@@ -11,6 +11,10 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<States> States { get; set; }
         public DbSet<Game> Games { get; set; }
         public DbSet<GamePlayer> GamePlayers { get; set; }
+        public DbSet<EventType> EventTypes { get; set; }
+        public DbSet<Events> Events { get; set; }
+        public DbSet<EventWinners> EventWinners { get; set; }
+        public DbSet<Server> Servers { get; set; }
 
         public RankedDb(DbContextOptions<RankedDb> options)
        : base(options)

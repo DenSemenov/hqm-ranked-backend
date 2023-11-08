@@ -31,6 +31,8 @@ namespace hqm_ranked_backend
 
             services.AddScoped<IPlayerService, PlayerService>();
             services.AddScoped<ISeasonService, SeasonService>();
+            services.AddScoped<IEventService, EventService>();
+            services.AddScoped<IServerService, ServerService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>
@@ -71,6 +73,7 @@ namespace hqm_ranked_backend
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tutorial API V1");
+                c.RoutePrefix = "";
             });
 
             app.UseRouting();

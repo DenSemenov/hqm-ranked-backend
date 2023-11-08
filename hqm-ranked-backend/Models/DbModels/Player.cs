@@ -13,6 +13,8 @@ namespace hqm_ranked_backend.Models.DbModels
         public string Email { get; set; }
         [Required]
         public Role Role { get; set; }
+        [Required]
+        public bool IsActive { get; set; } = true;
 
     }
 }

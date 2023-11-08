@@ -30,5 +30,14 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+
+        [HttpPost("GetSeasonLastGames")]
+        public async Task<IActionResult> GetSeasonLastGames(CurrentSeasonStatsRequest request)
+        {
+            var result = await _seasonService.GetSeasonLastGames(request);
+
+            return Ok(result);
+        }
     }
 }

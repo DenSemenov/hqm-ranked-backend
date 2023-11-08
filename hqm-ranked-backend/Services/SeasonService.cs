@@ -69,5 +69,30 @@ namespace hqm_ranked_backend.Services
 
             return result;
         }
+
+        public async Task<List<SeasonGameViewModel>> GetSeasonLastGames(CurrentSeasonStatsRequest request)
+        {
+            var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
+            var games = await _dbContext.Games
+                .Include(x => x.State)
+                .Include(x => x.GamePlayers)
+                .ThenInclude(x => x.Player)
+                .Where(x => x.Season == season)
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new SeasonGameViewModel
+                {
+                    GameId = x.Id,
+                    Date = x.LastModifiedOn ?? x.CreatedOn,
+                    RedScore = x.RedScore,
+                    BlueScore = x.BlueScore,
+                    Status = x.State.Name,
+                    TeamNameRed = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Name : "Red",
+                    TeamNameBlue = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Name : "Blue",
+                })
+                .Take(10)
+                .ToListAsync();
+
+            return games;
+        }
     }
 }

@@ -32,6 +32,14 @@ namespace hqm_ranked_backend.Controllers
             }
         }
 
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register(RegistrationRequest request)
+        {
+            var result = await _playerService.Register(request);
+
+            return Ok(result);
+        }
+
         [Authorize]
         [HttpPost("GetCurrentUser")]
         public async Task<IActionResult> GetCurrentUser()

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using System.Numerics;
 using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
@@ -27,27 +28,45 @@ namespace hqm_ranked_backend.Services
             var player = await _dbContext.Players.SingleOrDefaultAsync(x => x.Name == request.Login && x.Password == password);
             if (player != null)
             {
-                var now = DateTime.UtcNow;
-                var jwt = new JwtSecurityToken(
-                        issuer: AuthOptions.ISSUER,
-                        audience: AuthOptions.AUDIENCE,
-                        notBefore: now,
-                        expires: now.Add(TimeSpan.FromDays(AuthOptions.LIFETIME)),
-                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-                jwt.Payload["id"] = player.Id;
-
-                var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+                var token = Encryption.GetToken(player.Id);
 
                 return new LoginResult
                 {
+                    Id = player.Id,
                     Success = true,
-                    Token = encodedJwt
+                    Token = token
                 };
             }
             else
             {
                 return null;
             }
+        }
+
+        public async Task<LoginResult?> Register(RegistrationRequest request)
+        {
+            var password = Encryption.GetMD5Hash(request.Password);
+            var userRole = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Name == "user");
+            var id = Guid.NewGuid();
+
+            await _dbContext.Players.AddAsync(new Player
+            {
+                Id = id,
+                Name = request.Nickname,
+                Email = request.Email,
+                Password = password,
+                Role = userRole,
+                IsActive = false,
+            });
+            await _dbContext.SaveChangesAsync();
+
+            var token = Encryption.GetToken(id);
+            return new LoginResult
+            {
+                Id = id,
+                Success = true,
+                Token = token
+            };
         }
 
         public async Task<CurrentUserVIewModel> GetCurrentUser(Guid userId)
