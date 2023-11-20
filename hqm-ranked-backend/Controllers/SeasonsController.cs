@@ -15,13 +15,22 @@ namespace hqm_ranked_backend.Controllers
             _seasonService = seasonService;
         }
 
-        [HttpPost("GetSeasons")]
-        public async Task<IActionResult> GetSeasons()
+        [HttpPost("GetDivisions")]
+        public async Task<IActionResult> GetDivisions()
         {
-            var result = await _seasonService.GetSeasons();
+            var result = await _seasonService.GetDivisions();
 
             return Ok(result);
         }
+
+        [HttpPost("GetSeasons")]
+        public async Task<IActionResult> GetSeasons(CurrentDivisionRequest request)
+        {
+            var result = await _seasonService.GetSeasons(request);
+
+            return Ok(result);
+        }
+
 
         [HttpPost("GetSeasonStats")]
         public async Task<IActionResult> GetSeasonStats(CurrentSeasonStatsRequest request)
@@ -36,6 +45,14 @@ namespace hqm_ranked_backend.Controllers
         public async Task<IActionResult> GetSeasonLastGames(CurrentSeasonStatsRequest request)
         {
             var result = await _seasonService.GetSeasonLastGames(request);
+
+            return Ok(result);
+        }
+
+        [HttpPost("GetPlayerData")]
+        public async Task<IActionResult> GetPlayerData(PlayerRequest request)
+        {
+            var result = await _seasonService.GetPlayerData(request);
 
             return Ok(result);
         }

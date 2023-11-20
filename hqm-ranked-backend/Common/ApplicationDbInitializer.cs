@@ -36,14 +36,35 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
+            if (!await _dbContext.Divisions.AnyAsync())
+            {
+                _dbContext.Divisions.Add(new Division
+                {
+                    Name = "EU"
+                });
+
+                _dbContext.Divisions.Add(new Division
+                {
+                    Name = "NA"
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
+
             if (!await _dbContext.Seasons.AnyAsync())
             {
-                _dbContext.Seasons.Add(new Season
+                var divisions = _dbContext.Divisions.ToList();
+                foreach(var division in divisions)
                 {
-                    Name = "Season 1",
-                    DateStart = DateTime.UtcNow.Date,
-                    DateEnd = DateTime.UtcNow.AddMonths(3).Date
-                });
+                    _dbContext.Seasons.Add(new Season
+                    {
+                        Name = "Season 1",
+                        DateStart = DateTime.UtcNow.Date,
+                        DateEnd = DateTime.UtcNow.AddMonths(3).Date,
+                        Division = division
+                    });
+                }
+                
 
                 await _dbContext.SaveChangesAsync();
             }

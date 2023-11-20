@@ -6,5 +6,6 @@ namespace hqm_ranked_backend.Models.DbModels
     {
         public string Name { get; set; }
         public int PlayerCount { get; set; }
+        public ServerToken Token { get; set; }
     }
 }

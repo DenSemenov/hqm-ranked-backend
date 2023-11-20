@@ -14,17 +14,23 @@ namespace hqm_ranked_backend.Services
             _dbContext = dbContext;
         }
 
-        public async Task<List<SeasonViewModel>> GetSeasons()
+        public async Task<List<SeasonViewModel>> GetSeasons(CurrentDivisionRequest request)
         {
-            var result = await _dbContext.Seasons.Select(x => new SeasonViewModel
+            var result = await _dbContext.Seasons.Where(x=>x.DivisionId == request.DivisionId).Select(x => new SeasonViewModel
             {
                 Id = x.Id,
                 Name = x.Name,
                 DateStart = x.DateStart,
-                DateEnd = x.DateEnd
+                DateEnd = x.DateEnd,
+                DivisionId = x.DivisionId,
             }).OrderByDescending(x=>x.DateStart).ToListAsync();
 
             return result;
+        }
+
+        public async Task<List<Division>> GetDivisions()
+        {
+            return await _dbContext.Divisions.ToListAsync();
         }
 
         public async Task<List<SeasonStatsViewModel>> GetSeasonStats(CurrentSeasonStatsRequest request)
@@ -88,11 +94,80 @@ namespace hqm_ranked_backend.Services
                     Status = x.State.Name,
                     TeamNameRed = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Name : "Red",
                     TeamNameBlue = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Name : "Blue",
+                    TeamRedId = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Id : Guid.Empty,
+                    TeamBlueId = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Id : Guid.Empty,
                 })
                 .Take(10)
                 .ToListAsync();
 
             return games;
         }
+
+        public async Task<PlayerViewModel> GetPlayerData(PlayerRequest request)
+        {
+            var result = new PlayerViewModel();
+
+            result.Id = request.Id;
+
+            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).SingleOrDefaultAsync(x => x.Id == request.Id);
+            result.Name = player.Name;
+            result.Games = player.GamePlayers.Count;
+            result.Goals = player.GamePlayers.Sum(x => x.Goals);
+            result.Assists = player.GamePlayers.Sum(x => x.Assists);
+            result.Points = result.Goals + result.Assists;
+
+            var currentSeasonStats = await GetSeasons(new CurrentDivisionRequest { DivisionId = request.DivisionId });
+            var lastSeason = currentSeasonStats.FirstOrDefault();
+            var seasonStats = await GetSeasonStats(new CurrentSeasonStatsRequest { SeasonId = lastSeason.Id });
+
+            var currentPlayerStats = seasonStats.SingleOrDefault(x => x.PlayerId == request.Id);
+            if (currentPlayerStats != null)
+            {
+                result.CurrentSeasonData = new PlayerLastSeasonViewModel
+                {
+                    Games = currentPlayerStats.Win + currentPlayerStats.Lose,
+                    Goals = currentPlayerStats.Goals,
+                    Assists = currentPlayerStats.Assists,
+                    Points = currentPlayerStats.Goals + currentPlayerStats.Assists,
+                    Position = seasonStats.IndexOf(currentPlayerStats) + 1,
+                    Elo = currentPlayerStats.Rating
+                };
+            }
+
+            var lastSeasons = currentSeasonStats.Skip(1).Take(3);
+            foreach (var season in lastSeasons)
+            {
+                var seasonStatsTemp = await GetSeasonStats(new CurrentSeasonStatsRequest { SeasonId = season.Id });
+                var lastSeasonStats = seasonStatsTemp.SingleOrDefault(x => x.PlayerId == request.Id);
+                if (lastSeasonStats != null)
+                {
+                    result.LastSeasons.Add(new PlayerSeasonsViewModel
+                    {
+                        Name = season.Name,
+                        Place = seasonStatsTemp.IndexOf(lastSeasonStats) + 1
+                    });
+                }
+            }
+
+            result.LastGames = player.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3).Select(x => new PlayerLastGamesViewModel
+            {
+                Date = x.CreatedOn,
+                GameId = x.Id,
+                Goals = x.Goals,
+                Assists = x.Assists,
+                RedScore = x.Game.RedScore,
+                BlueScore = x.Game.BlueScore,
+                TeamRedName = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Name : "Red",
+                TeamBlueName = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Name : "Blue",
+                TeamRedId = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Id : Guid.Empty,
+                TeamBlueId = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Id : Guid.Empty,
+                Team= x.Team
+            }).ToList();
+
+            result.CalcData = new PlayerCalcDataViewModel();
+
+            return result;
+        }
+
     }
 }

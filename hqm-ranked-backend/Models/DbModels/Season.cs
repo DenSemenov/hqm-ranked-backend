@@ -12,6 +12,8 @@ namespace hqm_ranked_backend.Models.DbModels
         [Required]
         public DateTime DateEnd { get; set; }
         public ICollection<Game> Games { get; set; }
+        public Division Division { get; set; }
+        public Guid DivisionId { get; set; }
 
     }
 }
