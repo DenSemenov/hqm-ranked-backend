@@ -56,8 +56,18 @@ namespace hqm_ranked_backend.Services
                 .GroupBy(x => x.PlayerId)
                 .ToList();
 
+            var elos = await _dbContext.Elos.Include(x=>x.Player).Where(x => x.Season == season).ToListAsync();
+
             foreach(var game in games)
             {
+                var elo = 0;
+
+                var playerElo = elos.SingleOrDefault(x => x.Player.Id == game.Key);
+                if (playerElo != null)
+                {
+                    elo = playerElo.Value;
+                }
+
                 result.Add(new SeasonStatsViewModel
                 {
                     PlayerId = game.Key,
@@ -67,7 +77,7 @@ namespace hqm_ranked_backend.Services
                     Win = game.Count(x => x.Win),
                     Lose = game.Count(x => x.Lose),
                     Mvp = game.Count(x => x.Mvp),
-                    Rating = game.Sum(x => x.Score)
+                    Rating = game.Sum(x => x.Score) + elo
                 });
             }
 
