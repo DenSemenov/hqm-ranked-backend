@@ -9,6 +9,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public Game Game { get; set; }
         [Required]
         public Player Player { get; set; }
+        public Guid PlayerId { get; set; }
         [Required]
         public int Team { get; set; }
         [Required]
@@ -19,6 +20,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public int Score { get; set; }
         public int Ping { get; set; }
         public string Ip { get; set; }
-
+        public bool IsCaptain { get; set; }
     }
 }

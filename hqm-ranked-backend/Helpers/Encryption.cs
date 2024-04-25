@@ -5,6 +5,8 @@ using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Models.DbModels;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Data;
 
 namespace hqm_ranked_backend.Helpers
 {
@@ -24,15 +26,24 @@ namespace hqm_ranked_backend.Helpers
             }
         }
 
-        public static string GetToken(Guid userId)
+        public static string GetToken(Guid userId, bool isAdmin)
         {
             var now = DateTime.UtcNow;
+            var claims = new List<Claim>();
+
+            if (isAdmin)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
+
             var jwt = new JwtSecurityToken(
                     issuer: AuthOptions.ISSUER,
                     audience: AuthOptions.AUDIENCE,
                     notBefore: now,
                     expires: now.Add(TimeSpan.FromDays(AuthOptions.LIFETIME)),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256),
+                    claims: claims
+                    );
             jwt.Payload["id"] = userId;
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);

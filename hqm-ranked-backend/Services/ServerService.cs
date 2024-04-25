@@ -1,7 +1,9 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Helpers;
+using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,9 +12,11 @@ namespace hqm_ranked_backend.Services
     public class ServerService : IServerService
     {
         private RankedDb _dbContext;
-        public ServerService(RankedDb dbContext)
+        private ISeasonService _seasonService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService)
         {
             _dbContext = dbContext;
+            _seasonService = seasonService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -30,23 +34,158 @@ namespace hqm_ranked_backend.Services
             return servers;
         }
 
-        public async Task ServerUpdate(ServerUpdateRequest request)
+        public async Task<ServerLoginViewModel> ServerLogin(ServerLoginRequest request)
         {
-            var server = await _dbContext.Servers.SingleOrDefaultAsync(x=>x.Name == request.Name);
+            var password = Encryption.GetMD5Hash(request.Password.Trim());
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
             if (server != null)
             {
-                server.PlayerCount = request.PlayerCount;
+                var player = await _dbContext.Players.SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+                if (player != null)
+                {
+                    return new ServerLoginViewModel
+                    {
+                        Id = player.Id,
+                        Success = true,
+                    };
+                }
+                else
+                {
+                    return new ServerLoginViewModel
+                    {
+                        Id = Guid.Empty,
+                        Success = false,
+                        ErrorMessage = "Incorrect login or password"
+                    };
+                }
             }
             else
             {
-                await _dbContext.Servers.AddAsync(new Server
+                return new ServerLoginViewModel
                 {
-                    Name = request.Name,
-                    PlayerCount = request.PlayerCount
-                });
+                    Id = Guid.Empty,
+                    Success = false,
+                    ErrorMessage = "Server token wasn't found"
+                };
             }
-            
-            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<StartGameViewModel> StartGame(StartGameRequest request)
+        {
+            var result = new StartGameViewModel();
+
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var rnd = new Random();
+                var randomPlayers = request.PlayerIds.OrderBy(x => rnd.Next()).Take(request.MaxCount * 2);
+
+                foreach(var player in randomPlayers)
+                {
+                    result.Players.Add(new StartGamePlayerViewModel
+                    {
+                        Id = player,
+                        Score = await _seasonService.GetPlayerElo(player),
+                    });
+                }
+
+                result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
+                result.CaptainRed = result.Players[0].Id;
+                result.CaptainBlue = result.Players[1].Id;
+
+                var newId = Guid.NewGuid();
+                await _dbContext.Games.AddAsync(new Game
+                {
+                    Id = newId,
+                    RedScore = 0,
+                    BlueScore = 0,
+                    Season = await _seasonService.GetCurrentSeason(),
+                    State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Pick"),
+                    MvpId = result.CaptainRed,
+                    GamePlayers = randomPlayers.Select(x => new GamePlayer
+                    {
+                        PlayerId = x,
+                        Team = result.CaptainRed == x? 0: (result.CaptainBlue == x? 1: -1),
+                        Score = 0,
+                        Ping = 0,
+                        Ip = String.Empty,
+                        Goals = 0,
+                        Assists = 0,
+                        IsCaptain = result.CaptainRed == x || result.CaptainBlue == x
+                    }).ToList()
+                });
+                await _dbContext.SaveChangesAsync();
+
+                result.GameId= newId;
+            }
+
+            return result;
+        }
+
+        public async Task Pick(PickRequest request)
+        {
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var game = await _dbContext.Games.Include(x=>x.GamePlayers).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                if (game != null)
+                {
+                    var player = game.GamePlayers.FirstOrDefault(x => x.PlayerId == request.PlayerId);
+                    if (player != null)
+                    {
+                        player.Team = request.Team;
+                        await _dbContext.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+
+        public async Task AddGoal(AddGoalRequest request)
+        {
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var game = await _dbContext.Games.Include(x => x.GamePlayers).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                if (game != null)
+                {
+                    var scorer = game.GamePlayers.FirstOrDefault(x => x.PlayerId == request.Scorer);
+                    if (scorer != null)
+                    {
+                        scorer.Goals += 1;
+                    }
+
+                    var assist = game.GamePlayers.FirstOrDefault(x => x.PlayerId == request.Assist);
+                    if (assist != null)
+                    {
+                        assist.Assists += 1;
+                    }
+
+                    if (request.Team == 0)
+                    {
+                        game.RedScore += 1;
+                    }
+                    else if (request.Team == 1)
+                    {
+                        game.BlueScore += 1;
+                    }
+
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
+        }
+
+        public async Task SaveGame(SaveGameRequest request)
+        {
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var game = await _dbContext.Games.Include(x => x.GamePlayers).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                if (game != null)
+                {
+                    game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
         }
     }
 }

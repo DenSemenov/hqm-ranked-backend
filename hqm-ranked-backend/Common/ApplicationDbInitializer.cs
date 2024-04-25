@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Helpers;
+using hqm_ranked_backend.Models.DbModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Common
@@ -36,16 +37,15 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
-            if (!await _dbContext.Divisions.AnyAsync())
+            if (!await _dbContext.Players.AnyAsync())
             {
-                _dbContext.Divisions.Add(new Division
+                _dbContext.Players.Add(new Player
                 {
-                    Name = "EU"
-                });
-
-                _dbContext.Divisions.Add(new Division
-                {
-                    Name = "NA"
+                    Name = "Admin",
+                    Password = Encryption.GetMD5Hash("Admin"),
+                    Email = String.Empty,
+                    Role = _dbContext.Roles.FirstOrDefault(x => x.Name == "admin"),
+                    IsActive = true,
                 });
 
                 await _dbContext.SaveChangesAsync();
@@ -53,24 +53,24 @@ namespace hqm_ranked_backend.Common
 
             if (!await _dbContext.Seasons.AnyAsync())
             {
-                var divisions = _dbContext.Divisions.ToList();
-                foreach(var division in divisions)
+                _dbContext.Seasons.Add(new Season
                 {
-                    _dbContext.Seasons.Add(new Season
-                    {
-                        Name = "Season 1",
-                        DateStart = DateTime.UtcNow.Date,
-                        DateEnd = DateTime.UtcNow.AddMonths(3).Date,
-                        Division = division
-                    });
-                }
-                
+                    Name = "Season 1",
+                    DateStart = DateTime.UtcNow.Date,
+                    DateEnd = DateTime.UtcNow.AddMonths(3).Date
+                });
+
 
                 await _dbContext.SaveChangesAsync();
             }
 
             if (!await _dbContext.States.AnyAsync())
             {
+                _dbContext.States.Add(new States
+                {
+                    Name = "Pick"
+                });
+
                 _dbContext.States.Add(new States
                 {
                     Name = "Live"

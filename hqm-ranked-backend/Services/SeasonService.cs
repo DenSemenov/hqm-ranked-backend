@@ -2,6 +2,7 @@
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services
@@ -14,23 +15,24 @@ namespace hqm_ranked_backend.Services
             _dbContext = dbContext;
         }
 
-        public async Task<List<SeasonViewModel>> GetSeasons(CurrentDivisionRequest request)
+        public async Task<List<SeasonViewModel>> GetSeasons()
         {
-            var result = await _dbContext.Seasons.Where(x=>x.DivisionId == request.DivisionId).Select(x => new SeasonViewModel
+            var result = await _dbContext.Seasons.Select(x => new SeasonViewModel
             {
                 Id = x.Id,
                 Name = x.Name,
                 DateStart = x.DateStart,
-                DateEnd = x.DateEnd,
-                DivisionId = x.DivisionId,
+                DateEnd = x.DateEnd
             }).OrderByDescending(x=>x.DateStart).ToListAsync();
 
             return result;
         }
 
-        public async Task<List<Division>> GetDivisions()
+        public async Task<Season> GetCurrentSeason()
         {
-            return await _dbContext.Divisions.ToListAsync();
+            var result = await _dbContext.Seasons.FirstOrDefaultAsync(x => x.DateStart <= DateTime.UtcNow && x.DateEnd > DateTime.UtcNow);
+
+            return result;
         }
 
         public async Task<List<SeasonStatsViewModel>> GetSeasonStats(CurrentSeasonStatsRequest request)
@@ -102,10 +104,10 @@ namespace hqm_ranked_backend.Services
                     RedScore = x.RedScore,
                     BlueScore = x.BlueScore,
                     Status = x.State.Name,
-                    TeamNameRed = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Name : "Red",
-                    TeamNameBlue = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Name : "Blue",
-                    TeamRedId = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Id : Guid.Empty,
-                    TeamBlueId = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Id : Guid.Empty,
+                    TeamNameRed = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Name : "Red",
+                    TeamNameBlue = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Name : "Blue",
+                    TeamRedId = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Id : Guid.Empty,
+                    TeamBlueId = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Id : Guid.Empty,
                 })
                 .Take(10)
                 .ToListAsync();
@@ -126,7 +128,7 @@ namespace hqm_ranked_backend.Services
             result.Assists = player.GamePlayers.Sum(x => x.Assists);
             result.Points = result.Goals + result.Assists;
 
-            var currentSeasonStats = await GetSeasons(new CurrentDivisionRequest { DivisionId = request.DivisionId });
+            var currentSeasonStats = await GetSeasons();
             var lastSeason = currentSeasonStats.FirstOrDefault();
             var seasonStats = await GetSeasonStats(new CurrentSeasonStatsRequest { SeasonId = lastSeason.Id });
 
@@ -179,5 +181,14 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
+
+        public async Task<int> GetPlayerElo(Guid id)
+        {
+            var currentSeason = await GetCurrentSeason();
+
+            var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason).Sum(x => x.Score);
+
+            return sum == 0 ? 1000 : sum;
+        }
     }
 }

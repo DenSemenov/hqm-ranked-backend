@@ -24,10 +24,39 @@ namespace hqm_ranked_backend.Controllers
             return Ok(result);
         }
 
-        [HttpPost("ServerUpdate")]
-        public async Task<IActionResult> ServerUpdate(ServerUpdateRequest request)
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromForm] string login, [FromForm] string password, [FromForm] string token)
         {
-           await _serverService.ServerUpdate(request);
+            var result = await _serverService.ServerLogin(new ServerLoginRequest
+            {
+                Login = login,
+                Password = password,
+                ServerToken = token
+            });
+
+            return Ok(result);
+        }
+
+        [HttpPost("StartGame")]
+        public async Task<IActionResult> StartGame(StartGameRequest request)
+        {
+            var result = await _serverService.StartGame(request);
+
+            return Ok(result);
+        }
+
+        [HttpPost("Pick")]
+        public async Task<IActionResult> Pick(PickRequest request)
+        {
+            await _serverService.Pick(request);
+
+            return Ok();
+        }
+
+        [HttpPost("SaveGame")]
+        public async Task<IActionResult> SaveGame(SaveGameRequest request)
+        {
+            await _serverService.SaveGame(request);
 
             return Ok();
         }

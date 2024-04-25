@@ -33,6 +33,7 @@ namespace hqm_ranked_backend
             services.AddScoped<ISeasonService, SeasonService>();
             services.AddScoped<IEventService, EventService>();
             services.AddScoped<IServerService, ServerService>();
+            services.AddScoped<IAdminService, AdminService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>

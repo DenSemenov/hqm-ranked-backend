@@ -6,8 +6,9 @@ namespace hqm_ranked_backend.Services.Interfaces
     public interface IServerService
     {
         Task<List<ActiveServerViewModel>> GetActiveServers();
-        Task ServerUpdate(ServerUpdateRequest request);
-
-
+        Task<ServerLoginViewModel> ServerLogin(ServerLoginRequest request);
+        Task<StartGameViewModel> StartGame(StartGameRequest request);
+        Task Pick(PickRequest request);
+        Task SaveGame(SaveGameRequest request);
     }
 }

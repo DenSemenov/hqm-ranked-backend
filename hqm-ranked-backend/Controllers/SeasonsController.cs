@@ -15,18 +15,10 @@ namespace hqm_ranked_backend.Controllers
             _seasonService = seasonService;
         }
 
-        [HttpPost("GetDivisions")]
-        public async Task<IActionResult> GetDivisions()
-        {
-            var result = await _seasonService.GetDivisions();
-
-            return Ok(result);
-        }
-
         [HttpPost("GetSeasons")]
-        public async Task<IActionResult> GetSeasons(CurrentDivisionRequest request)
+        public async Task<IActionResult> GetSeasons()
         {
-            var result = await _seasonService.GetSeasons(request);
+            var result = await _seasonService.GetSeasons();
 
             return Ok(result);
         }

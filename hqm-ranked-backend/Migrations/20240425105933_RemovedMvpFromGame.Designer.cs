@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
@@ -11,9 +12,11 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240425105933_RemovedMvpFromGame")]
+    partial class RemovedMvpFromGame
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,9 +253,6 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<string>("Ip")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsCaptain")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");

@@ -15,8 +15,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<Events> Events { get; set; }
         public DbSet<EventWinners> EventWinners { get; set; }
         public DbSet<Server> Servers { get; set; }
-        public DbSet<ServerToken> ServerTokens { get; set; }
-        public DbSet<Division> Divisions { get; set; }
         public DbSet<Elo> Elos { get; set; }
 
         public RankedDb(DbContextOptions<RankedDb> options)

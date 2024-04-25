@@ -6,10 +6,11 @@ namespace hqm_ranked_backend.Services.Interfaces
 {
     public interface ISeasonService
     {
-        Task<List<SeasonViewModel>> GetSeasons(CurrentDivisionRequest request);
-        Task<List<Division>> GetDivisions();
+        Task<List<SeasonViewModel>> GetSeasons();
         Task<List<SeasonStatsViewModel>> GetSeasonStats(CurrentSeasonStatsRequest request);
         Task<List<SeasonGameViewModel>> GetSeasonLastGames(CurrentSeasonStatsRequest request);
         Task<PlayerViewModel> GetPlayerData(PlayerRequest request);
+        Task<Season> GetCurrentSeason();
+        Task<int> GetPlayerElo(Guid id);
     }
 }
