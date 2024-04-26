@@ -77,6 +77,7 @@ namespace hqm_ranked_backend.Services
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
+                server.TeamMax = request.MaxCount;
                 var rnd = new Random();
                 var randomPlayers = request.PlayerIds.OrderBy(x => rnd.Next()).Take(request.MaxCount * 2);
 
@@ -134,6 +135,13 @@ namespace hqm_ranked_backend.Services
                     if (player != null)
                     {
                         player.Team = request.Team;
+
+                        if (game.GamePlayers.Where(x => x.Team == -1).Count() == 1)
+                        {
+                            var team = game.GamePlayers.Where(x => x.Team == 0).Count() > game.GamePlayers.Where(x => x.Team == 1).Count() ? 1 : 0;
+                            var lastPlayer = game.GamePlayers.FirstOrDefault(x => x.Team == -1);
+                            lastPlayer.Team = team;
+                        }
 
                         if (!game.GamePlayers.Any(x=>x.Team == -1))
                         {
