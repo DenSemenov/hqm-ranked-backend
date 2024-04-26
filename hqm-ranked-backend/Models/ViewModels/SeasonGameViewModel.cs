@@ -7,9 +7,12 @@
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public string Status { get; set; }
-        public int TeamRedId { get; set; }
-        public int TeamBlueId { get; set; }
-        public string TeamNameRed { get; set; }
-        public string TeamNameBlue { get; set; }
+        public List<GamePlayerItem> Players { get; set; }
+    }
+
+    public class GamePlayerItem { 
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Team { get; set; }
     }
 }

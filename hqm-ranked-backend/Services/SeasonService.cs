@@ -104,10 +104,12 @@ namespace hqm_ranked_backend.Services
                     RedScore = x.RedScore,
                     BlueScore = x.BlueScore,
                     Status = x.State.Name,
-                    TeamNameRed = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Name : "Red",
-                    TeamNameBlue = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Name : "Blue",
-                    TeamRedId = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Id : 0,
-                    TeamBlueId = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Id : 0,
+                    Players = x.GamePlayers.Select(x=>new GamePlayerItem
+                    {
+                        Id = x.PlayerId,
+                         Name = x.Player.Name,
+                          Team = x.Team
+                    }).ToList()
                 })
                 .Take(10)
                 .ToListAsync();
