@@ -45,7 +45,7 @@ namespace hqm_ranked_backend.Services
                 {
                     return new ServerLoginViewModel
                     {
-                        Id = player.Id,
+                        Id = player.Id.ToString(),
                         Success = true,
                     };
                 }
@@ -53,7 +53,7 @@ namespace hqm_ranked_backend.Services
                 {
                     return new ServerLoginViewModel
                     {
-                        Id = Guid.Empty,
+                        Id = String.Empty,
                         Success = false,
                         ErrorMessage = "Incorrect login or password"
                     };
@@ -63,7 +63,7 @@ namespace hqm_ranked_backend.Services
             {
                 return new ServerLoginViewModel
                 {
-                    Id = Guid.Empty,
+                    Id = String.Empty,
                     Success = false,
                     ErrorMessage = "Server token wasn't found"
                 };

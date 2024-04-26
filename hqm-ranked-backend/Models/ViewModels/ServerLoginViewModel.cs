@@ -2,7 +2,7 @@
 {
     public class ServerLoginViewModel
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
     }
