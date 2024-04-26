@@ -190,6 +190,17 @@ namespace hqm_ranked_backend.Services
                 if (game != null)
                 {
                     game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+
+                    var winTeam = game.RedScore > game.BlueScore ? 0 : 1;
+                    
+                    foreach(var winPlayer in game.GamePlayers.Where(x=>x.Team == winTeam)){
+                        winPlayer.Score = 15;
+                    }
+
+                    foreach (var winPlayer in game.GamePlayers.Where(x => x.Team != winTeam)){
+                        winPlayer.Score = -15;
+                    }
+
                     await _dbContext.SaveChangesAsync();
                 }
             }
