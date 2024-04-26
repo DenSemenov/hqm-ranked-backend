@@ -53,7 +53,7 @@ namespace hqm_ranked_backend.Services
                     Win = x.Team == 0 ? x.Game.RedScore > x.Game.BlueScore: x.Game.RedScore < x.Game.BlueScore,
                     Lose = x.Team == 0 ? x.Game.RedScore < x.Game.BlueScore : x.Game.RedScore > x.Game.BlueScore,
                     Mvp = x.Game.Mvp == x.Player,
-                    Score = x.Score + 1000
+                    Score = x.Score 
                 })
                 .GroupBy(x => x.PlayerId)
                 .ToList();
@@ -190,7 +190,7 @@ namespace hqm_ranked_backend.Services
 
             var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason).Sum(x => x.Score);
 
-            return sum == 0 ? 1000 : sum + 1000;
+            return sum;
         }
     }
 }
