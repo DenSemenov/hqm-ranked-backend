@@ -7,7 +7,7 @@ namespace hqm_ranked_backend.Services.Interfaces
     {
         Task<LoginResult?> Login(LoginRequest request);
         Task<LoginResult?> Register(RegistrationRequest request);
-        Task<CurrentUserVIewModel> GetCurrentUser(Guid userId);
-        Task ChangePassword(PasswordChangeRequest request, Guid userId);
+        Task<CurrentUserVIewModel> GetCurrentUser(int userId);
+        Task ChangePassword(PasswordChangeRequest request, int userId);
     }
 }

@@ -2,7 +2,7 @@
 {
     public class PlayerViewModel
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public int Games { get; set; }
         public int Goals { get; set; }
@@ -39,8 +39,8 @@
         public DateTime Date { get; set; }
         public int Goals { get; set; }
         public int Assists { get; set; }
-        public Guid TeamRedId { get; set; }
-        public Guid TeamBlueId { get; set; }
+        public int TeamRedId { get; set; }
+        public int TeamBlueId { get; set; }
         public string TeamRedName { get; set; }
         public string TeamBlueName { get; set; }
         public int Team { get; set; }

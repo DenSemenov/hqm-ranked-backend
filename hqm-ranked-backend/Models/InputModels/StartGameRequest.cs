@@ -4,6 +4,6 @@
     {
         public string Token { get; set; }
         public int MaxCount { get; set; }
-        public List<Guid> PlayerIds { get; set; }
+        public List<int> PlayerIds { get; set; }
     }
 }

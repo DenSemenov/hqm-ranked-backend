@@ -4,13 +4,13 @@
     {
         public Guid GameId { get; set; }
         public List<StartGamePlayerViewModel> Players { get; set; } = new List<StartGamePlayerViewModel>();
-        public Guid CaptainRed { get; set; }
-        public Guid CaptainBlue { get; set; }
+        public int CaptainRed { get; set; }
+        public int CaptainBlue { get; set; }
     }
 
     public class StartGamePlayerViewModel
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public int Score { get; set; }
     }
 }

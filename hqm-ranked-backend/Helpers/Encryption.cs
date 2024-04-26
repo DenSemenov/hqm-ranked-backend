@@ -26,7 +26,7 @@ namespace hqm_ranked_backend.Helpers
             }
         }
 
-        public static string GetToken(Guid userId, bool isAdmin)
+        public static string GetToken(int userId, bool isAdmin)
         {
             var now = DateTime.UtcNow;
             var claims = new List<Claim>();

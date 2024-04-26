@@ -106,8 +106,8 @@ namespace hqm_ranked_backend.Services
                     Status = x.State.Name,
                     TeamNameRed = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Name : "Red",
                     TeamNameBlue = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Name : "Blue",
-                    TeamRedId = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Id : Guid.Empty,
-                    TeamBlueId = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Id : Guid.Empty,
+                    TeamRedId = x.GamePlayers.Any(x => x.Team == 0) ? x.GamePlayers.FirstOrDefault(x => x.Team == 0 && x.IsCaptain).Player.Id : 0,
+                    TeamBlueId = x.GamePlayers.Any(x => x.Team == 1) ? x.GamePlayers.FirstOrDefault(x => x.Team == 1 && x.IsCaptain).Player.Id : 0,
                 })
                 .Take(10)
                 .ToListAsync();
@@ -171,8 +171,8 @@ namespace hqm_ranked_backend.Services
                 BlueScore = x.Game.BlueScore,
                 TeamRedName = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Name : "Red",
                 TeamBlueName = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Name : "Blue",
-                TeamRedId = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Id : Guid.Empty,
-                TeamBlueId = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Id : Guid.Empty,
+                TeamRedId = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Id : 0,
+                TeamBlueId = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Id : 0,
                 Team= x.Team
             }).ToList();
 
@@ -182,7 +182,7 @@ namespace hqm_ranked_backend.Services
         }
 
 
-        public async Task<int> GetPlayerElo(Guid id)
+        public async Task<int> GetPlayerElo(int id)
         {
             var currentSeason = await GetCurrentSeason();
 

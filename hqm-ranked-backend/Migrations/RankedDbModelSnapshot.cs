@@ -41,8 +41,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.Property<byte[]>("Thumbnail")
                         .IsRequired()
@@ -70,8 +70,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("SeasonId")
                         .HasColumnType("uuid");
@@ -142,8 +142,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -203,8 +203,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("MvpId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("MvpId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("RedScore")
                         .HasColumnType("integer");
@@ -260,8 +260,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<int>("Ping")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");
@@ -280,9 +280,11 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Player", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");

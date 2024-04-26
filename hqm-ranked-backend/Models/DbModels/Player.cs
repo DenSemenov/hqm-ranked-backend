@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace hqm_ranked_backend.Models.DbModels
 {
-    public class Player : AuditableEntity<Guid>
+    public class Player : AuditableEntity<int>
     {
         [Required]
         public string Name { get; set; }

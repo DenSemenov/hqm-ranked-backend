@@ -7,8 +7,8 @@
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public string Status { get; set; }
-        public Guid TeamRedId { get; set; }
-        public Guid TeamBlueId { get; set; }
+        public int TeamRedId { get; set; }
+        public int TeamBlueId { get; set; }
         public string TeamNameRed { get; set; }
         public string TeamNameBlue { get; set; }
     }

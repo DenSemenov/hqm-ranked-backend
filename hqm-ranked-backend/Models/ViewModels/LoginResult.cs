@@ -2,7 +2,7 @@
 {
     public class LoginResult
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string Token { get; set; }
         public bool Success { get; set; }
         public bool IsExists { get; set; }

@@ -12,8 +12,8 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    [Migration("20240425052541_RemovedDivisions")]
-    partial class RemovedDivisions
+    [Migration("20240426103711_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,8 +44,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.Property<byte[]>("Thumbnail")
                         .IsRequired()
@@ -73,8 +73,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("SeasonId")
                         .HasColumnType("uuid");
@@ -145,8 +145,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -206,8 +206,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("MvpId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("MvpId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("RedScore")
                         .HasColumnType("integer");
@@ -254,14 +254,17 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsCaptain")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Ping")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");
@@ -280,9 +283,11 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Player", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
@@ -360,9 +365,6 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("DivisionId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -397,30 +399,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<int>("PlayerCount")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("TokenId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenId");
-
-                    b.ToTable("Servers");
-                });
-
-            modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ServerToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int>("TeamMax")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -428,7 +408,7 @@ namespace hqm_ranked_backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ServerTokens");
+                    b.ToTable("Servers");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.States", b =>
@@ -570,17 +550,6 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Server", b =>
-                {
-                    b.HasOne("hqm_ranked_backend.Models.DbModels.ServerToken", "Token")
-                        .WithMany()
-                        .HasForeignKey("TokenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Token");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Game", b =>

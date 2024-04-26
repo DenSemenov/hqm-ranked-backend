@@ -2,7 +2,7 @@
 {
     public class SeasonStatsViewModel
     {
-        public Guid PlayerId { get; set; }  
+        public int PlayerId { get; set; }  
         public string Nickname { get; set; }
         public int Win { get; set; }
         public int Lose { get; set; }

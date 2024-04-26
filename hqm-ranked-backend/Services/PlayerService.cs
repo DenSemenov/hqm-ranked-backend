@@ -51,7 +51,7 @@ namespace hqm_ranked_backend.Services
             {
                 return new LoginResult
                 {
-                    Id = Guid.Empty,
+                    Id = 0,
                     Success = false,
                     Token = String.Empty,
                 };
@@ -59,11 +59,9 @@ namespace hqm_ranked_backend.Services
 
             var password = Encryption.GetMD5Hash(request.Password.Trim());
             var userRole = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Name == "user");
-            var id = Guid.NewGuid();
 
-            await _dbContext.Players.AddAsync(new Player
+            var entity = await _dbContext.Players.AddAsync(new Player
             {
-                Id = id,
                 Name = request.Login.Trim(),
                 Email = request.Email.Trim(),
                 Password = password,
@@ -72,17 +70,17 @@ namespace hqm_ranked_backend.Services
             });
             await _dbContext.SaveChangesAsync();
 
-            var token = Encryption.GetToken(id, userRole.Name == "admin");
+            var token = Encryption.GetToken(entity.Entity.Id, userRole.Name == "admin");
             return new LoginResult
             {
-                Id = id,
+                Id = entity.Entity.Id,
                 Success = true,
                 Token = token,
                 IsExists = false
             };
         }
 
-        public async Task<CurrentUserVIewModel> GetCurrentUser(Guid userId)
+        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId)
         {
             var result = new CurrentUserVIewModel();
 
@@ -98,7 +96,7 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
-        public async Task ChangePassword(PasswordChangeRequest request, Guid userId)
+        public async Task ChangePassword(PasswordChangeRequest request, int userId)
         {
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)

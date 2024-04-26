@@ -16,6 +16,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public States State { get; set; }
         public ICollection<GamePlayer> GamePlayers { get; set; }
         public Player Mvp { get; set; }
-        public Guid MvpId { get; set; }
+        public int MvpId { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public Game Game { get; set; }
         [Required]
         public Player Player { get; set; }
-        public Guid PlayerId { get; set; }
+        public int PlayerId { get; set; }
         [Required]
         public int Team { get; set; }
         [Required]

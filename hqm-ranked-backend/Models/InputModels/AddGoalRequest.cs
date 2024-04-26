@@ -5,7 +5,7 @@
         public string Token { get; set; }
         public Guid GameId { get; set; }
         public int Team { get; set; }
-        public Guid? Scorer { get; set; }
-        public Guid? Assist { get; set; }
+        public int? Scorer { get; set; }
+        public int? Assist { get; set; }
     }
 }
