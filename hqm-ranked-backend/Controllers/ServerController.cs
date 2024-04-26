@@ -25,14 +25,9 @@ namespace hqm_ranked_backend.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<IActionResult> Login([FromForm] string login, [FromForm] string password, [FromForm] string token)
+        public async Task<IActionResult> Login(ServerLoginRequest request)
         {
-            var result = await _serverService.ServerLogin(new ServerLoginRequest
-            {
-                Login = login,
-                Password = password,
-                ServerToken = token
-            });
+            var result = await _serverService.ServerLogin(request);
 
             return Ok(result);
         }
