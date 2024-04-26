@@ -90,8 +90,8 @@ namespace hqm_ranked_backend.Services
                 }
 
                 result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
-                result.CaptainRed = result.Players[0].Id;
-                result.CaptainBlue = result.Players[1].Id;
+                result.CaptainRed = result.Players[1].Id;
+                result.CaptainBlue = result.Players[0].Id;
 
                 var newId = Guid.NewGuid();
                 await _dbContext.Games.AddAsync(new Game
@@ -134,8 +134,15 @@ namespace hqm_ranked_backend.Services
                     if (player != null)
                     {
                         player.Team = request.Team;
+
+                        if (!game.GamePlayers.Any(x=>x.Team == -1))
+                        {
+                            game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Live");
+                        }
+
                         await _dbContext.SaveChangesAsync();
                     }
+
                 }
             }
         }

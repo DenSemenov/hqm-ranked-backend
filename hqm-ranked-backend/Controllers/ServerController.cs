@@ -48,6 +48,14 @@ namespace hqm_ranked_backend.Controllers
             return Ok();
         }
 
+        [HttpPost("AddGoal")]
+        public async Task<IActionResult> AddGoal(AddGoalRequest request)
+        {
+            await _serverService.AddGoal(request);
+
+            return Ok();
+        }
+
         [HttpPost("SaveGame")]
         public async Task<IActionResult> SaveGame(SaveGameRequest request)
         {

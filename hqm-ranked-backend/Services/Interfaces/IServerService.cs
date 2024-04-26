@@ -9,6 +9,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<ServerLoginViewModel> ServerLogin(ServerLoginRequest request);
         Task<StartGameViewModel> StartGame(StartGameRequest request);
         Task Pick(PickRequest request);
+        Task AddGoal(AddGoalRequest request);
         Task SaveGame(SaveGameRequest request);
     }
 }
