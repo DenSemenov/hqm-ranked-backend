@@ -169,6 +169,7 @@ namespace hqm_ranked_backend.Services
                 GameId = x.Game.Id,
                 Goals = x.Goals,
                 Assists = x.Assists,
+                Score = x.Score,
                 RedScore = x.Game.RedScore,
                 BlueScore = x.Game.BlueScore,
                 Players = x.Game.GamePlayers.Select(x => new GameDataPlayerViewModel
