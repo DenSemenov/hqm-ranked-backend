@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using SixLabors.ImageSharp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Numerics;
 using static MassTransit.ValidationResultExtensions;
@@ -16,10 +17,14 @@ namespace hqm_ranked_backend.Services
 {
     public class PlayerService : IPlayerService
     {
-        private RankedDb _dbContext;
-        public PlayerService(RankedDb dbContext)
+        private RankedDb _dbContext; 
+        private IWebHostEnvironment _hostingEnvironment;
+        private IImageGeneratorService _imageGeneratorService;
+        public PlayerService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
         {
             _dbContext = dbContext;
+            _hostingEnvironment = hostingEnvironment;
+            _imageGeneratorService = imageGeneratorService;
         }
         public async Task<LoginResult?> Login(LoginRequest request)
         {
@@ -71,6 +76,14 @@ namespace hqm_ranked_backend.Services
             await _dbContext.SaveChangesAsync();
 
             var token = Encryption.GetToken(entity.Entity.Id, userRole.Name == "admin");
+
+            var path = _hostingEnvironment.WebRootPath + "/avatars/" + entity.Entity.Id + ".png";
+            if (!File.Exists(path))
+            {
+                var file = _imageGeneratorService.GenerateImage();
+                file.SaveAsPng(path);
+            }
+
             return new LoginResult
             {
                 Id = entity.Entity.Id,
