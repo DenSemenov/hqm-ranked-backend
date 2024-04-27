@@ -90,6 +90,11 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
+            if (!Directory.Exists(_hostingEnvironment.WebRootPath + "/avatars"))
+            {
+                Directory.CreateDirectory(_hostingEnvironment.WebRootPath + "/avatars");
+            }
+
             var userIds = await _dbContext.Players.Select(x => x.Id).ToListAsync();
             foreach (var userId in userIds)
             {
