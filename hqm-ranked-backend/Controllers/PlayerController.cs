@@ -3,6 +3,8 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace hqm_ranked_backend.Controllers
 {
@@ -64,22 +66,23 @@ namespace hqm_ranked_backend.Controllers
         [HttpPost("UploadAvatar")]
         public async Task<IActionResult> UploadAvatar(IFormFile file)
         {
-            var userId = UserHelper.GetUserId(User);
-            var path = String.Empty;
             try
             {
-                path = Path.Combine(_hostingEnvironment.WebRootPath, "avatars", userId.ToString() + ".png");
-
-                using (Stream fileStream = new FileStream(path, FileMode.Create))
+                var userId = UserHelper.GetUserId(User);
+                if (file != null)
                 {
-                    await file.CopyToAsync(fileStream);
+                    var path = "/avatars/" + userId + ".png";
+                    using (var fileStream = new FileStream(_hostingEnvironment.WebRootPath + path, FileMode.Create))
+                    {
+                        await file.CopyToAsync(fileStream);
+                    }
                 }
+                return Ok();
             }
-            catch
+            catch (Exception ex)
             {
-
+                return Ok(ex);
             }
-            return Ok(path);
         }
     }
 }
