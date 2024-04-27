@@ -66,11 +66,18 @@ namespace hqm_ranked_backend.Controllers
         {
             var userId = UserHelper.GetUserId(User);
             var path = Path.Combine(_hostingEnvironment.WebRootPath, "avatars", userId.ToString() + ".png");
-            using (Stream fileStream = new FileStream(path, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(fileStream);
+                using (Stream fileStream = new FileStream(path, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
             }
-            return Ok();
+            catch
+            {
+
+            }
+            return Ok(path);
         }
     }
 }
