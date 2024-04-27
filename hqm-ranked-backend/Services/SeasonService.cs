@@ -166,7 +166,7 @@ namespace hqm_ranked_backend.Services
             result.LastGames = player.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3).Select(x => new PlayerLastGamesViewModel
             {
                 Date = x.CreatedOn,
-                GameId = x.Id,
+                GameId = x.Game.Id,
                 Goals = x.Goals,
                 Assists = x.Assists,
                 RedScore = x.Game.RedScore,
