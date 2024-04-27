@@ -65,9 +65,11 @@ namespace hqm_ranked_backend.Controllers
         public async Task<IActionResult> UploadAvatar(IFormFile file)
         {
             var userId = UserHelper.GetUserId(User);
-            var path = Path.Combine(_hostingEnvironment.WebRootPath, "avatars", userId.ToString() + ".png");
+            var path = String.Empty;
             try
             {
+                path = Path.Combine(_hostingEnvironment.WebRootPath, "avatars", userId.ToString() + ".png");
+
                 using (Stream fileStream = new FileStream(path, FileMode.Create))
                 {
                     await file.CopyToAsync(fileStream);
