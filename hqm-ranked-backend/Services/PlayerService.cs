@@ -111,7 +111,7 @@ namespace hqm_ranked_backend.Services
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                user.Password = request.Name;
+                user.Name = request.Name;
                 await _dbContext.SaveChangesAsync();
             }
         }
