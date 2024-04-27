@@ -89,16 +89,16 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
-            var userIds = await _dbContext.Players.Select(x=>x.Id).ToListAsync();
-            foreach(var userId in  userIds)
-            {
-                var path = _hostingEnvironment.WebRootPath+ "/avatars/" + userId + ".png";
-                if (!File.Exists(path))
-                {
-                    var file = _imageGeneratorService.GenerateImage();
-                    file.Save(path, ImageFormat.Png);
-                }
-            }
+            //var userIds = await _dbContext.Players.Select(x=>x.Id).ToListAsync();
+            //foreach(var userId in  userIds)
+            //{
+            //    var path = _hostingEnvironment.WebRootPath+ "/avatars/" + userId + ".png";
+            //    if (!File.Exists(path))
+            //    {
+            //        var file = _imageGeneratorService.GenerateImage();
+            //        file.Save(path, ImageFormat.Png);
+            //    }
+            //}
            
         }
     }
