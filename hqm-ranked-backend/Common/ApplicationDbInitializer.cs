@@ -1,16 +1,21 @@
 ﻿using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing.Imaging;
 
 namespace hqm_ranked_backend.Common
 {
     internal class ApplicationDbInitializer
     {
         private readonly RankedDb _dbContext;
-
-        public ApplicationDbInitializer(RankedDb dbContext)
+        private IWebHostEnvironment _hostingEnvironment;
+        private IImageGeneratorService _imageGeneratorService;
+        public ApplicationDbInitializer(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
         {
             _dbContext = dbContext;
+            _hostingEnvironment = hostingEnvironment;
+            _imageGeneratorService = imageGeneratorService;
         }
 
         public async Task Initialize()
@@ -83,6 +88,18 @@ namespace hqm_ranked_backend.Common
 
                 await _dbContext.SaveChangesAsync();
             }
+
+            var userIds = await _dbContext.Players.Select(x=>x.Id).ToListAsync();
+            foreach(var userId in  userIds)
+            {
+                var path = _hostingEnvironment.WebRootPath+ "/avatars/" + userId + ".png";
+                if (!File.Exists(path))
+                {
+                    var file = _imageGeneratorService.GenerateImage();
+                    file.Save(path, ImageFormat.Png);
+                }
+            }
+           
         }
     }
 }

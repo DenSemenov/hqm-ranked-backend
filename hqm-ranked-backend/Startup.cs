@@ -34,6 +34,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IEventService, EventService>();
             services.AddScoped<IServerService, ServerService>();
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>
