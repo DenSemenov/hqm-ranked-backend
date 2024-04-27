@@ -69,6 +69,7 @@ namespace hqm_ranked_backend
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
@@ -87,6 +88,7 @@ namespace hqm_ranked_backend
                  .AllowAnyHeader()
                  .SetIsOriginAllowed(origin => true)
                  .AllowCredentials());
+
 
             app.UseEndpoints(endpoints =>
             {

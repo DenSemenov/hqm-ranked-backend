@@ -11,10 +11,12 @@ namespace hqm_ranked_backend.Controllers
     public class PlayerController : ControllerBase
     {
         IPlayerService _playerService;
+        private IWebHostEnvironment _hostingEnvironment;
 
-        public PlayerController(IPlayerService playerService)
+        public PlayerController(IPlayerService playerService, IWebHostEnvironment hostingEnvironment)
         {
             _playerService = playerService;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         [HttpPost("Login")]
@@ -55,6 +57,19 @@ namespace hqm_ranked_backend.Controllers
         {
             var userId = UserHelper.GetUserId(User);
             await _playerService.ChangePassword(request, userId);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("UploadAvatar")]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            var userId = UserHelper.GetUserId(User);
+            var path = Path.Combine(_hostingEnvironment.WebRootPath, "avatars", userId.ToString() + ".png");
+            using (Stream fileStream = new FileStream(path, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
             return Ok();
         }
     }
