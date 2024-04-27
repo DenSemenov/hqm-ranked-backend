@@ -106,5 +106,14 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
+        public async Task ChangeNickname(NicknameChangeRequest request, int userId)
+        {
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                user.Password = request.Name;
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }

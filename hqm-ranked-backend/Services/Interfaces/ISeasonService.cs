@@ -10,6 +10,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<SeasonStatsViewModel>> GetSeasonStats(CurrentSeasonStatsRequest request);
         Task<List<SeasonGameViewModel>> GetSeasonLastGames(CurrentSeasonStatsRequest request);
         Task<PlayerViewModel> GetPlayerData(PlayerRequest request);
+        Task<GameDataViewModel> GetGameData(GameRequest request);
         Task<Season> GetCurrentSeason();
         Task<int> GetPlayerElo(int id);
     }

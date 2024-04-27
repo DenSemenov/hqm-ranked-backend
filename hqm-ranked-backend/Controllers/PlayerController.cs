@@ -54,6 +54,15 @@ namespace hqm_ranked_backend.Controllers
         }
 
         [Authorize]
+        [HttpPost("ChangeNickname")]
+        public async Task<IActionResult> ChangeNickname(NicknameChangeRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.ChangeNickname(request, userId);
+            return Ok();
+        }
+
+        [Authorize]
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword(PasswordChangeRequest request)
         {
