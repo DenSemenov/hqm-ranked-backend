@@ -39,11 +39,7 @@
         public DateTime Date { get; set; }
         public int Goals { get; set; }
         public int Assists { get; set; }
-        public int TeamRedId { get; set; }
-        public int TeamBlueId { get; set; }
-        public string TeamRedName { get; set; }
-        public string TeamBlueName { get; set; }
-        public int Team { get; set; }
+        public List<GameDataPlayerViewModel> Players { get; set; }
     }
 
     public class PlayerCalcDataViewModel

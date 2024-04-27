@@ -171,11 +171,15 @@ namespace hqm_ranked_backend.Services
                 Assists = x.Assists,
                 RedScore = x.Game.RedScore,
                 BlueScore = x.Game.BlueScore,
-                TeamRedName = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Name : "Red",
-                TeamBlueName = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Name : "Blue",
-                TeamRedId = x.Game.GamePlayers.Any(x => x.Team == 0) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 0).Player.Id : 0,
-                TeamBlueId = x.Game.GamePlayers.Any(x => x.Team == 1) ? x.Game.GamePlayers.FirstOrDefault(x => x.Team == 1).Player.Id : 0,
-                Team= x.Team
+                Players = x.Game.GamePlayers.Select(x => new GameDataPlayerViewModel
+                {
+                    Id = x.PlayerId,
+                    Name = x.Player.Name,
+                    Goals = x.Goals,
+                    Assists = x.Assists,
+                    Score = x.Score,
+                    Team = x.Team,
+                }).ToList()
             }).ToList();
 
             result.CalcData = new PlayerCalcDataViewModel();
