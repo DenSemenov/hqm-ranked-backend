@@ -1,10 +1,11 @@
 ﻿using hqm_ranked_backend.Models.ViewModels;
-using System.Drawing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace hqm_ranked_backend.Services.Interfaces
 {
     public interface IImageGeneratorService
     {
-        Bitmap GenerateImage();
+        Image<Rgba32> GenerateImage();
     }
 }
