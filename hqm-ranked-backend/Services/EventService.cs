@@ -31,7 +31,7 @@ namespace hqm_ranked_backend.Services
             result.Text = String.Format(ev.EventType.Text, ev.X, ev.Y);
             result.Value = ev.X;
             result.Id = ev.Id;
-            result.Left = String.Format("{0}h {1}m", date.Subtract(ev.Date).Hours, date.Subtract(ev.Date).Minutes);
+            result.Left = String.Format("{0}h {1}m", ev.Date.AddDays(1).Subtract(date).Hours, ev.Date.AddDays(1).Subtract(date).Minutes);
 
             result.Players = await _dbContext.EventWinners.Include(x => x.Event).Include(x => x.Player).Where(x => x.Event == ev).Select(x => new CurrentEventPlayersViewModel
             {
