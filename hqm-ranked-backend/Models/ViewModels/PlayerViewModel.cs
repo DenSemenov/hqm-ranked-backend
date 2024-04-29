@@ -12,6 +12,13 @@
         public List<PlayerLastGamesViewModel> LastGames {  get; set; }
         public List<PlayerSeasonsViewModel> LastSeasons { get; set; } = new List<PlayerSeasonsViewModel>();
         public PlayerCalcDataViewModel CalcData { get; set; }
+        public List<PlayerPoint> PlayerPoints { get; set; } = new List<PlayerPoint>();
+    }
+
+    public class PlayerPoint
+    {
+        public Guid GameId { get; set; }
+        public int Score { get; set; }
     }
 
     public class PlayerLastSeasonViewModel

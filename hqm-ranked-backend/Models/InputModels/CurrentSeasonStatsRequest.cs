@@ -3,5 +3,6 @@
     public class CurrentSeasonStatsRequest
     {
         public Guid SeasonId { get; set; }
+        public int Offset { get; set;}
     }
 }

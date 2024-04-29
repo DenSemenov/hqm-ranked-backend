@@ -1,4 +1,6 @@
-﻿using hqm_ranked_backend.Common;
+﻿using Hangfire;
+using Hangfire.PostgreSql;
+using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
@@ -36,6 +38,8 @@ namespace hqm_ranked_backend
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
 
+            services.AddHangfire(x => x.UsePostgreSqlStorage(db));
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>
                      {
@@ -58,6 +62,7 @@ namespace hqm_ranked_backend
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HQM Ranked API", Version = "v1" });
             });
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -90,11 +95,19 @@ namespace hqm_ranked_backend
                  .SetIsOriginAllowed(origin => true)
                  .AllowCredentials());
 
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            app.UseHangfireDashboard("/hangfire");
+            app.UseHangfireServer();
+
+            var scope = app.ApplicationServices.CreateScope();
+            var eventService = scope.ServiceProvider.GetRequiredService<IEventService>() as EventService;
+            RecurringJob.AddOrUpdate("CreateNewDailyEvent",() => eventService.CreateNewEvent(), Cron.Daily);
+
+            eventService.CalculateEvents();
 
 
 

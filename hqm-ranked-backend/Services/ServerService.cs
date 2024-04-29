@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Helpers;
+﻿using Hangfire;
+using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
@@ -13,10 +14,12 @@ namespace hqm_ranked_backend.Services
     {
         private RankedDb _dbContext;
         private ISeasonService _seasonService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService)
+        private IEventService _eventService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
+            _eventService = eventService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -210,6 +213,8 @@ namespace hqm_ranked_backend.Services
                     }
 
                     await _dbContext.SaveChangesAsync();
+
+                    BackgroundJob.Enqueue(()=>_eventService.CalculateEvents());
                 }
             }
         }

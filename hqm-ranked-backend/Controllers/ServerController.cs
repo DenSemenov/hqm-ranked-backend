@@ -59,6 +59,8 @@ namespace hqm_ranked_backend.Controllers
         [HttpPost("SaveGame")]
         public async Task<IActionResult> SaveGame(SaveGameRequest request)
         {
+            Thread.Sleep(3000);
+
             await _serverService.SaveGame(request);
 
             return Ok();

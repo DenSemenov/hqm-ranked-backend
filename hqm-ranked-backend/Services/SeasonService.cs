@@ -88,7 +88,7 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
-        public async Task<List<SeasonGameViewModel>> GetSeasonLastGames(CurrentSeasonStatsRequest request)
+        public async Task<List<SeasonGameViewModel>> GetSeasonGames(CurrentSeasonStatsRequest request)
         {
             var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
             var games = await _dbContext.Games
@@ -111,7 +111,8 @@ namespace hqm_ranked_backend.Services
                           Team = x.Team
                     }).ToList()
                 })
-                .Take(10)
+                .Skip(request.Offset)
+                .Take(30)
                 .ToListAsync();
 
             return games;
@@ -184,6 +185,18 @@ namespace hqm_ranked_backend.Services
             }).ToList();
 
             result.CalcData = new PlayerCalcDataViewModel();
+
+            var score = 0;
+            foreach(var game in player.GamePlayers)
+            {
+
+                score += game.Score;
+                result.PlayerPoints.Add(new PlayerPoint
+                {
+                    GameId = game.Game.Id,
+                    Score = score
+                });
+            }
 
             return result;
         }

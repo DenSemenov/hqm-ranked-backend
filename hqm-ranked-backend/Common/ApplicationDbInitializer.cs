@@ -1,6 +1,7 @@
 ﻿using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
 using System.Drawing.Imaging;
@@ -106,6 +107,56 @@ namespace hqm_ranked_backend.Common
                 }
             }
 
+
+            if (!await _dbContext.EventTypes.AnyAsync())
+            {
+                _dbContext.EventTypes.Add(new EventType
+                {
+                    Text = "Score {0} goals",
+                    MinX = 17,
+                    MaxX = 30,
+                    MinY = 0,
+                    MaxY = 0,
+                });
+
+                _dbContext.EventTypes.Add(new EventType
+                {
+                    Text = "Do {0} assists",
+                    MinX = 17,
+                    MaxX = 30,
+                    MinY = 0,
+                    MaxY = 0,
+                });
+
+                _dbContext.EventTypes.Add(new EventType
+                {
+                    Text = "Win {0} games",
+                    MinX = 10,
+                    MaxX = 20,
+                    MinY = 0,
+                    MaxY = 0,
+                });
+
+                _dbContext.EventTypes.Add(new EventType
+                {
+                    Text = "Win {0} games in a row",
+                    MinX = 5,
+                    MaxX = 10,
+                    MinY = 0,
+                    MaxY = 0,
+                });
+
+                _dbContext.EventTypes.Add(new EventType
+                {
+                    Text = "Do same count of goals and assists more than 0 {0} games",
+                    MinX = 3,
+                    MaxX = 10,
+                    MinY = 0,
+                    MaxY = 0,
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 }
