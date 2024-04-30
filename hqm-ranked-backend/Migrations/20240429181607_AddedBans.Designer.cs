@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
@@ -11,9 +12,11 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240429181607_AddedBans")]
+    partial class AddedBans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,6 +64,9 @@ namespace hqm_ranked_backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("BannedByPlayerId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("BannedPlayerId")
                         .HasColumnType("integer");
 
@@ -77,6 +83,8 @@ namespace hqm_ranked_backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BannedByPlayerId");
 
                     b.HasIndex("BannedPlayerId");
 
@@ -476,11 +484,19 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Bans", b =>
                 {
+                    b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "BannedByPlayer")
+                        .WithMany()
+                        .HasForeignKey("BannedByPlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "BannedPlayer")
-                        .WithMany("Bans")
+                        .WithMany()
                         .HasForeignKey("BannedPlayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("BannedByPlayer");
 
                     b.Navigation("BannedPlayer");
                 });
@@ -598,8 +614,6 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Player", b =>
                 {
-                    b.Navigation("Bans");
-
                     b.Navigation("GamePlayers");
                 });
 

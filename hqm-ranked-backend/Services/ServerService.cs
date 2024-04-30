@@ -43,14 +43,26 @@ namespace hqm_ranked_backend.Services
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
             if (server != null)
             {
-                var player = await _dbContext.Players.SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+                var player = await _dbContext.Players.Include(x=>x.Bans).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
                 if (player != null)
                 {
-                    return new ServerLoginViewModel
+                    if (player.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow))
                     {
-                        Id = player.Id,
-                        Success = true,
-                    };
+                        return new ServerLoginViewModel
+                        {
+                            Id = 0,
+                            Success = false,
+                            ErrorMessage = "[Server] You are banned"
+                        };
+                    }
+                    else
+                    {
+                        return new ServerLoginViewModel
+                        {
+                            Id = player.Id,
+                            Success = true,
+                        };
+                    }
                 }
                 else
                 {
@@ -58,7 +70,7 @@ namespace hqm_ranked_backend.Services
                     {
                         Id = 0,
                         Success = false,
-                        ErrorMessage = "Incorrect login or password"
+                        ErrorMessage = "[Server] Incorrect login or password"
                     };
                 }
             }
@@ -68,7 +80,7 @@ namespace hqm_ranked_backend.Services
                 {
                     Id = 0,
                     Success = false,
-                    ErrorMessage = "Server token wasn't found"
+                    ErrorMessage = "[Server] Server token wasn't found"
                 };
             }
         }

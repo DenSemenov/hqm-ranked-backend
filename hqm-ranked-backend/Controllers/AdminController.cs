@@ -42,5 +42,37 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok();
         }
+
+        [HttpPost("GetPlayers")]
+        public async Task<IActionResult> GetPlayers()
+        {
+            var result = await _adminService.GetPlayers();
+
+            return Ok(result);
+        }
+
+        [HttpPost("BanPlayer")]
+        public async Task<IActionResult> BanPlayer(BanUnbanRequest request)
+        {
+            await _adminService.BanPlayer(request);
+
+            return Ok();
+        }
+
+        [HttpPost("GetAdmins")]
+        public async Task<IActionResult> GetAdmins()
+        {
+            var result = await _adminService.GetAdmins();
+
+            return Ok(result);
+        }
+
+        [HttpPost("AddRemoveAdmin")]
+        public async Task<IActionResult> AddRemoveAdmin(AddRemoveAdminRequest request)
+        {
+            await _adminService.AddRemoveAdmin(request);
+
+            return Ok();
+        }
     }
 }

@@ -8,5 +8,9 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<AdminServerViewModel>> GetServers();
         Task AddServer(AddServerRequest request);
         Task RemoveServer(RemoveServerRequest request);
+        Task <List<AdminPlayerViewModel>> GetPlayers();
+        Task BanPlayer(BanUnbanRequest request);
+        Task<List<AdminViewModel>> GetAdmins();
+        Task AddRemoveAdmin(AddRemoveAdminRequest request);
     }
 }

@@ -16,6 +16,7 @@ namespace hqm_ranked_backend.Models.DbModels
         [Required]
         public bool IsActive { get; set; } = true;
         public ICollection<GamePlayer> GamePlayers { get; set; }
+        public ICollection<Bans> Bans { get; set; }
 
     }
 }

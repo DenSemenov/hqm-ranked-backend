@@ -45,5 +45,64 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
+
+        public async Task<List<AdminPlayerViewModel>> GetPlayers()
+        {
+            return await _dbContext.Players.Include(x => x.Bans).Select(x => new AdminPlayerViewModel
+            {
+                Id = x.Id,
+                Name = x.Name,
+                IsBanned = x.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow)
+            }).ToListAsync();
+        }
+
+        public async Task BanPlayer(BanUnbanRequest request)
+        {
+            if (request.IsBanned)
+            {
+                var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.Id);
+                _dbContext.Bans.Add(new Bans
+                {
+                    BannedPlayer = player,
+                    Days = request.Days,
+                });
+            }
+            else
+            {
+                var ban = await _dbContext.Bans.Include(x=>x.BannedPlayer).OrderByDescending(x=>x.CreatedOn).FirstOrDefaultAsync(x=>x.BannedPlayer.Id == request.Id);
+                _dbContext.Remove(ban);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<AdminViewModel>> GetAdmins()
+        {
+            var result = await _dbContext.Players.Include(x=>x.Role).Where(x=>x.Role.Name == "admin").Select(x=>new AdminViewModel
+            {
+                Id = x.Id,
+                Name = x.Name,
+            }).ToListAsync();
+
+            return result;
+        }
+
+        public async Task AddRemoveAdmin(AddRemoveAdminRequest request)
+        {
+            var player = await _dbContext.Players.Include(x => x.Role).FirstOrDefaultAsync(x=>x.Id == request.Id);
+            if (player != null)
+            {
+                if (player.Role.Name != "admin")
+                {
+                    player.Role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Name == "admin");
+                }
+                else
+                {
+                    player.Role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Name == "user");
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }
