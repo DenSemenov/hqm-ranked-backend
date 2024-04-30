@@ -65,13 +65,15 @@ namespace hqm_ranked_backend.Services
             var password = Encryption.GetMD5Hash(request.Password.Trim());
             var userRole = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Name == "user");
 
+            var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
+
             var entity = await _dbContext.Players.AddAsync(new Player
             {
                 Name = request.Login.Trim(),
                 Email = request.Email.Trim(),
                 Password = password,
                 Role = userRole,
-                IsActive = false,
+                IsApproved = approveRequired? false: true,
             });
             await _dbContext.SaveChangesAsync();
 
@@ -97,13 +99,18 @@ namespace hqm_ranked_backend.Services
         {
             var result = new CurrentUserVIewModel();
 
-            var user = await _dbContext.Players.Include(x=>x.Role).SingleOrDefaultAsync(x => x.Id == userId);
+            var user = await _dbContext.Players.Include(x=>x.Bans).Include(x=>x.Role).SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
                 result.Id = user.Id;
                 result.Name = user.Name;
                 result.Email = user.Email;
                 result.Role = user.Role.Name;
+
+                var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
+
+                result.IsApproved = approveRequired ? result.IsApproved : true;
+                result.IsBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
             }
 
             return result;
@@ -119,14 +126,35 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
-        public async Task ChangeNickname(NicknameChangeRequest request, int userId)
+        public async Task<string> ChangeNickname(NicknameChangeRequest request, int userId)
         {
+            var result = String.Empty;
+
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                user.Name = request.Name;
-                await _dbContext.SaveChangesAsync();
+                var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+                var countDays = settings.NicknameChangeDaysLimit;
+
+                if (_dbContext.NicknameChanges.Any(x => x.Player == user && x.CreatedOn.AddDays(countDays) > DateTime.UtcNow))
+                {
+                    result = String.Format("You can change nickname each {0} days", countDays);
+                }
+                else
+                {
+                    _dbContext.NicknameChanges.Add(new NicknameChanges
+                    {
+                        Player = user,
+                        OldNickname = user.Name
+                    });
+                    user.Name = request.Name;
+
+                    result = "Nickname successfully changed";
+                    await _dbContext.SaveChangesAsync();
+                }
             }
+
+            return result;
         }
     }
 }

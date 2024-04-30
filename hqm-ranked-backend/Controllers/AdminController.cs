@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.InputModels;
+﻿using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -71,6 +72,35 @@ namespace hqm_ranked_backend.Controllers
         public async Task<IActionResult> AddRemoveAdmin(AddRemoveAdminRequest request)
         {
             await _adminService.AddRemoveAdmin(request);
+
+            return Ok();
+        }
+        [HttpPost("GetSettings")]
+        public async Task<IActionResult> GetSettings()
+        {
+            var result = await _adminService.GetSettings();
+
+            return Ok(result);
+        }
+        [HttpPost("SaveSettings")]
+        public async Task<IActionResult> SaveSettings(Setting request)
+        {
+            await _adminService.SaveSettings(request);
+
+            return Ok();
+        }
+
+        [HttpPost("GetUnApprovedUsers")]
+        public async Task<IActionResult> GetUnApprovedUsers()
+        {
+            var result = await _adminService.GetUnApprovedUsers();
+
+            return Ok(result);
+        }
+        [HttpPost("ApproveUser")]
+        public async Task<IActionResult> ApproveUser(IApproveRequest request)
+        {
+            await _adminService.ApproveUser(request);
 
             return Ok();
         }

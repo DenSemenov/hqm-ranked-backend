@@ -104,5 +104,42 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
+
+        public async Task<Setting> GetSettings()
+        {
+            return await _dbContext.Settings.FirstOrDefaultAsync();
+        }
+
+        public async Task SaveSettings(Setting request)
+        {
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync(); 
+            if (settings != null)
+            {
+                settings.NewPlayerApproveRequired = request.NewPlayerApproveRequired;
+                settings.NicknameChangeDaysLimit = request.NicknameChangeDaysLimit;
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<AdminPlayerViewModel>> GetUnApprovedUsers()
+        {
+            return await _dbContext.Players.Where(x => x.IsApproved == false).Select(x=>new AdminPlayerViewModel
+            {
+                Id = x.Id,
+                Name = x.Name,
+            }).ToListAsync();
+        }
+
+        public async Task ApproveUser(IApproveRequest request)
+        {
+            var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.Id);
+            if (player != null)
+            {
+                player.IsApproved = true;
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }

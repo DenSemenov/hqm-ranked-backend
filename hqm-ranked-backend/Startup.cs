@@ -106,11 +106,6 @@ namespace hqm_ranked_backend
             var scope = app.ApplicationServices.CreateScope();
             var eventService = scope.ServiceProvider.GetRequiredService<IEventService>() as EventService;
             RecurringJob.AddOrUpdate("CreateNewDailyEvent",() => eventService.CreateNewEvent(), Cron.Daily);
-
-            eventService.CalculateEvents();
-
-
-
         }
     }
 }

@@ -57,11 +57,25 @@ namespace hqm_ranked_backend.Services
                     }
                     else
                     {
-                        return new ServerLoginViewModel
+                        var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
+                        if ((approveRequired && player.IsApproved) || !approveRequired)
                         {
-                            Id = player.Id,
-                            Success = true,
-                        };
+
+                            return new ServerLoginViewModel
+                            {
+                                Id = player.Id,
+                                Success = true,
+                            };
+                        }
+                        else
+                        {
+                            return new ServerLoginViewModel
+                            {
+                                Id = 0,
+                                Success = false,
+                                ErrorMessage = "[Server] You are not approved by admin"
+                            };
+                        }
                     }
                 }
                 else

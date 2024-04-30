@@ -58,8 +58,8 @@ namespace hqm_ranked_backend.Controllers
         public async Task<IActionResult> ChangeNickname(NicknameChangeRequest request)
         {
             var userId = UserHelper.GetUserId(User);
-            await _playerService.ChangeNickname(request, userId);
-            return Ok();
+            var result = await _playerService.ChangeNickname(request, userId);
+            return Ok(result);
         }
 
         [Authorize]

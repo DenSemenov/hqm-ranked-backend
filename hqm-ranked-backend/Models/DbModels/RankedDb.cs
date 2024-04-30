@@ -17,6 +17,9 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<Server> Servers { get; set; }
         public DbSet<Elo> Elos { get; set; }
         public DbSet<Bans> Bans { get; set; }
+        public DbSet<Setting> Settings { get; set; }
+        public DbSet<NicknameChanges> NicknameChanges { get; set; }
+
 
         public RankedDb(DbContextOptions<RankedDb> options)
        : base(options)

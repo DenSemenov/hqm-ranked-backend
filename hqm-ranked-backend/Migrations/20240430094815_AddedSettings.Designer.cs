@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
@@ -11,9 +12,11 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240430094815_AddedSettings")]
+    partial class AddedSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -356,7 +359,7 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsApproved")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastModifiedOn")

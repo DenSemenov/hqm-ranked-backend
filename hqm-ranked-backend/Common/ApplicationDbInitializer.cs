@@ -52,7 +52,7 @@ namespace hqm_ranked_backend.Common
                     Password = Encryption.GetMD5Hash("Admin"),
                     Email = String.Empty,
                     Role = _dbContext.Roles.FirstOrDefault(x => x.Name == "admin"),
-                    IsActive = true,
+                    IsApproved = true
                 });
 
                 await _dbContext.SaveChangesAsync();
@@ -155,6 +155,16 @@ namespace hqm_ranked_backend.Common
                     MaxY = 0,
                 });
 
+                await _dbContext.SaveChangesAsync();
+            }
+
+            if (!await _dbContext.Settings.AnyAsync())
+            {
+                _dbContext.Settings.Add(new Setting
+                {
+                    NewPlayerApproveRequired = false,
+                    NicknameChangeDaysLimit = 30
+                });
                 await _dbContext.SaveChangesAsync();
             }
         }
