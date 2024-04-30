@@ -37,6 +37,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IServerService, ServerService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
+            services.AddScoped<IReplayService, ReplayService>();
 
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 

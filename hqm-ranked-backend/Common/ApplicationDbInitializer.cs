@@ -167,6 +167,29 @@ namespace hqm_ranked_backend.Common
                 });
                 await _dbContext.SaveChangesAsync();
             }
+
+            var players = await _dbContext.Players.ToListAsync();
+
+            var seasons = await _dbContext.Seasons.ToListAsync();
+
+            foreach(var player in players)
+            {
+                foreach(var season in seasons)
+                {
+                    if (!_dbContext.Elos.Any(x=>x.Player == player && x.Season == season))
+                    {
+                        _dbContext.Elos.Add(new Elo
+                        {
+                            Player = player,
+                            Season = season,
+                            Value = 1000
+                        });
+                    }
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+
         }
     }
 }

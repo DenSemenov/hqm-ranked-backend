@@ -62,9 +62,9 @@ namespace hqm_ranked_backend.Services
 
             foreach(var game in games)
             {
-                var elo = 0;
+                var elo = 1000;
 
-                var playerElo = elos.SingleOrDefault(x => x.Player.Id == game.Key);
+                var playerElo = elos.SingleOrDefault(x => x.Player.Id == game.Key && x.Season == season);
                 if (playerElo != null)
                 {
                     elo = playerElo.Value;
@@ -233,8 +233,8 @@ namespace hqm_ranked_backend.Services
             var currentSeason = await GetCurrentSeason();
 
             var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason).Sum(x => x.Score);
-
-            return sum;
+            var eloOnSeasonStart = await _dbContext.Elos.Include(x=>x.Player).FirstOrDefaultAsync(x=>x.Player.Id == id && x.Season == currentSeason);
+            return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : 1000);
         }
     }
 }
