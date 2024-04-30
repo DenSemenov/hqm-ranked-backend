@@ -117,6 +117,7 @@ namespace hqm_ranked_backend.Services
             {
                 settings.NewPlayerApproveRequired = request.NewPlayerApproveRequired;
                 settings.NicknameChangeDaysLimit = request.NicknameChangeDaysLimit;
+                settings.Rules = request.Rules;
 
                 await _dbContext.SaveChangesAsync();
             }

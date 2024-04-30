@@ -56,5 +56,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("GetRules")]
+        public async Task<IActionResult> GetRules()
+        {
+            var result = await _seasonService.GetRules();
+
+            return Ok(result);
+        }
     }
 }

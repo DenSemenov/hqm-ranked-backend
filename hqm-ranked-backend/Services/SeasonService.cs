@@ -236,5 +236,18 @@ namespace hqm_ranked_backend.Services
             var eloOnSeasonStart = await _dbContext.Elos.Include(x=>x.Player).FirstOrDefaultAsync(x=>x.Player.Id == id && x.Season == currentSeason);
             return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : 1000);
         }
+
+        public async Task<string> GetRules()
+        {
+            var rules = String.Empty;
+
+            var setting = await _dbContext.Settings.FirstOrDefaultAsync();
+            if (setting != null)
+            {
+                rules = setting.Rules;
+            }
+
+            return rules;
+        }
     }
 }
