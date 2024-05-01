@@ -71,6 +71,7 @@ namespace hqm_ranked_backend.Services
 
                 var entity = await _dbContext.Players.AddAsync(new Player
                 {
+                    Id = _dbContext.Players.Max(x=>x.Id)+1,
                     Name = request.Login.Trim(),
                     Email = request.Email.Trim(),
                     Password = password,
@@ -103,7 +104,7 @@ namespace hqm_ranked_backend.Services
                 {
                     Id = 0,
                     Success = false,
-                    Token = ex.Message + ex.StackTrace,
+                    Token = ex.Message,
                 };
             }
         }

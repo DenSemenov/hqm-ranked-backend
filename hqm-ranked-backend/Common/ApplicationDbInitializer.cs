@@ -163,30 +163,32 @@ namespace hqm_ranked_backend.Common
                 _dbContext.Settings.Add(new Setting
                 {
                     NewPlayerApproveRequired = false,
-                    NicknameChangeDaysLimit = 30
+                    NicknameChangeDaysLimit = 30,
+                    ReplayStoreDays = 10,
+                    Rules = String.Empty
                 });
                 await _dbContext.SaveChangesAsync();
             }
 
-            var players = await _dbContext.Players.ToListAsync();
+            //var players = await _dbContext.Players.ToListAsync();
 
-            var seasons = await _dbContext.Seasons.ToListAsync();
+            //var seasons = await _dbContext.Seasons.OrderByDescending(x=>x.DateStart).Take(1).ToListAsync();
 
-            foreach(var player in players)
-            {
-                foreach(var season in seasons)
-                {
-                    if (!_dbContext.Elos.Any(x=>x.Player == player && x.Season == season))
-                    {
-                        _dbContext.Elos.Add(new Elo
-                        {
-                            Player = player,
-                            Season = season,
-                            Value = 1000
-                        });
-                    }
-                }
-            }
+            //foreach(var player in players)
+            //{
+            //    foreach(var season in seasons)
+            //    {
+            //        if (!_dbContext.Elos.Any(x=>x.Player == player && x.Season == season))
+            //        {
+            //            _dbContext.Elos.Add(new Elo
+            //            {
+            //                Player = player,
+            //                Season = season,
+            //                Value = 1000
+            //            });
+            //        }
+            //    }
+            //}
 
             await _dbContext.SaveChangesAsync();
 
