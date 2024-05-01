@@ -208,11 +208,14 @@ namespace hqm_ranked_backend.Services
             var game = await _dbContext.Games.Include(x=>x.State).Include(x=>x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x=>x.Id == request.Id); 
             if (game != null)
             {
+                var replayItem = await _dbContext.ReplayData.FirstOrDefaultAsync(x => x.Game == game);
+
                 result.Id = game.Id;
                 result.State = game.State.Name;
                 result.Date = game.CreatedOn;
                 result.RedScore = game.RedScore;
                 result.BlueScore = game.BlueScore;
+                result.ReplayId = replayItem != null ? replayItem.Id : null;
                 result.Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                 {
                     Id = x.PlayerId,
@@ -226,7 +229,6 @@ namespace hqm_ranked_backend.Services
 
             return result;
         }
-
 
         public async Task<int> GetPlayerElo(int id)
         {

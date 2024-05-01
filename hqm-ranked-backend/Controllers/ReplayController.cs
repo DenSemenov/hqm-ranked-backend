@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Services.Interfaces;
+﻿using hqm_ranked_backend.Models.InputModels;
+using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace hqm_ranked_backend.Controllers
@@ -14,7 +15,7 @@ namespace hqm_ranked_backend.Controllers
         }
 
         [HttpPost("ProcessHrp")]
-        public void ProcessHrp([FromForm] string time, [FromForm] string server, [FromForm] IFormFile replay, string token)
+        public async Task ProcessHrpAsync([FromForm] Guid gameId, [FromForm] IFormFile replay, string token)
         {
             if (replay.Length > 0)
             {
@@ -22,9 +23,17 @@ namespace hqm_ranked_backend.Controllers
                 {
                     replay.CopyTo(ms);
                     var fileBytes = ms.ToArray();
-                    _replayService.PushReplay(fileBytes, token);
+                    await _replayService.PushReplay(gameId,fileBytes, token);
                 }
             }
+        }
+
+        [HttpPost("GetReplayData")]
+        public async Task<IActionResult> GetReplayData(ReplayRequest request)
+        {
+            var result = await _replayService.GetReplayData(request);
+
+            return Ok(result);
         }
     }
 }

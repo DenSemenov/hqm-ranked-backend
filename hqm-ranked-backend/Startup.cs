@@ -105,8 +105,11 @@ namespace hqm_ranked_backend
             app.UseHangfireServer();
 
             var scope = app.ApplicationServices.CreateScope();
+
             var eventService = scope.ServiceProvider.GetRequiredService<IEventService>() as EventService;
             RecurringJob.AddOrUpdate("CreateNewDailyEvent",() => eventService.CreateNewEvent(), Cron.Daily);
+            var replayService = scope.ServiceProvider.GetRequiredService<IReplayService>() as ReplayService;
+            RecurringJob.AddOrUpdate("RemoveOldReplays", () => replayService.RemoveOldReplays(), Cron.Daily);
         }
     }
 }

@@ -8,6 +8,7 @@
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public List<GameDataPlayerViewModel> Players { get; set; }
+        public Guid? ReplayId { get; set; }
     }
 
     public class GameDataPlayerViewModel
