@@ -103,7 +103,7 @@ namespace hqm_ranked_backend.Services
                 {
                     Id = 0,
                     Success = false,
-                    Token = ex.Message,
+                    Token = ex.Message + ex.StackTrace,
                 };
             }
         }
