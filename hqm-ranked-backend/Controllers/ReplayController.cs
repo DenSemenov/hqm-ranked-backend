@@ -15,7 +15,7 @@ namespace hqm_ranked_backend.Controllers
         }
 
         [HttpPost("ProcessHrp")]
-        public async Task ProcessHrpAsync([FromForm] Guid gameId, [FromForm] IFormFile replay, string token)
+        public async Task ProcessHrpAsync([FromForm] Guid gameId, [FromForm] string token, [FromForm] IFormFile replay)
         {
             if (replay.Length > 0)
             {

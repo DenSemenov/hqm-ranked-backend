@@ -79,11 +79,23 @@ namespace hqm_ranked_backend.Services
 
             var token = Encryption.GetToken(entity.Entity.Id, userRole.Name == "admin");
 
-            var path = _hostingEnvironment.WebRootPath + "/avatars/" + entity.Entity.Id + ".png";
-            if (!File.Exists(path))
+            try
             {
-                var file = _imageGeneratorService.GenerateImage();
-                file.SaveAsPng(path);
+                var path = _hostingEnvironment.WebRootPath + "/avatars/" + entity.Entity.Id + ".png";
+                if (!File.Exists(path))
+                {
+                    var file = _imageGeneratorService.GenerateImage();
+                    file.SaveAsPng(path);
+                }
+            }
+            catch (Exception ex)
+            {
+                return new LoginResult
+                {
+                    Id = 0,
+                    Success = false,
+                    Token = ex.Message,
+                };
             }
 
             return new LoginResult
