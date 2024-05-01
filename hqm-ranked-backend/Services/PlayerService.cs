@@ -50,43 +50,52 @@ namespace hqm_ranked_backend.Services
 
         public async Task<LoginResult?> Register(RegistrationRequest request)
         {
-            var user = await _dbContext.Players.FirstOrDefaultAsync(x => x.Name == request.Login.Trim());
-
-            if (user != null)
-            {
-                return new LoginResult
-                {
-                    Id = 0,
-                    Success = false,
-                    Token = String.Empty,
-                };
-            }
-
-            var password = Encryption.GetMD5Hash(request.Password.Trim());
-            var userRole = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Name == "user");
-
-            var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
-
-            var entity = await _dbContext.Players.AddAsync(new Player
-            {
-                Name = request.Login.Trim(),
-                Email = request.Email.Trim(),
-                Password = password,
-                Role = userRole,
-                IsApproved = approveRequired? false: true,
-            });
-            await _dbContext.SaveChangesAsync();
-
-            var token = Encryption.GetToken(entity.Entity.Id, userRole.Name == "admin");
-
             try
             {
+                var user = await _dbContext.Players.FirstOrDefaultAsync(x => x.Name == request.Login.Trim());
+
+                if (user != null)
+                {
+                    return new LoginResult
+                    {
+                        Id = 0,
+                        Success = false,
+                        Token = String.Empty,
+                    };
+                }
+
+                var password = Encryption.GetMD5Hash(request.Password.Trim());
+                var userRole = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Name == "user");
+
+                var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
+
+                var entity = await _dbContext.Players.AddAsync(new Player
+                {
+                    Name = request.Login.Trim(),
+                    Email = request.Email.Trim(),
+                    Password = password,
+                    Role = userRole,
+                    IsApproved = approveRequired ? false : true,
+                });
+                await _dbContext.SaveChangesAsync();
+
+                var token = Encryption.GetToken(entity.Entity.Id, userRole.Name == "admin");
+
                 var path = _hostingEnvironment.WebRootPath + "/avatars/" + entity.Entity.Id + ".png";
                 if (!File.Exists(path))
                 {
                     var file = _imageGeneratorService.GenerateImage();
                     file.SaveAsPng(path);
                 }
+
+
+                return new LoginResult
+                {
+                    Id = entity.Entity.Id,
+                    Success = true,
+                    Token = token,
+                    IsExists = false
+                };
             }
             catch (Exception ex)
             {
@@ -97,14 +106,6 @@ namespace hqm_ranked_backend.Services
                     Token = ex.Message,
                 };
             }
-
-            return new LoginResult
-            {
-                Id = entity.Entity.Id,
-                Success = true,
-                Token = token,
-                IsExists = false
-            };
         }
 
         public async Task<CurrentUserVIewModel> GetCurrentUser(int userId)
