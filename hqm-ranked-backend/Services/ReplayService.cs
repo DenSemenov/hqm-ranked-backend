@@ -1,10 +1,7 @@
 ﻿using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
-using System.Net.Http.Headers;
 
 namespace hqm_ranked_backend.Services
 {
@@ -44,29 +41,17 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<HttpResponseMessage> GetReplayData(ReplayRequest request)
+        public async Task<string> GetReplayData(ReplayRequest request)
         {
-            byte[] data = [];
+            var data = String.Empty;
 
             var replayData = await _dbContext.ReplayData.FirstOrDefaultAsync(x => x.Id == request.Id);
             if (replayData != null)
             {
-                data = replayData.Data;
+                data = Convert.ToBase64String(replayData.Data);
             }
-            
-            var result = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new ByteArrayContent(data)
-            };
-            result.Content.Headers.ContentDisposition =
-                new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
-                {
-                    FileName = request.Id.ToString() + ".hrp"
-                };
-            result.Content.Headers.ContentType =
-                new MediaTypeHeaderValue("application/octet-stream");
 
-            return result;
+            return data;
         }
     }
 }

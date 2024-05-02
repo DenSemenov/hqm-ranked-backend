@@ -6,6 +6,6 @@ namespace hqm_ranked_backend.Services.Interfaces
     {
         Task PushReplay(Guid gameId, byte[] data, string token);
         Task RemoveOldReplays();
-        Task<HttpResponseMessage> GetReplayData(ReplayRequest request);
+        Task<string> GetReplayData(ReplayRequest request);
     }
 }
