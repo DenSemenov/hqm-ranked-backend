@@ -65,5 +65,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok();
         }
+
+        [HttpPost("Heartbeat")]
+        public async Task<IActionResult> Heartbeat(HeartbeatRequest request)
+        {
+            await _serverService.Heartbeat(request);
+
+            return Ok();
+        }
     }
 }

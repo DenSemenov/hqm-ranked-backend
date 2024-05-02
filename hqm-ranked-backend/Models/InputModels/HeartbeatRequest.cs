@@ -1,14 +1,11 @@
-﻿using hqm_ranked_backend.Common;
-
-namespace hqm_ranked_backend.Models.DbModels
+﻿namespace hqm_ranked_backend.Models.InputModels
 {
-    public class Server : AuditableEntity<Guid>
+    public class HeartbeatRequest
     {
-        public string Name { get; set; }
-        public int PlayerCount { get; set; }
         public string Token { get; set; }
-        public int TeamMax { get; set; }
+        public string Name { get; set; }
         public int LoggedIn { get; set; }
+        public int TeamMax { get; set; }
         public int Period { get; set; }
         public int Time { get; set; }
         public int RedScore { get; set; }

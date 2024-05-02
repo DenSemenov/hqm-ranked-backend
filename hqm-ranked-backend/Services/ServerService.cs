@@ -244,5 +244,22 @@ namespace hqm_ranked_backend.Services
                 }
             }
         }
+        public async Task Heartbeat(HeartbeatRequest request)
+        {
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                server.Name = request.Name;
+                server.State = request.State;
+                server.Time = request.Time;
+                server.LoggedIn = request.LoggedIn;
+                server.Period = request.Period;
+                server.RedScore = request.RedScore;
+                server.BlueScore = request.BlueScore;
+                server.TeamMax = request.TeamMax;
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }
