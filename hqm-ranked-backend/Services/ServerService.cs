@@ -6,6 +6,7 @@ using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services
@@ -15,11 +16,13 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private ISeasonService _seasonService;
         private IEventService _eventService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService)
+        private IHubContext _hubContext;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext hubContext)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _eventService = eventService;
+            _hubContext = hubContext;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -263,6 +266,8 @@ namespace hqm_ranked_backend.Services
                 server.TeamMax = request.TeamMax;
 
                 await _dbContext.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("onHeartbeat", request);
             }
         }
     }

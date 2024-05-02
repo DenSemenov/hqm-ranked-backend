@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
 using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
@@ -28,7 +29,6 @@ namespace hqm_ranked_backend
         {
             var db = Configuration.GetSection("Database:Connection").Value;
             services.AddCors();
-            services.AddDbContextPool<RankedDb>(options =>options.UseNpgsql(db));
             services.AddScoped<ApplicationDbInitializer>();
 
             services.AddScoped<IPlayerService, PlayerService>();
@@ -38,6 +38,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
             services.AddScoped<IReplayService, ReplayService>();
+            services.AddSignalR();
 
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 
@@ -99,6 +100,7 @@ namespace hqm_ranked_backend
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ActionHub>("/action");
             });
 
             app.UseHangfireDashboard("/hangfire");
