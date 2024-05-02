@@ -24,13 +24,17 @@ namespace hqm_ranked_backend.Services
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
         {
-            var date = DateTime.UtcNow.AddMinutes(-15);
             var servers = await _dbContext.Servers
-                .Where(x => x.CreatedOn > date || (x.LastModifiedOn != null && x.LastModifiedOn > date))
                 .Select(x => new ActiveServerViewModel
                 {
                     Name = x.Name,
-                    Count = x.PlayerCount
+                    LoggedIn = x.LoggedIn,
+                    TeamMax = x.TeamMax,
+                    State = x.State,
+                    Time = x.Time,
+                    Period = x.Period,
+                    RedScore = x.RedScore,
+                    BlueScore = x.BlueScore,
                 })
                 .ToListAsync();
 
