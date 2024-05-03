@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
 using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
@@ -101,6 +102,7 @@ namespace hqm_ranked_backend
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ActionHub>("/actionhub");
             });
 
             app.UseHangfireDashboard("/hangfire");
