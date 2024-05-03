@@ -31,6 +31,7 @@ namespace hqm_ranked_backend.Services
             var servers = await _dbContext.Servers
                 .Select(x => new ActiveServerViewModel
                 {
+                    Id = x.Id,
                     Name = x.Name,
                     LoggedIn = x.LoggedIn,
                     TeamMax = x.TeamMax,

@@ -2,6 +2,7 @@
 {
     public class ActiveServerViewModel
     {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public int LoggedIn { get; set; }
         public int TeamMax { get; set; }
