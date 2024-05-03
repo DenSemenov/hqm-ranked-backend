@@ -227,12 +227,14 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task SaveGame(SaveGameRequest request)
+        public async Task<SaveGameViewModel> SaveGame(SaveGameRequest request)
         {
+            var result = new SaveGameViewModel();
+
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
-                var game = await _dbContext.Games.Include(x => x.GamePlayers).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                var game = await _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x => x.Id == request.GameId);
                 if (game != null)
                 {
                     game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
@@ -247,11 +249,40 @@ namespace hqm_ranked_backend.Services
                         winPlayer.Score = -15;
                     }
 
+                    var mvp = game.GamePlayers.Where(x => x.Team == winTeam).OrderByDescending(x=>x.Goals + x.Assists).FirstOrDefault();
+                    game.Mvp = mvp.Player;
+                    result.Mvp = mvp.Player.Name;
+
                     await _dbContext.SaveChangesAsync();
+
+                    var currentSeason = await _seasonService.GetCurrentSeason();
+                    var stats = await _seasonService.GetSeasonStats(new CurrentSeasonStatsRequest
+                    {
+                        SeasonId = currentSeason.Id,
+                    });
+
+                    foreach (var gp in game.GamePlayers)
+                    {
+                        var total = 0;
+                        var playerStat = stats.FirstOrDefault(x=>x.PlayerId == gp.PlayerId);
+                        if (playerStat != null)
+                        {
+                            total = playerStat.Rating;
+                        }
+
+                        result.Players.Add(new SaveGamePlayerViewModel
+                        {
+                            Id = gp.PlayerId,
+                            Score = gp.Score,
+                            Total = total
+                        });
+                    }
 
                     BackgroundJob.Enqueue(()=>_eventService.CalculateEvents());
                 }
             }
+
+            return result;
         }
         public async Task Heartbeat(HeartbeatRequest request)
         {

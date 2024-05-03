@@ -61,9 +61,9 @@ namespace hqm_ranked_backend.Controllers
         {
             Thread.Sleep(3000);
 
-            await _serverService.SaveGame(request);
+            var result = await _serverService.SaveGame(request);
 
-            return Ok();
+            return Ok(result);
         }
 
         [HttpPost("Heartbeat")]
