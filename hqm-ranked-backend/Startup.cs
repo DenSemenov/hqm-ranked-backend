@@ -42,7 +42,13 @@ namespace hqm_ranked_backend
 
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 
-            services.AddSignalR();
+            services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+                options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
+                options.MaximumReceiveMessageSize = null;
+            });
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>

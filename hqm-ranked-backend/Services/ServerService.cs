@@ -268,7 +268,18 @@ namespace hqm_ranked_backend.Services
 
                 await _dbContext.SaveChangesAsync();
 
-                await _hubContext.Clients.All.SendAsync("onHeartbeat", request);
+                await _hubContext.Clients.All.SendAsync("onHeartbeat", new HeartbeatSignalrViewModel
+                {
+                    Id = server.Id,
+                    Name = server.Name,
+                    RedScore = server.RedScore,
+                    BlueScore = server.BlueScore,
+                    LoggedIn = server.LoggedIn,
+                    Period = server.Period,
+                    State = server.State,
+                    TeamMax = server.TeamMax,
+                    Time = server.Time,
+                });
             }
         }
     }
