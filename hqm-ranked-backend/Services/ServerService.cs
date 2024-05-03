@@ -1,5 +1,6 @@
 ﻿using Hangfire;
 using hqm_ranked_backend.Helpers;
+using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
@@ -16,11 +17,13 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private ISeasonService _seasonService;
         private IEventService _eventService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService)
+        private readonly IHubContext<ActionHub> _hubContext;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _eventService = eventService;
+            _hubContext = hubContext;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -265,7 +268,7 @@ namespace hqm_ranked_backend.Services
 
                 await _dbContext.SaveChangesAsync();
 
-                //await _hubContext.Clients.All.SendAsync("onHeartbeat", request);
+                await _hubContext.Clients.All.SendAsync("onHeartbeat", request);
             }
         }
     }

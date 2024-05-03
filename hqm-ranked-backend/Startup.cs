@@ -41,6 +41,8 @@ namespace hqm_ranked_backend
 
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 
+            services.AddSignalR();
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>
                     {
