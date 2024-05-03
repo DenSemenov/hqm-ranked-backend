@@ -1,7 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
 using hqm_ranked_backend.Common;
-using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
@@ -29,6 +28,7 @@ namespace hqm_ranked_backend
         {
             var db = Configuration.GetSection("Database:Connection").Value;
             services.AddCors();
+            services.AddDbContextPool<RankedDb>(options => options.UseNpgsql(db));
             services.AddScoped<ApplicationDbInitializer>();
 
             services.AddScoped<IPlayerService, PlayerService>();
@@ -38,25 +38,24 @@ namespace hqm_ranked_backend
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
             services.AddScoped<IReplayService, ReplayService>();
-            services.AddSignalR();
 
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>
-                     {
-                         options.RequireHttpsMetadata = false;
-                         options.TokenValidationParameters = new TokenValidationParameters
-                         {
-                             ValidateIssuer = true,
-                             ValidIssuer = AuthOptions.ISSUER,
-                             ValidateAudience = true,
-                             ValidAudience = AuthOptions.AUDIENCE,
-                             ValidateLifetime = true,
-                             IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
-                             ValidateIssuerSigningKey = true,
-                         };
-                     });
+                    {
+                        options.RequireHttpsMetadata = false;
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidIssuer = AuthOptions.ISSUER,
+                            ValidateAudience = true,
+                            ValidAudience = AuthOptions.AUDIENCE,
+                            ValidateLifetime = true,
+                            IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
+                            ValidateIssuerSigningKey = true,
+                        };
+                    });
 
             services.AddControllers();
 
@@ -70,7 +69,7 @@ namespace hqm_ranked_backend
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
 
-            DbStartup.InitializeDatabasesAsync(app.ApplicationServices).Wait(); 
+            DbStartup.InitializeDatabasesAsync(app.ApplicationServices).Wait();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -100,7 +99,6 @@ namespace hqm_ranked_backend
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<ActionHub>("/action");
             });
 
             app.UseHangfireDashboard("/hangfire");
@@ -109,7 +107,7 @@ namespace hqm_ranked_backend
             var scope = app.ApplicationServices.CreateScope();
 
             var eventService = scope.ServiceProvider.GetRequiredService<IEventService>() as EventService;
-            RecurringJob.AddOrUpdate("CreateNewDailyEvent",() => eventService.CreateNewEvent(), Cron.Daily);
+            RecurringJob.AddOrUpdate("CreateNewDailyEvent", () => eventService.CreateNewEvent(), Cron.Daily);
             var replayService = scope.ServiceProvider.GetRequiredService<IReplayService>() as ReplayService;
             RecurringJob.AddOrUpdate("RemoveOldReplays", () => replayService.RemoveOldReplays(), Cron.Daily);
         }

@@ -16,13 +16,11 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private ISeasonService _seasonService;
         private IEventService _eventService;
-        private IHubContext _hubContext;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext hubContext)
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _eventService = eventService;
-            _hubContext = hubContext;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -267,7 +265,7 @@ namespace hqm_ranked_backend.Services
 
                 await _dbContext.SaveChangesAsync();
 
-                await _hubContext.Clients.All.SendAsync("onHeartbeat", request);
+                //await _hubContext.Clients.All.SendAsync("onHeartbeat", request);
             }
         }
     }
