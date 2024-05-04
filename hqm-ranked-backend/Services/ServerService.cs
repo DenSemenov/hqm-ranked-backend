@@ -263,18 +263,22 @@ namespace hqm_ranked_backend.Services
 
                     foreach (var gp in game.GamePlayers)
                     {
+                        var pos = 1;
                         var total = 0;
                         var playerStat = stats.FirstOrDefault(x=>x.PlayerId == gp.PlayerId);
                         if (playerStat != null)
                         {
                             total = playerStat.Rating;
+
+                            pos = stats.IndexOf(playerStat) + 1;
                         }
 
                         result.Players.Add(new SaveGamePlayerViewModel
                         {
                             Id = gp.PlayerId,
                             Score = gp.Score,
-                            Total = total
+                            Total = total,
+                            Pos = pos
                         });
                     }
 
