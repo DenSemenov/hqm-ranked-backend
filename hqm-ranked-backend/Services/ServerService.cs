@@ -2,6 +2,7 @@
 using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
@@ -240,13 +241,37 @@ namespace hqm_ranked_backend.Services
                     game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
 
                     var winTeam = game.RedScore > game.BlueScore ? 0 : 1;
-                    
-                    foreach(var winPlayer in game.GamePlayers.Where(x=>x.Team == winTeam)){
-                        winPlayer.Score = 15;
+
+                    var players = new List<EloCalcPlayerModel>();
+                    foreach(var player in game.GamePlayers)
+                    {
+                        players.Add(new EloCalcPlayerModel
+                        {
+                            Id = player.PlayerId,
+                            Goals = player.Goals,
+                            Assists = player.Assists,
+                            Points = player.Goals + player.Assists,
+                            Performance = 0,
+                            RawScore = 0,
+                            Team = player.Team,
+                            Elo = await _seasonService.GetPlayerElo(player.PlayerId)
+                        });
                     }
 
-                    foreach (var winPlayer in game.GamePlayers.Where(x => x.Team != winTeam)){
-                        winPlayer.Score = -15;
+                    var calculatedElo = RatingCalcHelper.CalcRating(new Models.DTO.EloCalcModel
+                    {
+                        RedScore = game.RedScore,
+                        BlueScore = game.BlueScore,
+                        Players = players
+                    });
+
+                    foreach (var player in game.GamePlayers)
+                    {
+                        var calcElo = calculatedElo.Players.FirstOrDefault(x => x.Id == player.PlayerId);
+                        if (calcElo != null)
+                        {
+                            player.Score = calcElo.Elo;
+                        }
                     }
 
                     var mvp = game.GamePlayers.Where(x => x.Team == winTeam).OrderByDescending(x=>x.Goals + x.Assists).FirstOrDefault();
