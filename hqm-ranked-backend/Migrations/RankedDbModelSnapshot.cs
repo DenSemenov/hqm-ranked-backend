@@ -533,6 +533,9 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<bool>("NewPlayerApproveRequired")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("NextGameCheckGames")
+                        .HasColumnType("integer");
+
                     b.Property<int>("NicknameChangeDaysLimit")
                         .HasColumnType("integer");
 

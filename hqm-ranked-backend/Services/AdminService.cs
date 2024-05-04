@@ -119,6 +119,7 @@ namespace hqm_ranked_backend.Services
                 settings.NicknameChangeDaysLimit = request.NicknameChangeDaysLimit;
                 settings.Rules = request.Rules;
                 settings.ReplayStoreDays = request.ReplayStoreDays;
+                settings.NextGameCheckGames = request.NextGameCheckGames;
 
                 await _dbContext.SaveChangesAsync();
             }

@@ -8,6 +8,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public bool NewPlayerApproveRequired { get; set; } = false;
         public string Rules { get; set; } = String.Empty;
         public int ReplayStoreDays { get; set; } = 10;
+        public int NextGameCheckGames { get; set; } = 5;
 
     }
 }

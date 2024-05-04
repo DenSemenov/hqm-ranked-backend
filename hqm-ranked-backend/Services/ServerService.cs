@@ -6,6 +6,7 @@ using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using MassTransit;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -117,17 +118,24 @@ namespace hqm_ranked_backend.Services
             if (server != null)
             {
                 server.TeamMax = request.MaxCount;
-                var rnd = new Random();
-                var randomPlayers = request.PlayerIds.OrderBy(x => rnd.Next()).Take(request.MaxCount * 2);
 
-                foreach(var player in randomPlayers)
+                var nextGameCheckGames = _dbContext.Settings.FirstOrDefault().NextGameCheckGames;
+
+                var lastGames = await _dbContext.Games.Include(x => x.GamePlayers).OrderByDescending(x => x.CreatedOn).Take(nextGameCheckGames).SelectMany(x=>x.GamePlayers).ToListAsync();
+
+                var count = request.MaxCount * 2;
+
+                foreach (var player in request.PlayerIds)
                 {
                     result.Players.Add(new StartGamePlayerViewModel
                     {
                         Id = player,
                         Score = await _seasonService.GetPlayerElo(player),
+                        Count = lastGames.Where(x=>x.PlayerId == player).Count(),
                     });
                 }
+
+                result.Players = result.Players.OrderBy(x=>x.Count).Take(count).ToList();
 
                 result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
                 result.CaptainRed = result.Players[1].Id;
