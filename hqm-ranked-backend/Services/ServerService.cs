@@ -19,13 +19,15 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private ISeasonService _seasonService;
         private IEventService _eventService;
+        private INotificationService _notificationService;
         private readonly IHubContext<ActionHub> _hubContext;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext)
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _eventService = eventService;
             _hubContext = hubContext;
+            _notificationService = notificationService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -165,6 +167,8 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
 
                 result.GameId= newId;
+
+                await _notificationService.SendDiscordStartGameNotification(server.Name);
             }
 
             return result;
@@ -316,6 +320,8 @@ namespace hqm_ranked_backend.Services
                     }
 
                     BackgroundJob.Enqueue(()=>_eventService.CalculateEvents());
+
+                    await _notificationService.SendDiscordEndGameNotification(server.Name);
                 }
             }
 
@@ -326,6 +332,8 @@ namespace hqm_ranked_backend.Services
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
+                var isLoggedChanged = server.LoggedIn != request.LoggedIn;
+
                 server.Name = request.Name;
                 server.State = request.State;
                 server.Time = request.Time;
@@ -349,6 +357,11 @@ namespace hqm_ranked_backend.Services
                     TeamMax = server.TeamMax,
                     Time = server.Time,
                 });
+
+                if (isLoggedChanged && server.State == 0)
+                {
+                    await _notificationService.SendDiscordNotification(server.Name, server.LoggedIn, server.TeamMax);
+                }
             }
         }
     }

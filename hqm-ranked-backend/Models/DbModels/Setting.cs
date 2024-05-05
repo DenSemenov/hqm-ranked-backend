@@ -9,6 +9,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public string Rules { get; set; } = String.Empty;
         public int ReplayStoreDays { get; set; } = 10;
         public int NextGameCheckGames { get; set; } = 5;
-
+        public string DiscordNotificationWebhook { get; set; } = String.Empty;
+        public int WebhookCount { get; set; } = 0;
     }
 }

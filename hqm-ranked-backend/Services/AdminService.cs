@@ -120,6 +120,8 @@ namespace hqm_ranked_backend.Services
                 settings.Rules = request.Rules;
                 settings.ReplayStoreDays = request.ReplayStoreDays;
                 settings.NextGameCheckGames = request.NextGameCheckGames;
+                settings.DiscordNotificationWebhook = request.DiscordNotificationWebhook;
+                settings.WebhookCount = request.WebhookCount;
 
                 await _dbContext.SaveChangesAsync();
             }
