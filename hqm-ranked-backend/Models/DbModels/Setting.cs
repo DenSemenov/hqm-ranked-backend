@@ -11,5 +11,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public int NextGameCheckGames { get; set; } = 5;
         public string DiscordNotificationWebhook { get; set; } = String.Empty;
         public int WebhookCount { get; set; } = 0;
+        public int ShadowBanReportsCount { get; set; } = 5;
     }
 }

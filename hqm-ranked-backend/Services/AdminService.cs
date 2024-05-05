@@ -122,6 +122,7 @@ namespace hqm_ranked_backend.Services
                 settings.NextGameCheckGames = request.NextGameCheckGames;
                 settings.DiscordNotificationWebhook = request.DiscordNotificationWebhook;
                 settings.WebhookCount = request.WebhookCount;
+                settings.ShadowBanReportsCount = request.ShadowBanReportsCount;
 
                 await _dbContext.SaveChangesAsync();
             }

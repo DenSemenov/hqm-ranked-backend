@@ -122,6 +122,7 @@ namespace hqm_ranked_backend.Services
                 server.TeamMax = request.MaxCount;
 
                 var nextGameCheckGames = _dbContext.Settings.FirstOrDefault().NextGameCheckGames;
+                var shadowBanReportsCount = _dbContext.Settings.FirstOrDefault().ShadowBanReportsCount;
 
                 var lastGames = await _dbContext.Games.Include(x => x.GamePlayers).OrderByDescending(x => x.CreatedOn).Take(nextGameCheckGames).SelectMany(x=>x.GamePlayers).ToListAsync();
 
@@ -132,7 +133,7 @@ namespace hqm_ranked_backend.Services
                 foreach (var player in request.PlayerIds)
                 {
                     var reportsCount = await _dbContext.Reports.Include(x => x.To).Where(x => x.CreatedOn.AddMonths(1) > date && x.To.Id == player).CountAsync();
-                    if (reportsCount < 5)
+                    if (reportsCount < shadowBanReportsCount)
                     {
                         reportsCount = 0;
                     }
