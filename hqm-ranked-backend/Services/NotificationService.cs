@@ -30,7 +30,11 @@ namespace hqm_ranked_backend.Services
 
                         message.Content = String.Format("{0}: Logged in {1}/{2}", serverName, count, teamMax * 2);
 
-                        await hook.SendAsync(message);
+                        try
+                        {
+                            await hook.SendAsync(message);
+                        }
+                        catch { }
                     }
                 }
             }
@@ -50,8 +54,11 @@ namespace hqm_ranked_backend.Services
                     var message = new DiscordMessage();
 
                     message.Content = String.Format("{0}: Game ended", serverName);
-
-                    await hook.SendAsync(message);
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
                 }
             }
         }
@@ -71,7 +78,11 @@ namespace hqm_ranked_backend.Services
 
                     message.Content = String.Format("{0}: Game started", serverName);
 
-                    await hook.SendAsync(message);
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
                 }
             }
         }
