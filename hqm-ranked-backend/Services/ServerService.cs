@@ -150,16 +150,16 @@ namespace hqm_ranked_backend.Services
                     Season = await _seasonService.GetCurrentSeason(),
                     State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Pick"),
                     MvpId = result.CaptainRed,
-                    GamePlayers = randomPlayers.Select(x => new GamePlayer
+                    GamePlayers = result.Players.Select(x => new GamePlayer
                     {
-                        PlayerId = x,
-                        Team = result.CaptainRed == x? 0: (result.CaptainBlue == x? 1: -1),
+                        PlayerId = x.Id,
+                        Team = result.CaptainRed == x.Id ? 0: (result.CaptainBlue == x.Id ? 1: -1),
                         Score = 0,
                         Ping = 0,
                         Ip = String.Empty,
                         Goals = 0,
                         Assists = 0,
-                        IsCaptain = result.CaptainRed == x || result.CaptainBlue == x
+                        IsCaptain = result.CaptainRed == x.Id || result.CaptainBlue == x.Id
                     }).ToList()
                 });
                 await _dbContext.SaveChangesAsync();
