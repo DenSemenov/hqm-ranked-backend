@@ -12,5 +12,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task AddGoal(AddGoalRequest request);
         Task<SaveGameViewModel> SaveGame(SaveGameRequest request);
         Task Heartbeat(HeartbeatRequest request);
+        Task<ReportViewModel> Report(ReportRequest request);
     }
 }

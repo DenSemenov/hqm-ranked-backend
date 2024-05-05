@@ -127,17 +127,26 @@ namespace hqm_ranked_backend.Services
 
                 var count = request.MaxCount * 2;
 
+                var date = DateTime.UtcNow;
+
                 foreach (var player in request.PlayerIds)
                 {
+                    var reportsCount = await _dbContext.Reports.Include(x => x.To).Where(x => x.CreatedOn.AddMonths(1) > date && x.To.Id == player).CountAsync();
+                    if (reportsCount < 5)
+                    {
+                        reportsCount = 0;
+                    }
+
                     result.Players.Add(new StartGamePlayerViewModel
                     {
                         Id = player,
                         Score = await _seasonService.GetPlayerElo(player),
                         Count = lastGames.Where(x=>x.PlayerId == player).Count(),
+                        Reports = reportsCount
                     });
                 }
 
-                result.Players = result.Players.OrderBy(x=>x.Count).Take(count).ToList();
+                result.Players = result.Players.OrderByDescending(x=>x.Reports).ThenBy(x=>x.Count).Take(count).ToList();
 
                 result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
                 result.CaptainRed = result.Players[1].Id;
@@ -363,6 +372,38 @@ namespace hqm_ranked_backend.Services
                     await _notificationService.SendDiscordNotification(server.Name, server.LoggedIn, server.TeamMax);
                 }
             }
+        }
+
+        public async Task<ReportViewModel> Report(ReportRequest request)
+        {
+            var result = new ReportViewModel();
+
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == request.FromId && x.To.Id == request.ToId).ToListAsync();
+                if (reportedBefore.Any())
+                {
+                    result.Message = "[Server] You can report this player once per month";
+                }
+                else
+                {
+                    var fromPlayer = await _dbContext.Players.FirstOrDefaultAsync(x=>x.Id == request.FromId);
+                    var toPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.ToId);
+
+                    _dbContext.Reports.Add(new Reports
+                    {
+                        From = fromPlayer,
+                        To = toPlayer,
+                    });
+                    await _dbContext.SaveChangesAsync();
+
+                    result.Message = String.Format("[Server] {0} reported {1}",fromPlayer.Name, toPlayer.Name);
+                    result.Success = true;
+                }
+            }
+
+            return result;
         }
     }
 }

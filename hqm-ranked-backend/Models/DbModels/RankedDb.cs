@@ -20,6 +20,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<Setting> Settings { get; set; }
         public DbSet<NicknameChanges> NicknameChanges { get; set; }
         public DbSet<ReplayData> ReplayData { get; set; }
+        public DbSet<Reports> Reports { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)

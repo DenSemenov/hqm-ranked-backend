@@ -73,5 +73,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok();
         }
+
+        [HttpPost("Report")]
+        public async Task<IActionResult> Report(ReportRequest request)
+        {
+            var result = await _serverService.Report(request);
+
+            return Ok(result);
+        }
     }
 }
