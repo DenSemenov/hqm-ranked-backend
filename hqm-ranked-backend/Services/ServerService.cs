@@ -382,25 +382,33 @@ namespace hqm_ranked_backend.Services
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
-                var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == request.FromId && x.To.Id == request.ToId).ToListAsync();
-                if (reportedBefore.Any())
+                var gamesCount = await _dbContext.GamePlayers.Where(x=>x.PlayerId == request.FromId).CountAsync();
+                if (gamesCount < 20)
                 {
-                    result.Message = "[Server] You can report this player once per month";
+                    result.Message = "[Server] You can't submit a report until you have played 20 games";
                 }
                 else
                 {
-                    var fromPlayer = await _dbContext.Players.FirstOrDefaultAsync(x=>x.Id == request.FromId);
-                    var toPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.ToId);
-
-                    _dbContext.Reports.Add(new Reports
+                    var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == request.FromId && x.To.Id == request.ToId).ToListAsync();
+                    if (reportedBefore.Any())
                     {
-                        From = fromPlayer,
-                        To = toPlayer,
-                    });
-                    await _dbContext.SaveChangesAsync();
+                        result.Message = "[Server] You can report this player once per month";
+                    }
+                    else
+                    {
+                        var fromPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.FromId);
+                        var toPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.ToId);
 
-                    result.Message = String.Format("[Server] {0} reported {1}",fromPlayer.Name, toPlayer.Name);
-                    result.Success = true;
+                        _dbContext.Reports.Add(new Reports
+                        {
+                            From = fromPlayer,
+                            To = toPlayer,
+                        });
+                        await _dbContext.SaveChangesAsync();
+
+                        result.Message = String.Format("[Server] {0} reported {1}", fromPlayer.Name, toPlayer.Name);
+                        result.Success = true;
+                    }
                 }
             }
 
