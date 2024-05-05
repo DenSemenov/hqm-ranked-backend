@@ -15,8 +15,6 @@ namespace hqm_ranked_backend.Helpers
             var totalEloBlueTeam = 0;
             var totalPointsRedTeam = 0;
             var totalPointsBlueTeam = 0;
-            var goalsRedTeam = 0;
-            var goalsBlueTeam = 0;
             var playerCount = game.Players.Count;
 
             foreach (var player in game.Players)
@@ -25,13 +23,11 @@ namespace hqm_ranked_backend.Helpers
                 {
                     totalEloRedTeam += player.Elo;
                     totalPointsRedTeam += player.Points;
-                    goalsRedTeam += player.Goals;
                 }
                 if (player.Team == BLUE_TEAM)
                 {
                     totalEloBlueTeam += player.Elo;
                     totalPointsBlueTeam += player.Points;
-                    goalsBlueTeam += player.Goals;
                 }
             }
 
@@ -42,11 +38,11 @@ namespace hqm_ranked_backend.Helpers
 
             var redProbFactor = totalEloRedTeam > totalEloBlueTeam ? 1 : -1;
 
-            var blueRedEloDivide = 1;
+            double blueRedEloDivide = 1;
 
             if (totalEloRedTeam != 0)
             {
-                blueRedEloDivide = totalEloBlueTeam / totalEloRedTeam;
+                blueRedEloDivide = (double)totalEloBlueTeam / (double)totalEloRedTeam;
             }
 
             var winProbRed = Math.Max(Math.Min(0.5 + redProbFactor * Math.Abs(blueRedEloDivide - 1), 0.99), 0.01);
