@@ -32,12 +32,12 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task RemoveOldReplays()
+        public void RemoveOldReplays()
         {
-            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+            var settings = _dbContext.Settings.FirstOrDefault();
             if (settings != null)
             {
-                await _dbContext.ReplayData.Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ExecuteDeleteAsync();
+                _dbContext.ReplayData.Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ExecuteDelete();
             }
         }
 

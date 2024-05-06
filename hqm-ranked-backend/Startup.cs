@@ -8,6 +8,7 @@ using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -112,7 +113,10 @@ namespace hqm_ranked_backend
                 endpoints.MapHub<ActionHub>("/actionhub");
             });
 
-            app.UseHangfireDashboard("/hangfire");
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[] { new AuthorizationFilter() }
+            });
             app.UseHangfireServer();
 
             var scope = app.ApplicationServices.CreateScope();
