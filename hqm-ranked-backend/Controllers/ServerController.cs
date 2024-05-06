@@ -81,5 +81,21 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("Resign")]
+        public async Task<IActionResult> Resign(ResignRequest request)
+        {
+            var result = await _serverService.Resign(request);
+
+            return Ok(result);
+        }
+
+        [HttpPost("Reset")]
+        public async Task<IActionResult> Reset(ResetRequest request)
+        {
+            await _serverService.Reset(request);
+
+            return Ok();
+        }
     }
 }
