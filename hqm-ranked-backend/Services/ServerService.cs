@@ -260,7 +260,10 @@ namespace hqm_ranked_backend.Services
                 var game = await _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x => x.Id == request.GameId);
                 if (game != null)
                 {
-                    game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+                    if (game.State != await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned"))
+                    {
+                        game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+                    }
 
                     var winTeam = game.RedScore > game.BlueScore ? 0 : 1;
 
@@ -429,10 +432,8 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<SaveGameViewModel> Resign(ResignRequest request)
+        public async Task Resign(ResignRequest request)
         {
-            var result = new SaveGameViewModel();
-
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
@@ -449,16 +450,8 @@ namespace hqm_ranked_backend.Services
                         game.RedScore = game.BlueScore + 7;
                     }
                     await _dbContext.SaveChangesAsync();
-
-                    result = await SaveGame(new SaveGameRequest
-                    {
-                        GameId = request.GameId,
-                        Token = request.Token,
-                    });
                 }
             }
-
-            return result;
         }
     }
 }

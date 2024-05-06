@@ -14,6 +14,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task Heartbeat(HeartbeatRequest request);
         Task<ReportViewModel> Report(ReportRequest request);
         Task Reset(ResetRequest request);
-        Task<SaveGameViewModel> Resign(ResignRequest request);
+        Task Resign(ResignRequest request);
     }
 }
