@@ -86,5 +86,52 @@ namespace hqm_ranked_backend.Services
                 }
             }
         }
+
+        public async Task SendDiscordResignedNotification(string serverName){
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            if (settings != null)
+            {
+                if (!String.IsNullOrEmpty(settings.DiscordNotificationWebhook))
+                {
+                    var hook = new DiscordWebhook();
+                    hook.Uri = new Uri(settings.DiscordNotificationWebhook);
+
+                    var message = new DiscordMessage();
+
+                    message.Content = String.Format("{0}: Game resigned", serverName);
+
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        public async Task SendDiscordCanceledNotification(string serverName)
+        {
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            if (settings != null)
+            {
+                if (!String.IsNullOrEmpty(settings.DiscordNotificationWebhook))
+                {
+                    var hook = new DiscordWebhook();
+                    hook.Uri = new Uri(settings.DiscordNotificationWebhook);
+
+                    var message = new DiscordMessage();
+
+                    message.Content = String.Format("{0}: Game canceled", serverName);
+
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+            }
+        }
     }
 }

@@ -414,5 +414,51 @@ namespace hqm_ranked_backend.Services
 
             return result;
         }
+
+        public async Task Reset(ResetRequest request)
+        {
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var game = await _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x => x.Player).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                if (game != null)
+                {
+                    game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Canceled");
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
+        }
+
+        public async Task<SaveGameViewModel> Resign(ResignRequest request)
+        {
+            var result = new SaveGameViewModel();
+
+            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
+            if (server != null)
+            {
+                var game = await _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x => x.Player).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                if (game != null)
+                {
+                    game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+                    if (request.Team == 0)
+                    {
+                        game.BlueScore = game.RedScore + 7;
+                    }
+                    else
+                    {
+                        game.RedScore = game.BlueScore + 7;
+                    }
+                    await _dbContext.SaveChangesAsync();
+
+                    result = await SaveGame(new SaveGameRequest
+                    {
+                        GameId = request.GameId,
+                        Token = request.Token,
+                    });
+                }
+            }
+
+            return result;
+        }
     }
 }

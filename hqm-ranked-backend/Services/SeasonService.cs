@@ -39,11 +39,14 @@ namespace hqm_ranked_backend.Services
         {
             var result  = new List<SeasonStatsViewModel>();
 
+            var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+            var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+
             var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
             var games = _dbContext.GamePlayers
                 .Include(x => x.Game)
                 .Include(x => x.Player)
-                .Where(x => x.Game.Season == season)
+                .Where(x => x.Game.Season == season && (x.Game.State == ended || x.Game.State == resigned))
                 .Select(x => new 
                 {
                     PlayerId = x.Player.Id,
@@ -104,11 +107,11 @@ namespace hqm_ranked_backend.Services
                     RedScore = x.RedScore,
                     BlueScore = x.BlueScore,
                     Status = x.State.Name,
-                    Players = x.GamePlayers.Select(x=>new GamePlayerItem
+                    Players = x.GamePlayers.Select(x => new GamePlayerItem
                     {
                         Id = x.PlayerId,
-                         Name = x.Player.Name,
-                          Team = x.Team
+                        Name = x.Player.Name,
+                        Team = x.Team
                     }).ToList()
                 })
                 .Skip(request.Offset)
@@ -234,7 +237,10 @@ namespace hqm_ranked_backend.Services
         {
             var currentSeason = await GetCurrentSeason();
 
-            var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason).Sum(x => x.Score);
+            var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+            var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+
+            var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason && (x.Game.State == ended || x.Game.State == resigned)).Sum(x => x.Score);
             var eloOnSeasonStart = await _dbContext.Elos.Include(x=>x.Player).FirstOrDefaultAsync(x=>x.Player.Id == id && x.Season == currentSeason);
             return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : 1000);
         }

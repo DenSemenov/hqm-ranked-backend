@@ -170,25 +170,25 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
-            //var players = await _dbContext.Players.ToListAsync();
+            if (!await _dbContext.States.AnyAsync(x=>x.Name == "Canceled"))
+            {
+                _dbContext.States.Add(new States
+                {
+                    Name = "Canceled"
+                });
 
-            //var seasons = await _dbContext.Seasons.OrderByDescending(x=>x.DateStart).Take(1).ToListAsync();
+                await _dbContext.SaveChangesAsync();
+            }
 
-            //foreach(var player in players)
-            //{
-            //    foreach(var season in seasons)
-            //    {
-            //        if (!_dbContext.Elos.Any(x=>x.Player == player && x.Season == season))
-            //        {
-            //            _dbContext.Elos.Add(new Elo
-            //            {
-            //                Player = player,
-            //                Season = season,
-            //                Value = 1000
-            //            });
-            //        }
-            //    }
-            //}
+            if (!await _dbContext.States.AnyAsync(x => x.Name == "Resigned"))
+            {
+                _dbContext.States.Add(new States
+                {
+                    Name = "Resigned"
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
 
             await _dbContext.SaveChangesAsync();
 
