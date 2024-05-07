@@ -12,5 +12,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public string DiscordNotificationWebhook { get; set; } = String.Empty;
         public int WebhookCount { get; set; } = 0;
         public int ShadowBanReportsCount { get; set; } = 5;
+        public int StartingElo { get; set; } = 1000;
     }
 }

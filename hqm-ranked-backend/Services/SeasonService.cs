@@ -41,6 +41,7 @@ namespace hqm_ranked_backend.Services
 
             var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
             var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+            var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
 
             var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
             var games = _dbContext.GamePlayers
@@ -65,7 +66,7 @@ namespace hqm_ranked_backend.Services
 
             foreach(var game in games)
             {
-                var elo = 1000;
+                var elo = startingElo;
 
                 var playerElo = elos.SingleOrDefault(x => x.Player.Id == game.Key && x.Season == season);
                 if (playerElo != null)
@@ -239,10 +240,11 @@ namespace hqm_ranked_backend.Services
 
             var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
             var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+            var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
 
             var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason && (x.Game.State == ended || x.Game.State == resigned)).Sum(x => x.Score);
             var eloOnSeasonStart = await _dbContext.Elos.Include(x=>x.Player).FirstOrDefaultAsync(x=>x.Player.Id == id && x.Season == currentSeason);
-            return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : 1000);
+            return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : startingElo);
         }
 
         public async Task<string> GetRules()

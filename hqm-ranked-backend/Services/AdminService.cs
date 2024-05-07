@@ -123,6 +123,7 @@ namespace hqm_ranked_backend.Services
                 settings.DiscordNotificationWebhook = request.DiscordNotificationWebhook;
                 settings.WebhookCount = request.WebhookCount;
                 settings.ShadowBanReportsCount = request.ShadowBanReportsCount;
+                settings.StartingElo = request.StartingElo;
 
                 await _dbContext.SaveChangesAsync();
             }

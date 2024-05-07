@@ -303,6 +303,20 @@ namespace hqm_ranked_backend.Services
                     game.Mvp = mvp.Player;
                     result.Mvp = mvp.Player.Name;
 
+                    var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
+                    foreach (var gp in game.GamePlayers)
+                    {
+                        if (!await _dbContext.Elos.AnyAsync(x => x.Player == gp.Player && x.Season == game.Season))
+                        {
+                            _dbContext.Elos.Add(new Elo
+                            {
+                                Player = gp.Player,
+                                Season = game.Season,
+                                Value = startingElo
+                            });
+                        }
+                    }
+
                     await _dbContext.SaveChangesAsync();
 
                     var currentSeason = await _seasonService.GetCurrentSeason();
