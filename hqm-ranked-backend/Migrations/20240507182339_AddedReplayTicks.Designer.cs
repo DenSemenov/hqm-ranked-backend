@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
@@ -11,9 +12,11 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240507182339_AddedReplayTicks")]
+    partial class AddedReplayTicks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -402,11 +405,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("Max")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("Min")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Ticks")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -425,17 +425,11 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Index")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Max")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("Min")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("ReplayDataId")
+                    b.Property<Guid?>("ReplayDataId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("StartTick")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -795,7 +789,7 @@ namespace hqm_ranked_backend.Migrations
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ReplayData", b =>
                 {
                     b.HasOne("hqm_ranked_backend.Models.DbModels.Game", "Game")
-                        .WithMany("ReplayDatas")
+                        .WithMany()
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -805,13 +799,9 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ReplayFragment", b =>
                 {
-                    b.HasOne("hqm_ranked_backend.Models.DbModels.ReplayData", "ReplayData")
+                    b.HasOne("hqm_ranked_backend.Models.DbModels.ReplayData", null)
                         .WithMany("ReplayFragments")
-                        .HasForeignKey("ReplayDataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReplayData");
+                        .HasForeignKey("ReplayDataId");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Reports", b =>
@@ -836,8 +826,6 @@ namespace hqm_ranked_backend.Migrations
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Game", b =>
                 {
                     b.Navigation("GamePlayers");
-
-                    b.Navigation("ReplayDatas");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Player", b =>

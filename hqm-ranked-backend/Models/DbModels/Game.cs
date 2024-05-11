@@ -15,6 +15,7 @@ namespace hqm_ranked_backend.Models.DbModels
         [Required]
         public States State { get; set; }
         public ICollection<GamePlayer> GamePlayers { get; set; }
+        public ICollection<ReplayData> ReplayDatas { get; set; }
         public Player Mvp { get; set; }
         public int MvpId { get; set; }
     }

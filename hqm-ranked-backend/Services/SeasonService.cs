@@ -207,20 +207,16 @@ namespace hqm_ranked_backend.Services
 
         public async Task<GameDataViewModel> GetGameData(GameRequest request)
         {
-            var result = new GameDataViewModel();
-
-            var game = await _dbContext.Games.Include(x=>x.State).Include(x=>x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x=>x.Id == request.Id); 
-            if (game != null)
+            var result = await _dbContext.Games.Include(x => x.State).Include(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x => x.ReplayDatas).ThenInclude(x=>x.ReplayFragments).Select(game => new GameDataViewModel
             {
-                Guid? replayId = _dbContext.ReplayData.Any(x => x.Game == game) ? _dbContext.ReplayData.FirstOrDefault(x => x.Game == game).Id : null;
-
-                result.Id = game.Id;
-                result.State = game.State.Name;
-                result.Date = game.CreatedOn;
-                result.RedScore = game.RedScore;
-                result.BlueScore = game.BlueScore;
-                result.ReplayId = replayId;
-                result.Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
+                Id = game.Id,
+                State = game.State.Name,
+                Date = game.CreatedOn,
+                RedScore = game.RedScore,
+                BlueScore = game.BlueScore,
+                ReplayId = game.ReplayDatas.Any()? game.ReplayDatas.FirstOrDefault().Id: null,
+                HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count !=0 : false,
+                Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                 {
                     Id = x.PlayerId,
                     Name = x.Player.Name,
@@ -228,8 +224,8 @@ namespace hqm_ranked_backend.Services
                     Assists = x.Assists,
                     Score = x.Score,
                     Team = x.Team,
-                }).ToList();
-            }
+                }).ToList()
+            }).FirstOrDefaultAsync(x => x.Id == request.Id);
 
             return result;
         }

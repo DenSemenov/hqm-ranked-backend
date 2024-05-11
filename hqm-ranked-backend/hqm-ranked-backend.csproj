@@ -34,4 +34,8 @@
     <Folder Include="wwwroot\avatars\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ReplayHandler\ReplayHandler.csproj" />
+  </ItemGroup>
+
 </Project>

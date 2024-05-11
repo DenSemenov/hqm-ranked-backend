@@ -1,7 +1,11 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using Hangfire;
+using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
+using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using ReplayHandler.Classes;
 
 namespace hqm_ranked_backend.Services
 {
@@ -21,13 +25,18 @@ namespace hqm_ranked_backend.Services
                 var game = await _dbContext.Games.FirstOrDefaultAsync(x=>x.Id == gameId);
                 if (game != null)
                 {
-                    _dbContext.ReplayData.Add(new ReplayData
+                    var entity = _dbContext.ReplayData.Add(new ReplayData
                     {
                          Game = game,
                          Data = data,
                     });
 
                     await _dbContext.SaveChangesAsync();
+
+                    BackgroundJob.Enqueue(() => ParseReplay(new ReplayRequest
+                    {
+                        Id = entity.Entity.Id
+                    }));
                 }
             }
         }
@@ -52,6 +61,67 @@ namespace hqm_ranked_backend.Services
             }
 
             return data;
+        }
+
+        public async Task ParseReplay(ReplayRequest request)
+        {
+            var replayData = await _dbContext.ReplayData.Include(x=>x.Game).FirstOrDefaultAsync(x=>x.Game.Id == request.Id);
+            if (replayData != null)
+            {
+                var result = ReplayHandler.ReplayHandler.ParseReplay(replayData.Data);
+
+                var fragmentLenght = 1000;
+
+                var count = Math.Ceiling((double)result.Count / (double)fragmentLenght);
+
+                replayData.Min = result.FirstOrDefault().PacketNumber;
+                replayData.Max = result.LastOrDefault().PacketNumber;
+
+                replayData.ReplayFragments = new List<ReplayFragment>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    var fragment = result.Skip(i* fragmentLenght).Take(fragmentLenght).ToArray();
+
+                    replayData.ReplayFragments.Add(new ReplayFragment
+                    {
+                         Data = JsonConvert.SerializeObject(fragment),
+                         Index = i,
+                         Min = fragment.Min(x=>x.PacketNumber),
+                         Max = fragment.Max(x=>x.PacketNumber)
+                    });
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<ReplayViewerViewModel> GetReplayViewer(ReplayViewerRequest request)
+        {
+            var result = new ReplayViewerViewModel();
+
+            var query = await _dbContext.ReplayFragments.Include(x => x.ReplayData).ThenInclude(x => x.ReplayFragments).Select(replayFragment => new
+            {
+                Data = replayFragment.Data,
+                Index = replayFragment.Index,
+                Fragments = replayFragment.ReplayData.ReplayFragments.OrderBy(x=>x.Index).Select(x => new ReplayViewerFragmentViewModel
+                {
+                    Index = x.Index,
+                    Min = x.Min,
+                    Max = x.Max,
+                })
+            }).FirstOrDefaultAsync(x => x.Index == request.Index); ;
+
+            if (query != null)
+            {
+                var data = JsonConvert.DeserializeObject<ReplayTick[]>(query.Data); 
+
+                result.Index = query.Index;
+                result.Data = data;
+                result.Fragments = query.Fragments.ToList();
+            }
+
+            return result;
         }
     }
 }

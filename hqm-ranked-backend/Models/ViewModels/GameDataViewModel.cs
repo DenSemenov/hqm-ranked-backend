@@ -9,6 +9,7 @@
         public int BlueScore { get; set; }
         public List<GameDataPlayerViewModel> Players { get; set; }
         public Guid? ReplayId { get; set; }
+        public bool HasReplayFragments { get; set; }
     }
 
     public class GameDataPlayerViewModel

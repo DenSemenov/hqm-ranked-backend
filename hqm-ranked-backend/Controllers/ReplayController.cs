@@ -35,5 +35,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("GetReplayViewer")]
+        public async Task<IActionResult> GetReplayViewer(ReplayViewerRequest request)
+        {
+            var result = await _replayService.GetReplayViewer(request);
+
+            return Ok(result);
+        }
     }
 }
