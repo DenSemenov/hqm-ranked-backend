@@ -27,6 +27,7 @@ namespace ReplayHandler
             uint current_msg_pos = 0;
 
             var j = 0;
+            uint packet = 0;
 
             while (reader.pos < data_len)
             {
@@ -108,12 +109,12 @@ namespace ReplayHandler
                     red_score = red_score,
                     blue_score = blue_score,
                     period = period,
-                    game_over = game_over,
+                    //game_over = game_over,
                     time = time,
-                    goal_message_timer = goal_message_timer,
+                    //goal_message_timer = goal_message_timer,
                     objects = objects,
-                    player_list = current_player_list.ToList(),
-                    messages_in_this_packet = messages_in_this_packet
+                    player_list = current_player_list.Where(x=>x != null).ToList(),
+                    //messages_in_this_packet = messages_in_this_packet
                 };
 
                 reader.Next();
@@ -182,21 +183,24 @@ namespace ReplayHandler
 
                 if (j % 2 == 0)
                 {
-                    var replayTick = new ReplayTick
+                    if (players.Count != 0)
                     {
-                        PacketNumber = state.packet_number,
-                        RedScore = (int)state.red_score,
-                        BlueScore = (int)state.blue_score,
-                        GameOver = state.game_over,
-                        GoalMessageTimer = (int)state.goal_message_timer,
-                        Period = (int)state.period,
-                        Time = (int)state.time,
-                        Pucks = pucks,
-                        Players = players,
-                        PlayersInList = playersInList
-                    };
+                        var replayTick = new ReplayTick
+                        {
+                            PacketNumber = packet,
+                            RedScore = (int)state.red_score,
+                            BlueScore = (int)state.blue_score,
+                            Period = (int)state.period,
+                            Time = (int)state.time,
+                            Pucks = pucks,
+                            Players = players,
+                            PlayersInList = playersInList
+                        };
 
-                    replayTicks.Add(replayTick);
+                        replayTicks.Add(replayTick);
+
+                        packet += 1;
+                    }
                 }
 
                 j += 1;

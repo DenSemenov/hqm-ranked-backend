@@ -479,3 +479,4 @@ $RECYCLE.BIN/
 appsettings.json
 
 /avatars/*
+/wwwroot/avatars/*

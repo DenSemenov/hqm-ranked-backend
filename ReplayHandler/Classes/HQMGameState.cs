@@ -106,17 +106,11 @@ namespace ReplayHandler.Classes
         public uint blue_score { get; set; }
         [JsonProperty("p")]
         public uint period { get; set; }
-        [JsonProperty("go")]
-        public bool game_over { get; set; }
         [JsonProperty("t")]
         public uint time { get; set; }
-        [JsonProperty("gmt")]
-        public uint goal_message_timer { get; set; }
         public List<HQMObject> objects { get; set; }
         [JsonProperty("pl")]
         public List<HQMServerPlayer> player_list { get; set; }
-        [JsonProperty("m")]
-        public List<HQMMessage> messages_in_this_packet { get; set; }
     }
 
     public class HQMSkaterPacket

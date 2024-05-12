@@ -19,22 +19,22 @@ namespace ReplayHandler.Classes
     public class ReplayTick
     {
         public uint PacketNumber { get; set; }
-        public bool GameOver { get; set; }
+        //public bool GameOver { get; set; }
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public int Time { get; set; }
-        public int GoalMessageTimer { get; set; }
+        //public int GoalMessageTimer { get; set; }
         public int Period { get; set; }
         public List<ReplayPuck> Pucks { get; set; }
         public List<ReplayPlayer> Players { get; set; }
-        public List<ReplayMessage> Messages { get; set; }
+        //public List<ReplayMessage> Messages { get; set; }
         public List<PlayerInList> PlayersInList { get; set; }
 
         public ReplayTick()
         {
             Pucks = new List<ReplayPuck>();
             Players = new List<ReplayPlayer>();
-            Messages = new List<ReplayMessage>();
+            //Messages = new List<ReplayMessage>();
         }
     }
 
