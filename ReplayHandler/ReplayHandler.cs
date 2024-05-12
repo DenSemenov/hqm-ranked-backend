@@ -195,9 +195,9 @@ namespace ReplayHandler
                         Players = players,
                         PlayersInList = playersInList
                     };
-                }
 
-                replayTicks.Add(replayTick);
+                    replayTicks.Add(replayTick);
+                }
 
                 j += 1;
             }
