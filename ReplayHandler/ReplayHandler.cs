@@ -180,19 +180,22 @@ namespace ReplayHandler
                     }
                 }
 
-                var replayTick = new ReplayTick
+                if (j % 2 == 0)
                 {
-                    PacketNumber = state.packet_number,
-                    RedScore = (int)state.red_score,
-                    BlueScore = (int)state.blue_score,
-                    GameOver = state.game_over,
-                    GoalMessageTimer = (int)state.goal_message_timer,
-                    Period = (int)state.period,
-                    Time = (int)state.time,
-                    Pucks = pucks,
-                    Players = players,
-                    PlayersInList = playersInList
-                };
+                    var replayTick = new ReplayTick
+                    {
+                        PacketNumber = state.packet_number,
+                        RedScore = (int)state.red_score,
+                        BlueScore = (int)state.blue_score,
+                        GameOver = state.game_over,
+                        GoalMessageTimer = (int)state.goal_message_timer,
+                        Period = (int)state.period,
+                        Time = (int)state.time,
+                        Pucks = pucks,
+                        Players = players,
+                        PlayersInList = playersInList
+                    };
+                }
 
                 replayTicks.Add(replayTick);
 
