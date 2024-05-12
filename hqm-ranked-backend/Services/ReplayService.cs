@@ -46,7 +46,7 @@ namespace hqm_ranked_backend.Services
             var settings = _dbContext.Settings.FirstOrDefault();
             if (settings != null)
             {
-                _dbContext.ReplayData.Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ExecuteDelete();
+                _dbContext.ReplayData.Include(x=>x.ReplayFragments).Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ExecuteDelete();
             }
         }
 
