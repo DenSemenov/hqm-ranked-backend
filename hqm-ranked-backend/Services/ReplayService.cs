@@ -35,7 +35,7 @@ namespace hqm_ranked_backend.Services
 
                     BackgroundJob.Enqueue(() => ParseReplay(new ReplayRequest
                     {
-                        Id = entity.Entity.Id
+                        Id = gameId
                     }));
                 }
             }
