@@ -63,9 +63,9 @@ namespace hqm_ranked_backend.Services
             return data;
         }
 
-        public async Task ParseReplay(ReplayRequest request)
+        public void ParseReplay(ReplayRequest request)
         {
-            var replayData = await _dbContext.ReplayData.Include(x=>x.Game).FirstOrDefaultAsync(x=>x.Game.Id == request.Id);
+            var replayData = _dbContext.ReplayData.Include(x=>x.Game).FirstOrDefault(x=>x.Game.Id == request.Id);
             if (replayData != null)
             {
                 var result = ReplayHandler.ReplayHandler.ParseReplay(replayData.Data);
@@ -92,7 +92,7 @@ namespace hqm_ranked_backend.Services
                     });
                 }
 
-                await _dbContext.SaveChangesAsync();
+                _dbContext.SaveChanges();
             }
         }
 
