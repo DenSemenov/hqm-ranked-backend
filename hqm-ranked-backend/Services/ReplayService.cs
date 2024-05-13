@@ -12,6 +12,7 @@ namespace hqm_ranked_backend.Services
     public class ReplayService:IReplayService
     {
         private RankedDb _dbContext;
+        private IWebHostEnvironment _hostingEnvironment;
         public ReplayService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
         {
             _dbContext = dbContext;
@@ -83,16 +84,18 @@ namespace hqm_ranked_backend.Services
                 {
                     var fragment = result.Skip(i* fragmentLenght).Take(fragmentLenght).ToArray();
 
+                    var json = JsonConvert.SerializeObject(fragment);
+                    var path = Path.Combine(_hostingEnvironment.WebRootPath, request.Id.ToString() + i.ToString() + ".json");
+                    File.WriteAllText(path, json);
                     replayData.ReplayFragments.Add(new ReplayFragment
                     {
-                         Data = JsonConvert.SerializeObject(fragment),
+                         Data = path,
                          Index = i,
                          Min = fragment.Min(x=>x.PacketNumber),
                          Max = fragment.Max(x=>x.PacketNumber)
                     });
                     _dbContext.SaveChanges();
                 }
-
             }
         }
 
@@ -114,7 +117,9 @@ namespace hqm_ranked_backend.Services
 
             if (query != null)
             {
-                var data = JsonConvert.DeserializeObject<ReplayTick[]>(query.Data); 
+                var path = query.Data;
+                var json= File.ReadAllText(path);
+                var data = JsonConvert.DeserializeObject<ReplayTick[]>(json); 
 
                 result.Index = query.Index;
                 result.Data = data;
