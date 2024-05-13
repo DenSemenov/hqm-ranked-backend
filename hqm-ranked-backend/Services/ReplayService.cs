@@ -90,9 +90,9 @@ namespace hqm_ranked_backend.Services
                          Min = fragment.Min(x=>x.PacketNumber),
                          Max = fragment.Max(x=>x.PacketNumber)
                     });
+                    _dbContext.SaveChanges();
                 }
 
-                _dbContext.SaveChanges();
             }
         }
 
