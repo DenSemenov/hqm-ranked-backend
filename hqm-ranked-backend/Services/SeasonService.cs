@@ -99,6 +99,8 @@ namespace hqm_ranked_backend.Services
                 .Include(x => x.State)
                 .Include(x => x.GamePlayers)
                 .ThenInclude(x => x.Player)
+                .Include(x => x.ReplayDatas)
+                .ThenInclude(x => x.ReplayFragments)
                 .Where(x => x.Season == season)
                 .OrderByDescending(x => x.CreatedOn)
                 .Select(x => new SeasonGameViewModel
@@ -108,6 +110,8 @@ namespace hqm_ranked_backend.Services
                     RedScore = x.RedScore,
                     BlueScore = x.BlueScore,
                     Status = x.State.Name,
+                    ReplayId = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().Id : null,
+                    HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
                     Players = x.GamePlayers.Select(x => new GamePlayerItem
                     {
                         Id = x.PlayerId,

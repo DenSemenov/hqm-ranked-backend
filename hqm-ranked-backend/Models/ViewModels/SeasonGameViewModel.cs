@@ -7,6 +7,8 @@
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public string Status { get; set; }
+        public Guid? ReplayId { get; set; }
+        public bool HasReplayFragments { get; set; }
         public List<GamePlayerItem> Players { get; set; }
     }
 
