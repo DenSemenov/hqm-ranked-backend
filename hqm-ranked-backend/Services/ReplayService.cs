@@ -154,7 +154,7 @@ namespace hqm_ranked_backend.Services
         {
             var result = new ReplayViewerViewModel();
 
-            var query = await _dbContext.ReplayFragments.Include(x => x.ReplayData).ThenInclude(x => x.ReplayFragments).Select(replayFragment => new
+            var query = await _dbContext.ReplayFragments.Include(x => x.ReplayData).ThenInclude(x => x.ReplayFragments).Where(x=>x.ReplayDataId == request.Id).Select(replayFragment => new
             {
                 Data = replayFragment.Data,
                 Index = replayFragment.Index,
@@ -164,7 +164,7 @@ namespace hqm_ranked_backend.Services
                     Min = x.Min,
                     Max = x.Max,
                 })
-            }).FirstOrDefaultAsync(x => x.Index == request.Index); ;
+            }).FirstOrDefaultAsync(x =>  x.Index == request.Index); ;
 
             if (query != null)
             {
@@ -175,6 +175,32 @@ namespace hqm_ranked_backend.Services
                 result.Index = query.Index;
                 result.Data = data;
                 result.Fragments = query.Fragments.ToList();
+            }
+
+            return result;
+        }
+
+        public async Task<List<ReplayGoal>> GetReplayGoals(ReplayRequest request)
+        {
+            var result = new List<ReplayGoal>();
+
+            var replayData = _dbContext.ReplayData.Include(x => x.ReplayGoals).FirstOrDefault(x => x.Id == request.Id);
+            if (replayData != null)
+            {
+                result = replayData.ReplayGoals;
+            }
+
+            return result;
+        }
+
+        public async Task<List<ReplayChat>> GetReplayChatMessages(ReplayRequest request)
+        {
+            var result = new List<ReplayChat>();
+
+            var replayData = _dbContext.ReplayData.Include(x => x.ReplayChats).FirstOrDefault(x => x.Id == request.Id);
+            if (replayData != null)
+            {
+                result = replayData.ReplayChats;
             }
 
             return result;
