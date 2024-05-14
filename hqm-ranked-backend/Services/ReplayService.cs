@@ -184,10 +184,10 @@ namespace hqm_ranked_backend.Services
         {
             var result = new List<ReplayGoal>();
 
-            var replayData = _dbContext.ReplayData.Include(x => x.ReplayGoals).FirstOrDefault(x => x.Id == request.Id);
+            var replayData = await _dbContext.ReplayData.Include(x => x.ReplayGoals).Where(x=>x.Id == request.Id).Select(x=>x.ReplayGoals).FirstOrDefaultAsync();
             if (replayData != null)
             {
-                result = replayData.ReplayGoals;
+                result = replayData;
             }
 
             return result;
@@ -197,10 +197,10 @@ namespace hqm_ranked_backend.Services
         {
             var result = new List<ReplayChat>();
 
-            var replayData = _dbContext.ReplayData.Include(x => x.ReplayChats).FirstOrDefault(x => x.Id == request.Id);
+            var replayData = await _dbContext.ReplayData.Include(x => x.ReplayChats).Where(x => x.Id == request.Id).Select(x => x.ReplayChats).FirstOrDefaultAsync();
             if (replayData != null)
             {
-                result = replayData.ReplayChats;
+                result = replayData;
             }
 
             return result;
