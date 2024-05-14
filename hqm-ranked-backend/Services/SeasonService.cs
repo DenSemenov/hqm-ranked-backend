@@ -216,32 +216,32 @@ namespace hqm_ranked_backend.Services
                 .Include(x => x.GamePlayers)
                 .ThenInclude(x => x.Player)
                 .Include(x => x.ReplayDatas)
-                .ThenInclude(x=>x.ReplayFragments)
+                .ThenInclude(x => x.ReplayFragments)
                 .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayChats)
                 .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayGoals)
                 .Select(game => new GameDataViewModel
-            {
-                Id = game.Id,
-                State = game.State.Name,
-                Date = game.CreatedOn,
-                RedScore = game.RedScore,
-                BlueScore = game.BlueScore,
-                ReplayId = game.ReplayDatas.Any()? game.ReplayDatas.FirstOrDefault().Id: null,
-                HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count !=0 : false,
-                ChatMessages = game.ReplayDatas.Any()? game.ReplayDatas.FirstOrDefault().ReplayChats: new List<ReplayChat>(),
-                Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals : new List<ReplayGoal>(),
-                Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                 {
-                    Id = x.PlayerId,
-                    Name = x.Player.Name,
-                    Goals = x.Goals,
-                    Assists = x.Assists,
-                    Score = x.Score,
-                    Team = x.Team,
-                }).ToList()
-            }).FirstOrDefaultAsync(x => x.Id == request.Id);
+                    Id = game.Id,
+                    State = game.State.Name,
+                    Date = game.CreatedOn,
+                    RedScore = game.RedScore,
+                    BlueScore = game.BlueScore,
+                    ReplayId = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().Id : null,
+                    HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
+                    ChatMessages = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayChats : new List<ReplayChat>(),
+                    Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals : new List<ReplayGoal>(),
+                    Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
+                    {
+                        Id = x.PlayerId,
+                        Name = x.Player.Name,
+                        Goals = x.Goals,
+                        Assists = x.Assists,
+                        Score = x.Score,
+                        Team = x.Team,
+                    }).ToList()
+                }).FirstOrDefaultAsync(x => x.Id == request.Id);
 
             return result;
         }
