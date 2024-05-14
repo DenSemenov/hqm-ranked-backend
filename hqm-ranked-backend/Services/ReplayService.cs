@@ -43,7 +43,17 @@ namespace hqm_ranked_backend.Services
             var settings = _dbContext.Settings.FirstOrDefault();
             if (settings != null)
             {
-                _dbContext.ReplayData.Include(x=>x.ReplayFragments).Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ExecuteDelete();
+                var replaysToRemove = _dbContext.ReplayData.Include(x => x.ReplayFragments).Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ToList();
+                foreach (var replay in replaysToRemove)
+                {
+                    foreach (var replayFragment in replay.ReplayFragments)
+                    {
+                        File.Delete(replayFragment.Data);
+                    }
+
+                    _dbContext.ReplayData.Remove(replay);
+                }
+                _dbContext.SaveChanges();
             }
         }
 
