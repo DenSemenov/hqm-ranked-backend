@@ -33,11 +33,6 @@ namespace hqm_ranked_backend.Services
                     });
 
                     await _dbContext.SaveChangesAsync();
-
-                    BackgroundJob.Enqueue(() => ParseReplay(new ReplayRequest
-                    {
-                        Id = gameId
-                    }));
                 }
             }
         }
@@ -48,6 +43,28 @@ namespace hqm_ranked_backend.Services
             if (settings != null)
             {
                 _dbContext.ReplayData.Include(x=>x.ReplayFragments).Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ExecuteDelete();
+            }
+        }
+
+        public void ParseAllReplays()
+        {
+            var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4);
+            if (!isPlayersOnServer)
+            {
+                var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x=>x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
+
+                foreach(var replayId in replayIds)
+                {
+                    ParseReplay(new ReplayRequest
+                    {
+                        Id = replayId
+                    });
+
+                    if (_dbContext.Servers.Any(x => x.LoggedIn > 4))
+                    {
+                        break;
+                    }
+                }
             }
         }
 
