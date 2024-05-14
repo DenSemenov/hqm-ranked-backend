@@ -16,6 +16,7 @@ namespace hqm_ranked_backend.Services
         public ReplayService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
         {
             _dbContext = dbContext;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public async Task PushReplay(Guid gameId, byte[] data, string token)
