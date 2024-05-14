@@ -147,13 +147,13 @@ namespace ReplayHandler
                         players.Add(new ReplayPlayer
                         {
                             Index = pl.index,
-                            PosX = 30 - pl.pos_x,
+                            PosX = pl.pos_x,
                             PosY = pl.pos_y,
                             PosZ = pl.pos_z,
                             RotX = pl.rot_x,
                             RotY = pl.rot_y,
                             RotZ = pl.rot_z,
-                            StickPosX = 30 - pl.stick_pos_x,
+                            StickPosX = pl.stick_pos_x,
                             StickPosY = pl.stick_pos_y,
                             StickPosZ = pl.stick_pos_z,
                             StickRotX = pl.stick_rot_x,
@@ -171,7 +171,7 @@ namespace ReplayHandler
                         pucks.Add(new ReplayPuck
                         {
                             Index = puck.index,
-                            PosX = 30 - puck.pos_x,
+                            PosX = puck.pos_x,
                             PosY = puck.pos_y,
                             PosZ = puck.pos_z,
                             RotX = puck.rot_x,
