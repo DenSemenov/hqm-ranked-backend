@@ -109,6 +109,7 @@ namespace ReplayHandler.Classes
         [JsonProperty("t")]
         public uint time { get; set; }
         public List<HQMObject> objects { get; set; }
+        public List<HQMMessage> messages_in_this_packet { get; set; }
         [JsonProperty("pl")]
         public List<HQMServerPlayer> player_list { get; set; }
     }

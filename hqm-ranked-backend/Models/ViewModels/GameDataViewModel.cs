@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Models.DbModels;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class GameDataViewModel
     {
@@ -8,6 +10,8 @@
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public List<GameDataPlayerViewModel> Players { get; set; }
+        public List<ReplayChat> ChatMessages { get; set; }
+        public List<ReplayGoal> Goals { get; set; }
         public Guid? ReplayId { get; set; }
         public bool HasReplayFragments { get; set; }
     }

@@ -27,7 +27,7 @@ namespace ReplayHandler.Classes
         public int Period { get; set; }
         public List<ReplayPuck> Pucks { get; set; }
         public List<ReplayPlayer> Players { get; set; }
-        //public List<ReplayMessage> Messages { get; set; }
+        public List<ReplayMessage> Messages { get; set; }
         public List<PlayerInList> PlayersInList { get; set; }
 
         public ReplayTick()
@@ -40,6 +40,7 @@ namespace ReplayHandler.Classes
 
     public class PlayerInList
     {
+        public int? ListIndex { get; set; }
         public int Index { get; set; }
         public string Name { get; set; }
         public ReplayTeam Team { get; set; }
@@ -105,18 +106,18 @@ namespace ReplayHandler.Classes
     public class ReplayMessage
     {
         public ReplayMessageType ReplayMessageType { get; set; }
-        public int ObjectIndex { get; set; }
+        public int? ObjectIndex { get; set; }
 
         //Chat
-        public int PlayerIndex { get; set; }
-        public string Message { get; set; }
+        public int? PlayerIndex { get; set; }
+        public string? Message { get; set; }
 
         //Goal
-        public int GoalIndex { get; set; }
-        public int AssistIndex { get; set; }
+        public int? GoalIndex { get; set; }
+        public int? AssistIndex { get; set; }
 
         //PlayerUpdate
-        public int UpdatePlayerIndex { get; set; }
+        public int? UpdatePlayerIndex { get; set; }
         public string PlayerName { get; set; }
         public bool InServer { get; set; }
         public ReplayTeam Team { get; set; }

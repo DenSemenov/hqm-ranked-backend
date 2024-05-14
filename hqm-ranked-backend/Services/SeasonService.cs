@@ -211,7 +211,17 @@ namespace hqm_ranked_backend.Services
 
         public async Task<GameDataViewModel> GetGameData(GameRequest request)
         {
-            var result = await _dbContext.Games.Include(x => x.State).Include(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x => x.ReplayDatas).ThenInclude(x=>x.ReplayFragments).Select(game => new GameDataViewModel
+            var result = await _dbContext.Games
+                .Include(x => x.State)
+                .Include(x => x.GamePlayers)
+                .ThenInclude(x => x.Player)
+                .Include(x => x.ReplayDatas)
+                .ThenInclude(x=>x.ReplayFragments)
+                .Include(x => x.ReplayDatas)
+                .ThenInclude(x => x.ReplayChats)
+                .Include(x => x.ReplayDatas)
+                .ThenInclude(x => x.ReplayGoals)
+                .Select(game => new GameDataViewModel
             {
                 Id = game.Id,
                 State = game.State.Name,
@@ -220,6 +230,8 @@ namespace hqm_ranked_backend.Services
                 BlueScore = game.BlueScore,
                 ReplayId = game.ReplayDatas.Any()? game.ReplayDatas.FirstOrDefault().Id: null,
                 HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count !=0 : false,
+                ChatMessages = game.ReplayDatas.Any()? game.ReplayDatas.FirstOrDefault().ReplayChats: new List<ReplayChat>(),
+                Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals : new List<ReplayGoal>(),
                 Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                 {
                     Id = x.PlayerId,

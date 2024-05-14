@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
@@ -98,6 +99,28 @@ namespace hqm_ranked_backend.Services
             if (replayData != null)
             {
                 var result = ReplayHandler.ReplayHandler.ParseReplay(replayData.Data);
+
+                var processedData = ReplayDataHelper.GetReplayCalcData(result);
+
+                foreach (var msg in processedData.Chats)
+                {
+                    replayData.ReplayChats.Add(new ReplayChat
+                    {
+                        Packet = msg.Packet,
+                        Text = msg.Text,
+                    });
+                }
+
+                foreach (var goal in processedData.Goals)
+                {
+                    replayData.ReplayGoals.Add(new ReplayGoal
+                    {
+                        Packet = goal.Packet,
+                        GoalBy = goal.GoalBy,
+                        Period = goal.Period,
+                        Time = goal.Time,
+                    });
+                }
 
                 var fragmentLenght = 1000;
 
