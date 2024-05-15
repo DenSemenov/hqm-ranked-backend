@@ -211,6 +211,8 @@ namespace hqm_ranked_backend.Services
 
         public async Task<GameDataViewModel> GetGameData(GameRequest request)
         {
+            var storageUrl = await GetStorage();
+
             var result = await _dbContext.Games
                 .Include(x => x.State)
                 .Include(x => x.GamePlayers)
@@ -230,8 +232,9 @@ namespace hqm_ranked_backend.Services
                     BlueScore = game.BlueScore,
                     ReplayId = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().Id : null,
                     HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
-                    ChatMessages = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayChats : new List<ReplayChat>(),
+                    ChatMessages = new List<ReplayChat>(),
                     Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals : new List<ReplayGoal>(),
+                    ReplayUrl = storageUrl + "replays/" + game.Id.ToString() + ".hrp",
                     Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                     {
                         Id = x.PlayerId,

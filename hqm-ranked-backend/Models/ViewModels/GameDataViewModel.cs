@@ -14,6 +14,7 @@ namespace hqm_ranked_backend.Models.ViewModels
         public List<ReplayGoal> Goals { get; set; }
         public Guid? ReplayId { get; set; }
         public bool HasReplayFragments { get; set; }
+        public string? ReplayUrl { get; set; }
     }
 
     public class GameDataPlayerViewModel
