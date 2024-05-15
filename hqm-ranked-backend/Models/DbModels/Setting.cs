@@ -13,5 +13,9 @@ namespace hqm_ranked_backend.Models.DbModels
         public int WebhookCount { get; set; } = 0;
         public int ShadowBanReportsCount { get; set; } = 5;
         public int StartingElo { get; set; } = 1000;
+        public string S3Domain { get; set; } = String.Empty;
+        public string S3Bucket { get; set; } = String.Empty;
+        public string S3User { get; set; } = String.Empty;
+        public string S3Key { get; set; } = String.Empty;
     }
 }

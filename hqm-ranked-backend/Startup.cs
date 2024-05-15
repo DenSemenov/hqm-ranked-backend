@@ -1,4 +1,7 @@
-﻿using Hangfire;
+﻿using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Hangfire;
 using Hangfire.PostgreSql;
 using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Hubs;
@@ -11,6 +14,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.WindowsTokenService;
 using Microsoft.OpenApi.Models;
 using System.Data;
 
@@ -41,6 +45,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
             services.AddScoped<IReplayService, ReplayService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IStorageService, StorageService>();
 
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 
@@ -51,6 +56,7 @@ namespace hqm_ranked_backend
                 options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
                 options.MaximumReceiveMessageSize = null;
             });
+
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>

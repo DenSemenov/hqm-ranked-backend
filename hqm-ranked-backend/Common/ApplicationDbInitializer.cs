@@ -11,12 +11,10 @@ namespace hqm_ranked_backend.Common
     internal class ApplicationDbInitializer
     {
         private readonly RankedDb _dbContext;
-        private IWebHostEnvironment _hostingEnvironment;
         private IImageGeneratorService _imageGeneratorService;
-        public ApplicationDbInitializer(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
+        public ApplicationDbInitializer(RankedDb dbContext, IImageGeneratorService imageGeneratorService)
         {
             _dbContext = dbContext;
-            _hostingEnvironment = hostingEnvironment;
             _imageGeneratorService = imageGeneratorService;
         }
 
@@ -91,21 +89,18 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
-            if (!Directory.Exists(_hostingEnvironment.WebRootPath + "/avatars"))
-            {
-                Directory.CreateDirectory(_hostingEnvironment.WebRootPath + "/avatars");
-            }
+            //var userIds = await _dbContext.Players.Select(x => x.Id).ToListAsync();
+            //foreach (var userId in userIds)
+            //{
+            //    var path = userId + ".png";
 
-            var userIds = await _dbContext.Players.Select(x => x.Id).ToListAsync();
-            foreach (var userId in userIds)
-            {
-                var path = _hostingEnvironment.WebRootPath + "/avatars/" + userId + ".png";
-                if (!File.Exists(path))
-                {
-                    var file = _imageGeneratorService.GenerateImage();
-                    file.SaveAsPng(path);
-                }
-            }
+
+            //    if (!File.Exists(path))
+            //    {
+            //        var file = _imageGeneratorService.GenerateImage();
+            //        file.SaveAsPng(path);
+            //    }
+            //}
 
 
             if (!await _dbContext.EventTypes.AnyAsync())
