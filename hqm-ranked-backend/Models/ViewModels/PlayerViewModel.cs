@@ -13,6 +13,7 @@
         public List<PlayerSeasonsViewModel> LastSeasons { get; set; } = new List<PlayerSeasonsViewModel>();
         public PlayerCalcDataViewModel CalcData { get; set; }
         public List<PlayerPoint> PlayerPoints { get; set; } = new List<PlayerPoint>();
+        public List<string> OldNicknames { get; set; } = new List<string>();
     }
 
     public class PlayerPoint

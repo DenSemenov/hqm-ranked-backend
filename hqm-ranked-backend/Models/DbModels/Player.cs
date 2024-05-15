@@ -15,6 +15,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public Role Role { get; set; }
         public ICollection<GamePlayer> GamePlayers { get; set; }
         public ICollection<Bans> Bans { get; set; }
+        public ICollection<NicknameChanges> NicknameChanges { get; set; }
         [Required]
         public bool IsApproved { get; set; } = true;
 

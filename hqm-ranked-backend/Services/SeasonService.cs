@@ -132,7 +132,7 @@ namespace hqm_ranked_backend.Services
 
             result.Id = request.Id;
 
-            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).SingleOrDefaultAsync(x => x.Id == request.Id);
+            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x=>x.NicknameChanges).SingleOrDefaultAsync(x => x.Id == request.Id);
             result.Name = player.Name;
             result.Games = player.GamePlayers.Count;
             result.Goals = player.GamePlayers.Sum(x => x.Goals);
@@ -205,6 +205,8 @@ namespace hqm_ranked_backend.Services
                     Score = score
                 });
             }
+
+            result.OldNicknames = player.NicknameChanges.OrderByDescending(x=>x.CreatedOn).Select(x=>x.OldNickname).ToList();
 
             return result;
         }

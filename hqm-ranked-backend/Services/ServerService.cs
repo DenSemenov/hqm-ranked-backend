@@ -56,7 +56,7 @@ namespace hqm_ranked_backend.Services
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
             if (server != null)
             {
-                var player = await _dbContext.Players.Include(x=>x.Bans).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+                var player = await _dbContext.Players.Include(x=>x.Bans).Include(x=>x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
                 if (player != null)
                 {
                     if (player.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow))
@@ -73,11 +73,17 @@ namespace hqm_ranked_backend.Services
                         var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
                         if ((approveRequired && player.IsApproved) || !approveRequired)
                         {
-
+                            var oldNickname = String.Empty;
+                            var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
+                            if (oldNicknameItem !=null)
+                            {
+                                oldNickname = oldNicknameItem.OldNickname;
+                            }
                             return new ServerLoginViewModel
                             {
                                 Id = player.Id,
                                 Success = true,
+                                OldNickname = oldNickname,
                             };
                         }
                         else

@@ -5,5 +5,6 @@
         public int Id { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; } = String.Empty;
+        public string OldNickname { get; set; } = String.Empty;
     }
 }
