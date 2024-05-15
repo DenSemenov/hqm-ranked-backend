@@ -124,6 +124,10 @@ namespace hqm_ranked_backend.Services
                 settings.WebhookCount = request.WebhookCount;
                 settings.ShadowBanReportsCount = request.ShadowBanReportsCount;
                 settings.StartingElo = request.StartingElo;
+                settings.S3Domain = request.S3Domain;
+                settings.S3Bucket = request.S3Bucket;
+                settings.S3User = request.S3User;
+                settings.S3Key = request.S3Key;
 
                 await _dbContext.SaveChangesAsync();
             }
