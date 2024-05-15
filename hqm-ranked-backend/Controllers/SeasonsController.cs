@@ -64,5 +64,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("GetStorage")]
+        public async Task<IActionResult> GetStorage()
+        {
+            var result = await _seasonService.GetStorage();
+
+            return Ok(result);
+        }
     }
 }

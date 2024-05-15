@@ -271,5 +271,18 @@ namespace hqm_ranked_backend.Services
 
             return rules;
         }
+
+        public async Task<string> GetStorage()
+        {
+            var storageUrl = String.Empty;
+
+            var setting = await _dbContext.Settings.FirstOrDefaultAsync();
+            if (setting != null)
+            {
+                storageUrl = "https://"+setting.S3Domain+"/"+setting.S3Bucket;
+            }
+
+            return storageUrl;
+        }
     }
 }

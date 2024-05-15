@@ -14,5 +14,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<Season> GetCurrentSeason();
         Task<int> GetPlayerElo(int id);
         Task<string> GetRules();
+        Task<string> GetStorage();
+
     }
 }

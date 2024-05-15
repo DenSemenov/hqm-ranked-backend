@@ -40,7 +40,7 @@ namespace hqm_ranked_backend.Services
                 {
                     var putObjectRequest = new PutObjectRequest();
                     putObjectRequest.BucketName = settings.S3Bucket;
-                    putObjectRequest.Key = name;
+                    putObjectRequest.Key = settings.Id.ToString()+"/"+name;
                     putObjectRequest.InputStream = fileToUpload;
 
                     var response = await client.PutObjectAsync(putObjectRequest);
@@ -66,7 +66,7 @@ namespace hqm_ranked_backend.Services
                 {
                     var putObjectRequest = new PutObjectRequest();
                     putObjectRequest.BucketName = settings.S3Bucket;
-                    putObjectRequest.Key = name;
+                    putObjectRequest.Key = settings.Id.ToString() + "/" + name;
                     putObjectRequest.InputStream = fileToUpload;
 
                     var response = await client.PutObjectAsync(putObjectRequest);
