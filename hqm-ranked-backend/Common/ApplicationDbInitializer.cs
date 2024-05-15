@@ -184,7 +184,7 @@ namespace hqm_ranked_backend.Common
             {
                 var path = String.Format("images/{0}.png", userId);
 
-                if (!existsFiles.Contains(path))
+                if (!existsFiles.Contains(settings.Id + "/"+path))
                 {
                     var file = _imageGeneratorService.GenerateImage();
                     var strm = new MemoryStream();
