@@ -10,17 +10,17 @@ using ReplayHandler.Classes;
 
 namespace hqm_ranked_backend.Services
 {
-    public class ReplayService:IReplayService
+    public class ReplayService: IReplayService
     {
         private RankedDb _dbContext;
-        private IWebHostEnvironment _hostingEnvironment;
-        public ReplayService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
+        private IStorageService _storageService;
+        public ReplayService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IStorageService storageService)
         {
             _dbContext = dbContext;
-            _hostingEnvironment = hostingEnvironment;
+            _storageService = storageService;
         }
 
-        public async Task PushReplay(Guid gameId, byte[] data, string token)
+        public async Task PushReplay(Guid gameId, IFormFile file, string token)
         {
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == token);
             if (server != null)
@@ -28,13 +28,19 @@ namespace hqm_ranked_backend.Services
                 var game = await _dbContext.Games.FirstOrDefaultAsync(x=>x.Id == gameId);
                 if (game != null)
                 {
-                    var entity = _dbContext.ReplayData.Add(new ReplayData
-                    {
-                         Game = game,
-                         Data = data,
-                    });
+                    var name = "replays/" + game.Id + ".hrp";
 
-                    await _dbContext.SaveChangesAsync();
+                    if (await _storageService.UploadFile(name, file))
+                    {
+
+                        var entity = _dbContext.ReplayData.Add(new ReplayData
+                        {
+                            Game = game,
+                            Url = name
+                        });
+
+                        await _dbContext.SaveChangesAsync();
+                    }
                 }
             }
         }
@@ -80,25 +86,17 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<string> GetReplayData(ReplayRequest request)
+        public async void ParseReplay(ReplayRequest request)
         {
-            var data = String.Empty;
-
-            var replayData = await _dbContext.ReplayData.FirstOrDefaultAsync(x => x.Id == request.Id);
+            var replayData = _dbContext.ReplayData.Include(x => x.Game).FirstOrDefault(x => x.Game.Id == request.Id);
             if (replayData != null)
             {
-                data = Convert.ToBase64String(replayData.Data);
-            }
+                var storageUrl = await _storageService.GetStorage();
 
-            return data;
-        }
+                var client = new System.Net.WebClient();
+                var data = client.DownloadData(storageUrl + replayData.Url);
 
-        public void ParseReplay(ReplayRequest request)
-        {
-            var replayData = _dbContext.ReplayData.Include(x=>x.Game).FirstOrDefault(x=>x.Game.Id == request.Id);
-            if (replayData != null)
-            {
-                var result = ReplayHandler.ReplayHandler.ParseReplay(replayData.Data);
+                var result = ReplayHandler.ReplayHandler.ParseReplay(data);
 
                 var processedData = ReplayDataHelper.GetReplayCalcData(result);
 
@@ -133,17 +131,19 @@ namespace hqm_ranked_backend.Services
 
                 for (int i = 0; i < count; i++)
                 {
-                    var fragment = result.Skip(i* fragmentLenght).Take(fragmentLenght).ToArray();
+                    var fragment = result.Skip(i * fragmentLenght).Take(fragmentLenght).ToArray();
 
                     var json = JsonConvert.SerializeObject(fragment);
-                    var path = Path.Combine(_hostingEnvironment.WebRootPath, request.Id.ToString() + i.ToString() + ".json");
-                    File.WriteAllText(path, json);
+                    var path = Path.Combine("replayFragments", request.Id.ToString() + i.ToString() + ".json");
+                    
+                    await _storageService.UploadTextFile(path, json);
+
                     replayData.ReplayFragments.Add(new ReplayFragment
                     {
-                         Data = path,
-                         Index = i,
-                         Min = fragment.Min(x=>x.PacketNumber),
-                         Max = fragment.Max(x=>x.PacketNumber)
+                        Data = path,
+                        Index = i,
+                        Min = fragment.Min(x => x.PacketNumber),
+                        Max = fragment.Max(x => x.PacketNumber)
                     });
                     _dbContext.SaveChanges();
                 }
@@ -169,7 +169,10 @@ namespace hqm_ranked_backend.Services
             if (query != null)
             {
                 var path = query.Data;
-                var json= File.ReadAllText(path);
+
+                var storageUrl = await _storageService.GetStorage();
+                var client = new System.Net.WebClient();
+                var json = client.DownloadString(storageUrl + path);
                 var data = JsonConvert.DeserializeObject<ReplayTick[]>(json); 
 
                 result.Index = query.Index;

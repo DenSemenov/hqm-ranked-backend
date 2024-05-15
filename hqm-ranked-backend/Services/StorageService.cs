@@ -5,6 +5,7 @@ using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services
 {
@@ -14,6 +15,19 @@ namespace hqm_ranked_backend.Services
         public StorageService(RankedDb dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task<string> GetStorage()
+        {
+            var storageUrl = String.Empty;
+
+            var setting = await _dbContext.Settings.FirstOrDefaultAsync();
+            if (setting != null)
+            {
+                storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
+            }
+
+            return storageUrl;
         }
 
         public async Task<List<string>> GetAllFileNames()
@@ -37,7 +51,7 @@ namespace hqm_ranked_backend.Services
             return fileNames;
         }
 
-        public async Task UploadFile(string name, IFormFile file)
+        public async Task<bool> UploadFile(string name, IFormFile file)
         {
             var settings = _dbContext.Settings.FirstOrDefault();
 
@@ -60,10 +74,16 @@ namespace hqm_ranked_backend.Services
 
                     await client.PutObjectAsync(putObjectRequest);
                 }
+
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
-        public async Task UploadFileStream(string name, Stream file)
+        public async Task<bool> UploadFileStream(string name, Stream file)
         {
             var settings = _dbContext.Settings.FirstOrDefault();
 
@@ -83,10 +103,16 @@ namespace hqm_ranked_backend.Services
                 putObjectRequest.InputStream = file;
 
                 await client.PutObjectAsync(putObjectRequest);
+
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
-        public async Task UploadTextFile(string name, string text)
+        public async Task<bool> UploadTextFile(string name, string text)
         {
             var settings = _dbContext.Settings.FirstOrDefault();
 
@@ -109,6 +135,11 @@ namespace hqm_ranked_backend.Services
 
                     await client.PutObjectAsync(putObjectRequest);
                 }
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 

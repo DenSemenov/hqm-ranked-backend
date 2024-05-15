@@ -19,21 +19,8 @@ namespace hqm_ranked_backend.Controllers
         {
             if (replay.Length > 0)
             {
-                using (var ms = new MemoryStream())
-                {
-                    replay.CopyTo(ms);
-                    var fileBytes = ms.ToArray();
-                    await _replayService.PushReplay(gameId,fileBytes, token);
-                }
+                await _replayService.PushReplay(gameId, replay, token);
             }
-        }
-
-        [HttpPost("GetReplayData")]
-        public async Task<IActionResult> GetReplayData(ReplayRequest request)
-        {
-            var result = await _replayService.GetReplayData(request);
-
-            return Ok(result);
         }
 
         [HttpPost("GetReplayViewer")]

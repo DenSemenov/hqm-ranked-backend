@@ -3,8 +3,9 @@
     public interface IStorageService
     {
         Task<List<string>> GetAllFileNames();
-        Task UploadFile(string name, IFormFile file);
-        Task UploadTextFile(string name, string text);
-        Task UploadFileStream(string name, Stream file);
+        Task<string> GetStorage();
+        Task<bool> UploadFile(string name, IFormFile file);
+        Task<bool> UploadTextFile(string name, string text);
+        Task<bool> UploadFileStream(string name, Stream file);
     }
 }
