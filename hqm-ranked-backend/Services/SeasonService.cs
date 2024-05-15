@@ -279,7 +279,7 @@ namespace hqm_ranked_backend.Services
             var setting = await _dbContext.Settings.FirstOrDefaultAsync();
             if (setting != null)
             {
-                storageUrl = "https://"+setting.S3Domain+"/"+setting.S3Bucket;
+                storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
             }
 
             return storageUrl;
