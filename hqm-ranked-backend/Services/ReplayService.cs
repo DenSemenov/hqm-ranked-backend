@@ -86,12 +86,18 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async void ParseReplay(ReplayRequest request)
+        public void ParseReplay(ReplayRequest request)
         {
             var replayData = _dbContext.ReplayData.Include(x => x.Game).FirstOrDefault(x => x.Game.Id == request.Id);
             if (replayData != null)
             {
-                var storageUrl = await _storageService.GetStorage();
+                var storageUrl = String.Empty;
+
+                var setting = _dbContext.Settings.FirstOrDefault();
+                if (setting != null)
+                {
+                    storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
+                }
 
                 var client = new System.Net.WebClient();
                 var data = client.DownloadData(storageUrl + replayData.Url);
@@ -134,9 +140,9 @@ namespace hqm_ranked_backend.Services
                     var fragment = result.Skip(i * fragmentLenght).Take(fragmentLenght).ToArray();
 
                     var json = JsonConvert.SerializeObject(fragment);
-                    var path = Path.Combine("replayFragments", request.Id.ToString() + i.ToString() + ".json");
-                    
-                    await _storageService.UploadTextFile(path, json);
+                    var path = "replayFragments/" + request.Id.ToString() + i.ToString() + ".json";
+
+                    _storageService.UploadTextFile(path, json).Wait();
 
                     replayData.ReplayFragments.Add(new ReplayFragment
                     {
@@ -145,8 +151,8 @@ namespace hqm_ranked_backend.Services
                         Min = fragment.Min(x => x.PacketNumber),
                         Max = fragment.Max(x => x.PacketNumber)
                     });
-                    _dbContext.SaveChanges();
                 }
+                _dbContext.SaveChanges();
             }
         }
 
@@ -190,7 +196,7 @@ namespace hqm_ranked_backend.Services
             var replayData = await _dbContext.ReplayData.Include(x => x.ReplayGoals).Where(x=>x.Id == request.Id).Select(x=>x.ReplayGoals).FirstOrDefaultAsync();
             if (replayData != null)
             {
-                result = replayData;
+                result = replayData.OrderBy(x=>x.Packet).ToList();
             }
 
             return result;
@@ -203,7 +209,7 @@ namespace hqm_ranked_backend.Services
             var replayData = await _dbContext.ReplayData.Include(x => x.ReplayChats).Where(x => x.Id == request.Id).Select(x => x.ReplayChats).FirstOrDefaultAsync();
             if (replayData != null)
             {
-                result = replayData;
+                result = replayData.OrderBy(x => x.Packet).ToList();
             }
 
             return result;
