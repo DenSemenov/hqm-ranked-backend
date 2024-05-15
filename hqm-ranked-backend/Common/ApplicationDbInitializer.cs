@@ -12,10 +12,12 @@ namespace hqm_ranked_backend.Common
     {
         private readonly RankedDb _dbContext;
         private IImageGeneratorService _imageGeneratorService;
-        public ApplicationDbInitializer(RankedDb dbContext, IImageGeneratorService imageGeneratorService)
+        private IStorageService _storageService;
+        public ApplicationDbInitializer(RankedDb dbContext, IImageGeneratorService imageGeneratorService, IStorageService storageService)
         {
             _dbContext = dbContext;
             _imageGeneratorService = imageGeneratorService;
+            _storageService = storageService;
         }
 
         public async Task Initialize()
@@ -89,18 +91,7 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
-            //var userIds = await _dbContext.Players.Select(x => x.Id).ToListAsync();
-            //foreach (var userId in userIds)
-            //{
-            //    var path = userId + ".png";
-
-
-            //    if (!File.Exists(path))
-            //    {
-            //        var file = _imageGeneratorService.GenerateImage();
-            //        file.SaveAsPng(path);
-            //    }
-            //}
+          
 
 
             if (!await _dbContext.EventTypes.AnyAsync())
@@ -183,6 +174,24 @@ namespace hqm_ranked_backend.Common
                 });
 
                 await _dbContext.SaveChangesAsync();
+            }
+
+            var existsFiles = await _storageService.GetAllFileNames();
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            var userIds = await _dbContext.Players.Select(x => x.Id).ToListAsync();
+            foreach (var userId in userIds)
+            {
+                var path = String.Format("images/{0}.png", userId);
+
+                if (!existsFiles.Contains(path))
+                {
+                    var file = _imageGeneratorService.GenerateImage();
+                    var strm = new MemoryStream();
+                    file.SaveAsPng(strm);
+
+                    await _storageService.UploadFileStream(path, strm); 
+                }
             }
 
             await _dbContext.SaveChangesAsync();

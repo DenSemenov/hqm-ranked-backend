@@ -80,7 +80,7 @@ namespace hqm_ranked_backend.Controllers
                 var userId = UserHelper.GetUserId(User);
                 if (file != null)
                 {
-                    var name = userId + ".png";
+                    var name = "images/" + userId + ".png";
                     await _storageService.UploadFile(name, file);
                 }
                 return Ok();
