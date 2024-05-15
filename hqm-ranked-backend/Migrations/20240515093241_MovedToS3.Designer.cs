@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
@@ -11,9 +12,11 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240515093241_MovedToS3")]
+    partial class MovedToS3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
