@@ -6,6 +6,10 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.Mime.MediaTypeNames;
+using System.IdentityModel.Tokens.Jwt;
+using System.IO;
+using System.Collections;
 
 namespace hqm_ranked_backend.Services
 {
@@ -141,6 +145,34 @@ namespace hqm_ranked_backend.Services
             {
                 return false;
             }
+        }
+
+        public async Task<string> LoadTextFile(string name)
+        {
+            var result = String.Empty;
+
+            var settings = _dbContext.Settings.FirstOrDefault();
+
+            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            {
+                AmazonS3Config config = new AmazonS3Config()
+                {
+                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
+                    UseHttp = false,
+                };
+                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
+                AmazonS3Client client = new AmazonS3Client(creds, config);
+
+                var file = await client.GetObjectAsync(settings.S3Bucket, settings.Id.ToString() + "/" + name);
+
+                using (StreamReader reader = new StreamReader(file.ResponseStream))
+                {
+                    result = reader.ReadToEnd();
+                }
+
+            }
+
+            return result;
         }
 
         private Stream GenerateStreamFromString(string p)

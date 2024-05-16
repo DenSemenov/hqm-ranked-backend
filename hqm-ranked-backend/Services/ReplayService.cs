@@ -177,8 +177,8 @@ namespace hqm_ranked_backend.Services
                 var path = query.Data;
 
                 var storageUrl = await _storageService.GetStorage();
-                var client = new System.Net.WebClient();
-                var json = client.DownloadString(storageUrl + path);
+
+                var json = await _storageService.LoadTextFile(path);
                 var data = JsonConvert.DeserializeObject<ReplayTick[]>(json); 
 
                 result.Index = query.Index;
