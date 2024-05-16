@@ -86,9 +86,13 @@ namespace ReplayHandler
                                     {
                                         if (player_index.Value != -1)
                                         {
-                                            var p = current_player_list[player_index.Value];
-                                            name = p?.name;
-                                            msg.player_name = name;
+                                            try
+                                            {
+                                                var p = current_player_list[player_index.Value];
+                                                name = p?.name;
+                                                msg.player_name = name;
+                                            }
+                                            catch { }
                                         }
                                     }
                                     break;
