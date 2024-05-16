@@ -176,8 +176,6 @@ namespace hqm_ranked_backend.Services
             {
                 var path = query.Data;
 
-                var storageUrl = await _storageService.GetStorage();
-
                 var json = await _storageService.LoadTextFile(path);
                 var data = JsonConvert.DeserializeObject<ReplayTick[]>(json); 
 

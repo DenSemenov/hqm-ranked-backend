@@ -29,8 +29,7 @@ namespace ReplayHandler.Classes
                 }
             }
             matrix4x[3, 3] = 1f;
-            var q = Quaternion.CreateFromRotationMatrix(matrix4x);
-            return GetEulerAnglesFromQuaternion(q);
+            return ConvertMatrixToEulerAngles(matrix4x);
         }
 
         public static Vector3 GetEulerAnglesFromQuaternion(Quaternion quaternion)
