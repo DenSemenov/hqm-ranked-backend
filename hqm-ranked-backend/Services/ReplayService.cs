@@ -120,7 +120,7 @@ namespace hqm_ranked_backend.Services
                     replayData.ReplayGoals.Add(new ReplayGoal
                     {
                         Packet = goal.Packet,
-                        GoalBy = goal.GoalBy,
+                        GoalBy = goal.GoalBy ?? String.Empty,
                         Period = goal.Period,
                         Time = goal.Time,
                     });
