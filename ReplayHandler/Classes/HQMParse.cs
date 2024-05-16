@@ -1,128 +1,59 @@
-﻿using System.Numerics;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System.Numerics;
+using DLA = MathNet.Numerics.LinearAlgebra.Double;
 
 namespace ReplayHandler.Classes
 {
     internal class HQMParse
     {
-        public static Vector3 ConvertMatrixFromNetwork(byte b, uint v1, uint v2)
+        static readonly DLA.Vector UXP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 1.0, 0.0, 0.0 });
+        static readonly DLA.Vector UXN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { -1.0, 0.0, 0.0 });
+        static readonly DLA.Vector UYP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 1.0, 0.0 });
+        static readonly DLA.Vector UYN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, -1.0, 0.0 });
+        static readonly DLA.Vector UZP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 0.0, 1.0 });
+        static readonly DLA.Vector UZN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 0.0, -1.0 });
+
+        static DLA.Vector[][] TABLE = new DLA.Vector[][]
         {
-            Vector3 vector = ConvertRotColumnFromNetwork(b, v1);
-            Vector3 vector2 = ConvertRotColumnFromNetwork(b, v2);
-            Vector3 vector3 = Vector3.Cross(vector, vector2);
-            float[,] array = new float[3, 3];
-            array[0, 0] = -vector3.X;
-            array[0, 1] = -vector.X;
-            array[0, 2] = -vector2.X;
-            array[1, 0] = vector3.Y;
-            array[1, 1] = vector.Y;
-            array[1, 2] = vector2.Y;
-            array[2, 0] = vector3.Z;
-            array[2, 1] = vector.Z;
-            array[2, 2] = vector2.Z;
-            float[,] array2 = array;
-            Matrix4x4 matrix4x = new Matrix4x4();
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    matrix4x[i, j] = array2[i, j];
-                }
-            }
-            matrix4x[3, 3] = 1f;
-            return ConvertMatrixToEulerAngles(matrix4x);
-        }
-
-        public static Vector3 GetEulerAnglesFromQuaternion(Quaternion quaternion)
+            new DLA.Vector[] { UYP, UXP, UZP },
+            new DLA.Vector[] { UYP, UZP, UXN },
+            new DLA.Vector[] { UYP, UZN, UXP },
+            new DLA.Vector[] { UYP, UXN, UZN },
+            new DLA.Vector[] { UZP, UXP, UYN },
+            new DLA.Vector[] { UXN, UZP, UYN },
+            new DLA.Vector[] { UXP, UZN, UYN },
+            new DLA.Vector[] { UZN, UXN, UYN },
+        };
+        public static DLA.Vector Cross(MathNet.Numerics.LinearAlgebra.Vector<double> left, MathNet.Numerics.LinearAlgebra.Vector<double> right)
         {
-            Matrix4x4 matrix = Matrix4x4.CreateFromQuaternion(quaternion);
-
-            // Extract Euler angles
-            float pitch, yaw, roll;
-            if (Math.Abs(matrix.M13) < 0.9999999)
+            if ((left.Count != 3 || right.Count != 3))
             {
-                pitch = (float)Math.Asin(-matrix.M23);
-                yaw = (float)Math.Atan2(matrix.M13, matrix.M33);
-                roll = (float)Math.Atan2(matrix.M21, matrix.M22);
+                string message = "Vectors must have a length of 3.";
+                throw new Exception(message);
             }
-            else
-            {
-                pitch = (float)Math.PI / 2 * Math.Sign(-matrix.M23);
-                yaw = (float)-Math.Atan2(-matrix.M12, matrix.M11);
-                roll = 0;
-            }
+            DLA.Vector result = new DLA.DenseVector(3);
+            result[0] = left[1] * right[2] - left[2] * right[1];
+            result[1] = -left[0] * right[2] + left[2] * right[0];
+            result[2] = left[0] * right[1] - left[1] * right[0];
 
-            return new Vector3(pitch, yaw, roll);
-        }
-
-        public static Vector3 ConvertRotColumnFromNetwork(byte b, uint v)
-        {
-            Vector3 vector = new Vector3(1f, 0f, 0f);
-            Vector3 vector2 = new Vector3(-1f, 0f, 0f);
-            Vector3 vector3 = new Vector3(0f, 1f, 0f);
-            Vector3 vector4 = new Vector3(0f, -1f, 0f);
-            Vector3 vector5 = new Vector3(0f, 0f, 1f);
-            Vector3 vector6 = new Vector3(0f, 0f, -1f);
-            Vector3[,] array = new Vector3[8, 3];
-            array[0, 0] = vector3;
-            array[0, 1] = vector;
-            array[0, 2] = vector5;
-            array[1, 0] = vector3;
-            array[1, 1] = vector5;
-            array[1, 2] = vector2;
-            array[2, 0] = vector3;
-            array[2, 1] = vector6;
-            array[2, 2] = vector;
-            array[3, 0] = vector3;
-            array[3, 1] = vector2;
-            array[3, 2] = vector6;
-            array[4, 0] = vector5;
-            array[4, 1] = vector;
-            array[4, 2] = vector4;
-            array[5, 0] = vector2;
-            array[5, 1] = vector5;
-            array[5, 2] = vector4;
-            array[6, 0] = vector;
-            array[6, 1] = vector6;
-            array[6, 2] = vector4;
-            array[7, 0] = vector6;
-            array[7, 1] = vector2;
-            array[7, 2] = vector4;
-            uint num = v & 7U;
-            Vector3 vector7 = array[(int)num, 0];
-            Vector3 vector8 = array[(int)num, 1];
-            Vector3 vector9 = array[(int)num, 2];
-            for (byte b2 = 3; b2 < b; b2 += 2)
-            {
-                uint num2 = v >> (int)b2 & 3U;
-                Vector3 vector10 = vector7 + vector8;
-                vector10 = Vector3.Normalize(vector10);
-                Vector3 vector11 = vector8 + vector9;
-                vector11 = Vector3.Normalize(vector11);
-                Vector3 vector12 = vector9 + vector7;
-                vector12 = Vector3.Normalize(vector12);
-                switch (num2)
-                {
-                    case 0U:
-                        vector8 = vector10;
-                        vector9 = vector12;
-                        break;
-                    case 1U:
-                        vector7 = vector10;
-                        vector9 = vector11;
-                        break;
-                    case 2U:
-                        vector7 = vector12;
-                        vector8 = vector11;
-                        break;
-                    case 3U:
-                        vector7 = vector10;
-                        vector8 = vector11;
-                        vector9 = vector12;
-                        break;
-                }
-            }
-            Vector3 result = vector7 + vector8 + vector9;
             return result;
+        }
+        public static (float x, float y, float z) ConvertMatrixFromNetwork(byte b, uint v1, uint v2)
+        {
+            DLA.Vector r1 = ConvertRotColumnFromNetwork(b, v1);
+            DLA.Vector r2 = ConvertRotColumnFromNetwork(b, v2);
+            DLA.Vector r0 = Cross(r1, r2);
+            var m = Matrix<double>.Build.DenseOfColumnVectors(r0, r1, r2);
+
+            Matrix4x4 matrix4x4 = new Matrix4x4(
+                (float)m[0, 0], (float)m[0, 1], (float)m[0, 2], 0.0f,
+                 (float)m[1, 0], (float)m[1, 1], (float)m[1, 2], 0.0f,
+                 (float)m[2, 0], (float)m[2, 1], (float)m[2, 2], 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f
+                );
+
+            var r = ConvertMatrixToEulerAngles(matrix4x4);
+            return (r.X, r.Y, r.Z);
         }
 
         public static Vector3 ConvertMatrixToEulerAngles(Matrix4x4 rotationMatrix)
@@ -146,6 +77,54 @@ namespace ReplayHandler.Classes
             }
 
             return new Vector3((float)x, (float)y, (float)z);
+        }
+
+        public static DLA.Vector ConvertRotColumnFromNetwork(byte b, uint v)
+        {
+            int start = (int)(v & 7);
+            DLA.Vector temp1 = TABLE[start][0];
+            DLA.Vector temp2 = TABLE[start][1];
+            DLA.Vector temp3 = TABLE[start][2];
+            int pos = 3;
+            while (pos < b)
+            {
+                int step = (int)((v >> pos) & 3);
+                DLA.Vector c1 = NormalizeVector((DLA.Vector)temp1.Add(temp2));
+                DLA.Vector c2 = NormalizeVector((DLA.Vector)temp2.Add(temp3));
+                DLA.Vector c3 = NormalizeVector((DLA.Vector)temp1.Add(temp3));
+                switch (step)
+                {
+                    case 0:
+                        temp2 = c1;
+                        temp3 = c3;
+                        break;
+                    case 1:
+                        temp1 = c1;
+                        temp3 = c2;
+                        break;
+                    case 2:
+                        temp1 = c3;
+                        temp2 = c2;
+                        break;
+                    case 3:
+                        temp1 = c1;
+                        temp2 = c2;
+                        temp3 = c3;
+                        break;
+                    default:
+                        throw new Exception();
+                }
+                pos += 2;
+            }
+            return NormalizeVector((DLA.Vector)temp1.Add(temp2).Add(temp3));
+        }
+
+        public static DLA.Vector NormalizeVector(DLA.Vector v)
+        {
+            var vector = new Vector3((float)v[0], (float)v[1], (float)v[2]);
+            var normalizedVector = Vector3.Normalize(vector);
+
+            return (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { normalizedVector.X, normalizedVector.Y, normalizedVector.Z });
         }
     }
 }
