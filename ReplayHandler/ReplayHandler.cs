@@ -441,9 +441,9 @@ namespace ReplayHandler
                         float pos_y = puckPacket.pos.Item2 / 1024.0f;
                         float pos_z = puckPacket.pos.Item3 / 1024.0f;
                         var rot = HQMParse.ConvertMatrixFromNetwork(31, puckPacket.rot.Item1, puckPacket.rot.Item2);
-                        float rot_x = rot.X;
-                        float rot_y = rot.Y;
-                        float rot_z = rot.Z;
+                        float rot_x = rot.x;
+                        float rot_y = rot.y;
+                        float rot_z = rot.z;
                         objects.Add(new HQMPuck
                         {
                             index = index,
@@ -463,13 +463,13 @@ namespace ReplayHandler
                         float stick_pos_y = (skaterPacket.stick_pos.Item2 / 1024.0f) + pos_y_p - 4.0f;
                         float stick_pos_z = (skaterPacket.stick_pos.Item3 / 1024.0f) + pos_z_p - 4.0f;
                         var stick_rot_p = HQMParse.ConvertMatrixFromNetwork(31, skaterPacket.stick_rot.Item1, skaterPacket.stick_rot.Item2);
-                        float stick_rot_x = stick_rot_p.X;
-                        float stick_rot_y = stick_rot_p.Y;
-                        float stick_rot_z = stick_rot_p.Z;
+                        float stick_rot_x = stick_rot_p.x;
+                        float stick_rot_y = stick_rot_p.y;
+                        float stick_rot_z = stick_rot_p.z;
                         var rot_p = HQMParse.ConvertMatrixFromNetwork(31, skaterPacket.rot.Item1, skaterPacket.rot.Item2);
-                        float rot_x_p = rot_p.X;
-                        float rot_y_p = rot_p.Y;
-                        float rot_z_p = rot_p.Z;
+                        float rot_x_p = rot_p.x;
+                        float rot_y_p = rot_p.y;
+                        float rot_z_p = rot_p.z;
                         objects.Add(new HQMSkater
                         {
                             index = index,
