@@ -17,5 +17,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public string S3Bucket { get; set; } = String.Empty;
         public string S3User { get; set; } = String.Empty;
         public string S3Key { get; set; } = String.Empty;
+        public string PushJson { get; set; } = String.Empty;
     }
 }

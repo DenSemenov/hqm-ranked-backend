@@ -1,6 +1,10 @@
 ﻿using CSharpDiscordWebhook.NET.Discord;
+using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
+using Google.Apis.Auth.OAuth2;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
+using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services
@@ -132,6 +136,29 @@ namespace hqm_ranked_backend.Services
                     catch { }
                 }
             }
+        }
+
+        public async Task SendPush(string title, string body)
+        {
+            var tokens = _dbContext.Players.Select(x => x.PushTokens).ToList().SelectMany(x => x).ToList();
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromJson(settings.PushJson),
+                ProjectId = "hqmpush"
+            });
+
+            var message = new MulticastMessage()
+            {
+                Tokens = tokens,
+                Notification = new Notification()
+                {
+                    Title = title,
+                    Body = body,
+                },
+            };
+            await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
         }
     }
 }
