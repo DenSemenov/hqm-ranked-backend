@@ -21,6 +21,7 @@ namespace hqm_ranked_backend.Services
         private IEventService _eventService;
         private INotificationService _notificationService;
         private readonly IHubContext<ActionHub> _hubContext;
+        private List<LoginTry> _loginTrys = new List<LoginTry>();
         public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService)
         {
             _dbContext = dbContext;
@@ -52,70 +53,90 @@ namespace hqm_ranked_backend.Services
 
         public async Task<ServerLoginViewModel> ServerLogin(ServerLoginRequest request)
         {
-            var password = Encryption.GetMD5Hash(request.Password.Trim());
-            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
-            if (server != null)
+            _loginTrys.Add(new LoginTry
             {
-                var player = await _dbContext.Players.Include(x=>x.Bans).Include(x=>x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
-                if (player != null)
+                Name = request.Login,
+                Date = DateTime.UtcNow
+            });
+
+            var dateToCheck = DateTime.UtcNow.AddSeconds(-5);
+
+            if (_loginTrys.Count(x => x.Date > dateToCheck) >= 3)
+            {
+                return new ServerLoginViewModel
                 {
-                    if (player.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow))
+                    Id = -1,
+                    Success = false,
+                    ErrorMessage = "[Server] Macros detected"
+                };
+            }
+            else
+            {
+                var password = Encryption.GetMD5Hash(request.Password.Trim());
+                var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
+                if (server != null)
+                {
+                    var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+                    if (player != null)
                     {
-                        return new ServerLoginViewModel
-                        {
-                            Id = 0,
-                            Success = false,
-                            ErrorMessage = "[Server] You are banned"
-                        };
-                    }
-                    else
-                    {
-                        var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
-                        if ((approveRequired && player.IsApproved) || !approveRequired)
-                        {
-                            var oldNickname = String.Empty;
-                            var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
-                            if (oldNicknameItem != null)
-                            {
-                                oldNickname = oldNicknameItem.OldNickname;
-                            }
-                            return new ServerLoginViewModel
-                            {
-                                Id = player.Id,
-                                Success = true,
-                                OldNickname = oldNickname,
-                            };
-                        }
-                        else
+                        if (player.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow))
                         {
                             return new ServerLoginViewModel
                             {
                                 Id = 0,
                                 Success = false,
-                                ErrorMessage = "[Server] You are not approved by admin"
+                                ErrorMessage = "[Server] You are banned"
                             };
                         }
+                        else
+                        {
+                            var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
+                            if ((approveRequired && player.IsApproved) || !approveRequired)
+                            {
+                                var oldNickname = String.Empty;
+                                var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
+                                if (oldNicknameItem != null)
+                                {
+                                    oldNickname = oldNicknameItem.OldNickname;
+                                }
+                                return new ServerLoginViewModel
+                                {
+                                    Id = player.Id,
+                                    Success = true,
+                                    OldNickname = oldNickname,
+                                };
+                            }
+                            else
+                            {
+                                return new ServerLoginViewModel
+                                {
+                                    Id = 0,
+                                    Success = false,
+                                    ErrorMessage = "[Server] You are not approved by admin"
+                                };
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var pl = await _dbContext.Players.SingleOrDefaultAsync(x => x.Name == request.Login.Trim());
+                        return new ServerLoginViewModel
+                        {
+                            Id = pl != null ? pl.Id : -1,
+                            Success = false,
+                            ErrorMessage = "[Server] Incorrect login or password"
+                        };
                     }
                 }
                 else
                 {
-                    var pl = await _dbContext.Players.SingleOrDefaultAsync(x => x.Name == request.Login.Trim());
                     return new ServerLoginViewModel
                     {
-                        Id = pl != null ? pl.Id : -1,
+                        Id = 0,
                         Success = false,
-                        ErrorMessage = "[Server] Incorrect login or password"
+                        ErrorMessage = "[Server] Server token wasn't found"
                     };
                 }
-            }
-            else
-            {
-                return new ServerLoginViewModel
-                {
-                    Id = 0,
-                    Success = false,
-                    ErrorMessage = "[Server] Server token wasn't found"
-                };
             }
         }
 
