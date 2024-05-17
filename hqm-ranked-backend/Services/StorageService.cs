@@ -1,15 +1,10 @@
 ﻿using Amazon.Runtime;
 using Amazon.S3.Model;
 using Amazon.S3;
-using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
-using System.IdentityModel.Tokens.Jwt;
-using System.IO;
-using System.Collections;
 
 namespace hqm_ranked_backend.Services
 {
