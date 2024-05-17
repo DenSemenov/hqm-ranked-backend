@@ -47,6 +47,7 @@ namespace hqm_ranked_backend
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IStorageService, StorageService>();
 
+            services.AddMemoryCache();
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
 
             services.AddSignalR(options =>

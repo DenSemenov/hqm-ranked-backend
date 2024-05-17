@@ -6,5 +6,6 @@
         public bool Success { get; set; }
         public string ErrorMessage { get; set; } = String.Empty;
         public string OldNickname { get; set; } = String.Empty;
+        public bool SendToAll { get; set; } = false;
     }
 }
