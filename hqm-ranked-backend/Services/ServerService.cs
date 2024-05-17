@@ -75,7 +75,7 @@ namespace hqm_ranked_backend.Services
                         {
                             var oldNickname = String.Empty;
                             var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
-                            if (oldNicknameItem !=null)
+                            if (oldNicknameItem != null)
                             {
                                 oldNickname = oldNicknameItem.OldNickname;
                             }
@@ -99,9 +99,10 @@ namespace hqm_ranked_backend.Services
                 }
                 else
                 {
+                    var pl = await _dbContext.Players.SingleOrDefaultAsync(x => x.Name == request.Login.Trim());
                     return new ServerLoginViewModel
                     {
-                        Id = 0,
+                        Id = pl != null ? pl.Id : -1,
                         Success = false,
                         ErrorMessage = "[Server] Incorrect login or password"
                     };
