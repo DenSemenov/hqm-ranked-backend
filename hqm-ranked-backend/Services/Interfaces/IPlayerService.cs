@@ -10,5 +10,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<CurrentUserVIewModel> GetCurrentUser(int userId);
         Task ChangePassword(PasswordChangeRequest request, int userId);
         Task<string> ChangeNickname(NicknameChangeRequest request, int userId);
+        Task AddPushToken(PushTokenRequest request, int userId);
     }
 }

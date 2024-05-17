@@ -17,7 +17,7 @@ namespace hqm_ranked_backend.Services
 {
     public class PlayerService : IPlayerService
     {
-        private RankedDb _dbContext; 
+        private RankedDb _dbContext;
         private IWebHostEnvironment _hostingEnvironment;
         private IImageGeneratorService _imageGeneratorService;
         public PlayerService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
@@ -30,7 +30,7 @@ namespace hqm_ranked_backend.Services
         {
             var password = Encryption.GetMD5Hash(request.Password.Trim());
 
-            var player = await _dbContext.Players.Include(x=>x.Role).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+            var player = await _dbContext.Players.Include(x => x.Role).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
             if (player != null)
             {
                 var token = Encryption.GetToken(player.Id, player.Role.Name == "admin");
@@ -71,7 +71,7 @@ namespace hqm_ranked_backend.Services
 
                 var entity = await _dbContext.Players.AddAsync(new Player
                 {
-                    Id = _dbContext.Players.Max(x=>x.Id)+1,
+                    Id = _dbContext.Players.Max(x => x.Id) + 1,
                     Name = request.Login.Trim(),
                     Email = request.Email.Trim(),
                     Password = password,
@@ -113,7 +113,7 @@ namespace hqm_ranked_backend.Services
         {
             var result = new CurrentUserVIewModel();
 
-            var user = await _dbContext.Players.Include(x=>x.Bans).Include(x=>x.Role).SingleOrDefaultAsync(x => x.Id == userId);
+            var user = await _dbContext.Players.Include(x => x.Bans).Include(x => x.Role).SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
                 result.Id = user.Id;
@@ -169,6 +169,24 @@ namespace hqm_ranked_backend.Services
             }
 
             return result;
+        }
+
+        public async Task AddPushToken(PushTokenRequest request, int userId)
+        {
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                if (user.PushTokens == null)
+                {
+                    user.PushTokens = new List<string>();
+                }
+
+                if (!user.PushTokens.Any(x => x == request.Token))
+                {
+                    user.PushTokens.Add(request.Token);
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
         }
     }
 }

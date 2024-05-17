@@ -72,6 +72,15 @@ namespace hqm_ranked_backend.Controllers
         }
 
         [Authorize]
+        [HttpPost("AddPushToken")]
+        public async Task<IActionResult> AddPushToken(PushTokenRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.AddPushToken(request, userId);
+            return Ok();
+        }
+
+        [Authorize]
         [HttpPost("UploadAvatar")]
         public async Task<IActionResult> UploadAvatar(IFormFile file)
         {
