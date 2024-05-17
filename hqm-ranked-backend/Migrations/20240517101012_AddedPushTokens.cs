@@ -15,7 +15,9 @@ namespace hqm_ranked_backend.Migrations
                 name: "PushTokens",
                 table: "Players",
                 type: "text[]",
-                nullable: false);
+                nullable: false,
+                defaultValue: new List<string>()
+                );
         }
 
         /// <inheritdoc />
