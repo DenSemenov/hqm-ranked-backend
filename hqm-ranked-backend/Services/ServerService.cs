@@ -456,7 +456,12 @@ namespace hqm_ranked_backend.Services
                 if (isLoggedChanged && server.State == 0)
                 {
                     await _notificationService.SendDiscordNotification(server.Name, server.LoggedIn, server.TeamMax);
-                    await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2));
+
+                    var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+                    if (server.LoggedIn >= settings.WebhookCount)
+                    {
+                        await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2));
+                    }
                 }
             }
         }
