@@ -15,5 +15,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<ReportViewModel> Report(ReportRequest request);
         Task Reset(ResetRequest request);
         Task Resign(ResignRequest request);
+        Task Test();
     }
 }

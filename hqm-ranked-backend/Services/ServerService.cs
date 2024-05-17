@@ -7,6 +7,7 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using MassTransit;
+using MathNet.Numerics;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -540,6 +541,11 @@ namespace hqm_ranked_backend.Services
                     await _dbContext.SaveChangesAsync();
                 }
             }
+        }
+
+        public async Task Test()
+        {
+            await _notificationService.SendPush("Title test", "Body test");
         }
     }
 }
