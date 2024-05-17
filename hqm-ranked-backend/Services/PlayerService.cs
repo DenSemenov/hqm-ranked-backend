@@ -176,16 +176,8 @@ namespace hqm_ranked_backend.Services
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                if (user.PushTokens == null)
-                {
-                    user.PushTokens = new List<string>();
-                }
-
-                if (!user.PushTokens.Any(x => x == request.Token))
-                {
-                    user.PushTokens.Add(request.Token);
-                    await _dbContext.SaveChangesAsync();
-                }
+                user.PushTokens = new List<string> { request.Token };
+                await _dbContext.SaveChangesAsync();
             }
         }
     }
