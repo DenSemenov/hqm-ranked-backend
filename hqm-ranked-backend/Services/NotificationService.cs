@@ -17,12 +17,14 @@ namespace hqm_ranked_backend.Services
             _dbContext = dbContext;
 
             var settings = _dbContext.Settings.FirstOrDefault();
-
-            FirebaseApp.Create(new AppOptions()
+            if (FirebaseApp.DefaultInstance == null)
             {
-                Credential = GoogleCredential.FromJson(settings.PushJson),
-                ProjectId = "hqmpush"
-            });
+                FirebaseApp.Create(new AppOptions()
+                {
+                    Credential = GoogleCredential.FromJson(settings.PushJson),
+                    ProjectId = "hqmpush"
+                });
+            }
         }
 
         public async Task SendDiscordNotification(string serverName, int count, int teamMax)
