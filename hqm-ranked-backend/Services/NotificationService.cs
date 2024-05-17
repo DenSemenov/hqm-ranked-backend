@@ -15,6 +15,14 @@ namespace hqm_ranked_backend.Services
         public NotificationService(RankedDb dbContext)
         {
             _dbContext = dbContext;
+
+            var settings = _dbContext.Settings.FirstOrDefault();
+
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromJson(settings.PushJson),
+                ProjectId = "hqmpush"
+            });
         }
 
         public async Task SendDiscordNotification(string serverName, int count, int teamMax)
@@ -143,13 +151,7 @@ namespace hqm_ranked_backend.Services
             try
             {
                 var tokens = _dbContext.Players.Select(x => x.PushTokens).ToList().SelectMany(x => x).ToList();
-                var settings = await _dbContext.Settings.FirstOrDefaultAsync();
-
-                FirebaseApp.Create(new AppOptions()
-                {
-                    Credential = GoogleCredential.FromJson(settings.PushJson),
-                    ProjectId = "hqmpush"
-                });
+                
 
                 var message = new MulticastMessage()
                 {
