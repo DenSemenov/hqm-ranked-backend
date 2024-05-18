@@ -2,6 +2,7 @@
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Builder.Extensions;
@@ -148,13 +149,10 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task SendPush(string title, string body)
+        public async Task SendPush(string title, string body, List<string> tokens)
         {
             try
             {
-                var tokens = _dbContext.Players.Select(x => x.PushTokens).ToList().SelectMany(x => x).ToList();
-                
-
                 var message = new MulticastMessage()
                 {
                     Tokens = tokens,
@@ -162,7 +160,7 @@ namespace hqm_ranked_backend.Services
                     {
                         Title = title,
                         Body = body,
-                    },
+                    }
                 };
                 await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
             }

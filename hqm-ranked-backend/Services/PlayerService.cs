@@ -176,7 +176,17 @@ namespace hqm_ranked_backend.Services
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                user.PushTokens = new List<string> { request.Token };
+                if (user.NotificationSetting != null)
+                {
+                    user.NotificationSetting.Token = request.Token;
+                }
+                else
+                {
+                    user.NotificationSetting = new PlayerNotificationSetting
+                    {
+                        Token = request.Token
+                    };
+                }
                 await _dbContext.SaveChangesAsync();
             }
         }
@@ -185,7 +195,54 @@ namespace hqm_ranked_backend.Services
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                user.PushTokens = user.PushTokens.Where(x=> x!= request.Token).ToList();
+                user.NotificationSetting = null;
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<PlayerNotificationsViewModel> GetPlayerNotifications(int userId)
+        {
+            var result = new PlayerNotificationsViewModel();
+
+            var user = await _dbContext.Players.Include(x=>x.NotificationSetting).SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                if (user.NotificationSetting != null)
+                {
+                    result.Token = user.NotificationSetting.Token;
+                    result.GameStarted = user.NotificationSetting.GameStarted;
+                    result.GameEnded = user.NotificationSetting.GameEnded;
+                    result.LogsCount = user.NotificationSetting.LogsCount;
+                }
+            }
+
+            return result;
+        }
+
+        public async Task SavePlayerNotifications(int userId, PlayerNotificationsViewModel request)
+        {
+            var user = await _dbContext.Players.Include(x => x.NotificationSetting).SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                if (user.NotificationSetting != null)
+                {
+                    user.NotificationSetting.GameStarted = request.GameStarted;
+                    user.NotificationSetting.GameEnded = request.GameEnded;
+                    user.NotificationSetting.LogsCount = request.LogsCount;
+                }
+                else
+                {
+                    user.NotificationSetting = new PlayerNotificationSetting
+                    {
+                        LogsCount = request.LogsCount,
+                        GameEnded = request.GameEnded,
+                        GameStarted = request.GameStarted,
+                        Token = request.Token
+                    };
+                }
+
+
                 await _dbContext.SaveChangesAsync();
             }
         }

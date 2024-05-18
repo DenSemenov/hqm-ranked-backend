@@ -97,12 +97,5 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok();
         }
-        //[HttpPost("Test")]
-        //public async Task<IActionResult> Test()
-        //{
-        //    await _serverService.Test();
-
-        //    return Ok();
-        //}
     }
 }

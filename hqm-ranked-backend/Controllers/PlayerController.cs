@@ -1,5 +1,6 @@
 ﻿using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Models.InputModels;
+using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -87,6 +88,24 @@ namespace hqm_ranked_backend.Controllers
         {
             var userId = UserHelper.GetUserId(User);
             await _playerService.RemovePushToken(request, userId);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("GetPlayerNotifications")]
+        public async Task<IActionResult> GetPlayerNotifications()
+        {
+            var userId = UserHelper.GetUserId(User);
+            var result = await _playerService.GetPlayerNotifications(userId);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("SavePlayerNotifications")]
+        public async Task<IActionResult> SavePlayerNotifications(PlayerNotificationsViewModel request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.SavePlayerNotifications(userId, request);
             return Ok();
         }
 

@@ -24,6 +24,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<ReplayChat> ReplayChats { get; set; }
         public DbSet<ReplayGoal> ReplayGoals { get; set; }
         public DbSet<Reports> Reports { get; set; }
+        public DbSet<PlayerNotificationSetting> PlayerNotificationSettings { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)

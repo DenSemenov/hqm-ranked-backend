@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
 {
@@ -246,7 +248,15 @@ namespace hqm_ranked_backend.Services
                 result.GameId= newId;
 
                 await _notificationService.SendDiscordStartGameNotification(server.Name);
-                await _notificationService.SendPush(server.Name, String.Format("Game started"));
+
+                var playersIds = result.Players.Select(x => x.Id).ToList();
+                var tokens = await _dbContext.Players
+                        .Include(x => x.NotificationSetting)
+                         .Where(x => x.NotificationSetting != null && !String.IsNullOrEmpty(x.NotificationSetting.Token))
+                        .Where(x => x.NotificationSetting.GameStarted == NotifyType.On || (x.NotificationSetting.GameStarted == NotifyType.OnWithMe && playersIds.Contains(x.Id)))
+                        .Select(x => x.NotificationSetting.Token)
+                        .ToListAsync();
+                await _notificationService.SendPush(server.Name, String.Format("Game started"), tokens);
             }
 
             return result;
@@ -417,7 +427,16 @@ namespace hqm_ranked_backend.Services
                     BackgroundJob.Enqueue(()=>_eventService.CalculateEvents());
 
                     await _notificationService.SendDiscordEndGameNotification(server.Name);
-                    await _notificationService.SendPush(server.Name, String.Format("Game ended"));
+
+                    var playersIds = game.GamePlayers.Select(x=>x.PlayerId).ToList();
+                    var tokens = await _dbContext.Players
+                        .Include(x => x.NotificationSetting)
+                         .Where(x => x.NotificationSetting !=null && !String.IsNullOrEmpty(x.NotificationSetting.Token))
+                        .Where(x => x.NotificationSetting.GameEnded == NotifyType.On || (x.NotificationSetting.GameEnded == NotifyType.OnWithMe && playersIds.Contains(x.Id)))
+                        .Select(x=>x.NotificationSetting.Token)
+                        .ToListAsync();
+
+                    await _notificationService.SendPush(server.Name, String.Format("Game ended"), tokens);
                 }
             }
 
@@ -458,11 +477,13 @@ namespace hqm_ranked_backend.Services
                 {
                     await _notificationService.SendDiscordNotification(server.Name, server.LoggedIn, server.TeamMax);
 
-                    var settings = await _dbContext.Settings.FirstOrDefaultAsync();
-                    if (server.LoggedIn >= settings.WebhookCount)
-                    {
-                        await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2));
-                    }
+                    var tokens = await _dbContext.Players
+                                .Include(x => x.NotificationSetting)
+                                 .Where(x => x.NotificationSetting != null && !String.IsNullOrEmpty(x.NotificationSetting.Token))
+                                .Where(x => x.NotificationSetting.LogsCount <= server.LoggedIn)
+                                .Select(x => x.NotificationSetting.Token)
+                                .ToListAsync();
+                    await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2), tokens);
                 }
             }
         }
@@ -541,11 +562,6 @@ namespace hqm_ranked_backend.Services
                     await _dbContext.SaveChangesAsync();
                 }
             }
-        }
-
-        public async Task Test()
-        {
-            await _notificationService.SendPush("Title test", "Body test");
         }
     }
 }

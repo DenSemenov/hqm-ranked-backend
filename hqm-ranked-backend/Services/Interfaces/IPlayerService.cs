@@ -12,5 +12,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<string> ChangeNickname(NicknameChangeRequest request, int userId);
         Task AddPushToken(PushTokenRequest request, int userId);
         Task RemovePushToken(PushTokenRequest request, int userId);
+        Task<PlayerNotificationsViewModel> GetPlayerNotifications(int userId);
+        Task SavePlayerNotifications(int userId, PlayerNotificationsViewModel request);
     }
 }

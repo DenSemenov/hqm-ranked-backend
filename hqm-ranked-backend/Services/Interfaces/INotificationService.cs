@@ -7,6 +7,6 @@
         public Task SendDiscordStartGameNotification(string serverName);
         public Task SendDiscordResignedNotification(string serverName);
         public Task SendDiscordCanceledNotification(string serverName);
-        public Task SendPush(string title, string body);
+        public Task SendPush(string title, string body, List<string> tokens);
     }
 }
