@@ -10,5 +10,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public string GoalBy { get; set; }
         public int Period { get; set; }
         public int Time { get; set; }
+        public Player Player { get; set; }
+        public string Url { get; set; }
     }
 }

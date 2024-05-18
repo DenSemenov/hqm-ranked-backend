@@ -7,6 +7,7 @@ using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
+using System.Linq;
 
 namespace hqm_ranked_backend.Services
 {
@@ -117,12 +118,26 @@ namespace hqm_ranked_backend.Services
 
                 foreach (var goal in processedData.Goals)
                 {
+                    var id = Guid.NewGuid();
+
+                    var goalTicks = result.Skip((int)(goal.Packet - 500)).Take(600).ToList();
+
+                    var json = JsonConvert.SerializeObject(goalTicks);
+                    var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
+
+                    _storageService.UploadTextFile(path, json).Wait();
+
+                    var player = _dbContext.Players.FirstOrDefault(x => x.Name == goal.GoalBy);
+
                     replayData.ReplayGoals.Add(new ReplayGoal
                     {
+                        Id = id,
                         Packet = goal.Packet,
                         GoalBy = goal.GoalBy ?? String.Empty,
                         Period = goal.Period,
                         Time = goal.Time,
+                        Player = player,
+                        Url = path
                     });
                 }
 
