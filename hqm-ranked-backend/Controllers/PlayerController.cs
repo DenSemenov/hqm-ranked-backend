@@ -86,7 +86,7 @@ namespace hqm_ranked_backend.Controllers
         public async Task<IActionResult> RemovePushToken(PushTokenRequest request)
         {
             var userId = UserHelper.GetUserId(User);
-            await _playerService.AddPushToken(request, userId);
+            await _playerService.RemovePushToken(request, userId);
             return Ok();
         }
 
