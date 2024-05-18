@@ -19,7 +19,7 @@ namespace hqm_ranked_backend.Models.DbModels
         [Required]
         public bool IsApproved { get; set; } = true;
         [Required]
-        public PlayerNotificationSetting? NotificationSetting { get; set; } 
+        public PlayerNotificationSetting? Notifications { get; set; } 
 
     }
 }
