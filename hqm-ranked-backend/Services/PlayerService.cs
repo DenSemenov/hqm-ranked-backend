@@ -1,17 +1,10 @@
-﻿using hqm_ranked_backend.Common;
-using hqm_ranked_backend.Helpers;
+﻿using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
-using System.IdentityModel.Tokens.Jwt;
-using System.Numerics;
-using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
 {
@@ -147,24 +140,31 @@ namespace hqm_ranked_backend.Services
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                var settings = await _dbContext.Settings.FirstOrDefaultAsync();
-                var countDays = settings.NicknameChangeDaysLimit;
-
-                if (_dbContext.NicknameChanges.Any(x => x.Player == user && x.CreatedOn.AddDays(countDays) > DateTime.UtcNow))
+                if (await _dbContext.Players.AnyAsync(x=>x.Name == request.Name.Trim()))
                 {
-                    result = String.Format("You can change nickname each {0} days", countDays);
+                    result = String.Format("Nickname exists");
                 }
                 else
                 {
-                    _dbContext.NicknameChanges.Add(new NicknameChanges
-                    {
-                        Player = user,
-                        OldNickname = user.Name
-                    });
-                    user.Name = request.Name;
+                    var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+                    var countDays = settings.NicknameChangeDaysLimit;
 
-                    result = "Nickname successfully changed";
-                    await _dbContext.SaveChangesAsync();
+                    if (_dbContext.NicknameChanges.Any(x => x.Player == user && x.CreatedOn.AddDays(countDays) > DateTime.UtcNow))
+                    {
+                        result = String.Format("You can change nickname each {0} days", countDays);
+                    }
+                    else
+                    {
+                        _dbContext.NicknameChanges.Add(new NicknameChanges
+                        {
+                            Player = user,
+                            OldNickname = user.Name.Trim()
+                        });
+                        user.Name = request.Name.Trim();
+
+                        result = "Nickname successfully changed";
+                        await _dbContext.SaveChangesAsync();
+                    }
                 }
             }
 
@@ -177,6 +177,15 @@ namespace hqm_ranked_backend.Services
             if (user != null)
             {
                 user.PushTokens = new List<string> { request.Token };
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        public async Task RemovePushToken(PushTokenRequest request, int userId)
+        {
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                user.PushTokens = user.PushTokens.Where(x=> x!= request.Token).ToList();
                 await _dbContext.SaveChangesAsync();
             }
         }
