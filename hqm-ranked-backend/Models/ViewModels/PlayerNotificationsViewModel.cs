@@ -4,7 +4,7 @@ namespace hqm_ranked_backend.Models.ViewModels
 {
     public class PlayerNotificationsViewModel
     {
-        public string Token { get; set; } = String.Empty;
+        public string Token { get; set; } = "empty";
         public int LogsCount { get; set; } = 1;
         public NotifyType GameStarted { get; set; } = NotifyType.On;
         public NotifyType GameEnded { get; set; } = NotifyType.On;
