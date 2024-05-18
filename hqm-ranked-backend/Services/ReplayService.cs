@@ -66,7 +66,7 @@ namespace hqm_ranked_backend.Services
 
         public void ParseAllReplays()
         {
-            var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4);
+            var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0);
             if (!isPlayersOnServer)
             {
                 var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x=>x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
@@ -78,7 +78,7 @@ namespace hqm_ranked_backend.Services
                         Id = replayId
                     });
 
-                    if (_dbContext.Servers.Any(x => x.LoggedIn > 4))
+                    if (_dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0))
                     {
                         break;
                     }
