@@ -10,6 +10,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task PushReplay(Guid gameId, IFormFile file, string token);
         void RemoveOldReplays();
         [DisableConcurrentExecution(10)]
+        public void ParseAllReplays();
         void ParseReplay(ReplayRequest request);
         Task<ReplayViewerViewModel> GetReplayViewer(ReplayViewerRequest request);
         Task<List<ReplayGoal>> GetReplayGoals(ReplayRequest request);

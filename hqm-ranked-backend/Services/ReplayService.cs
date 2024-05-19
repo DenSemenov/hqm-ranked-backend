@@ -65,6 +65,7 @@ namespace hqm_ranked_backend.Services
                 _dbContext.SaveChanges();
             }
         }
+        [DisableConcurrentExecution(10)]
         public void ParseAllReplays()
         {
             var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0);
@@ -87,7 +88,6 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        [DisableConcurrentExecution(10)]
         public void ParseReplay(ReplayRequest request)
         {
             var replayData = _dbContext.ReplayData.Include(x => x.Game).FirstOrDefault(x => x.Game.Id == request.Id);
@@ -126,7 +126,7 @@ namespace hqm_ranked_backend.Services
                 {
                     var id = Guid.NewGuid();
 
-                    var goalTicks = result.Skip((int)(goal.Packet - 500)).Take(600).ToList();
+                    var goalTicks = result.Skip((int)(goal.Packet - 250)).Take(300).ToList();
 
                     var json = JsonConvert.SerializeObject(goalTicks);
                     var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
