@@ -12,13 +12,13 @@ namespace hqm_ranked_backend.Services
     public class PlayerService : IPlayerService
     {
         private RankedDb _dbContext;
-        private IWebHostEnvironment _hostingEnvironment;
         private IImageGeneratorService _imageGeneratorService;
-        public PlayerService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService)
+        private IStorageService _storageService;
+        public PlayerService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService, IStorageService storageService)
         {
             _dbContext = dbContext;
-            _hostingEnvironment = hostingEnvironment;
             _imageGeneratorService = imageGeneratorService;
+            _storageService = storageService;
         }
         public async Task<LoginResult?> Login(LoginRequest request)
         {
@@ -76,12 +76,12 @@ namespace hqm_ranked_backend.Services
 
                 var token = Encryption.GetToken(entity.Entity.Id, userRole.Name == "admin");
 
-                var path = _hostingEnvironment.WebRootPath + "/avatars/" + entity.Entity.Id + ".png";
-                if (!File.Exists(path))
-                {
-                    var file = _imageGeneratorService.GenerateImage();
-                    file.SaveAsPng(path);
-                }
+                var path = String.Format("images/{0}.png", entity.Entity.Id);
+                var file = _imageGeneratorService.GenerateImage();
+                var strm = new MemoryStream();
+                file.SaveAsPng(strm);
+
+                await _storageService.UploadFileStream(path, strm);
 
 
                 return new LoginResult
