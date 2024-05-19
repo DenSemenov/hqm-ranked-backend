@@ -210,7 +210,7 @@ namespace hqm_ranked_backend.Services
                     Min = x.Min,
                     Max = x.Max,
                 })
-            }).FirstOrDefaultAsync(x =>  x.Index == request.Index); ;
+            }).FirstOrDefaultAsync(x =>  x.Index == request.Index); 
 
             if (query != null)
             {
@@ -248,6 +248,58 @@ namespace hqm_ranked_backend.Services
             if (replayData != null)
             {
                 result = replayData.OrderBy(x => x.Packet).ToList();
+            }
+
+            return result;
+        }
+
+        public async Task<List<StoryViewModel>> GetReplayStories()
+        {
+            var result = new List<StoryViewModel>();
+
+            var checkDate = DateTime.UtcNow.Date.AddDays(-1);
+            var games = await _dbContext.ReplayData.Where(x => x.CreatedOn >= checkDate).Include(x => x.ReplayGoals).ThenInclude(x => x.Player).OrderByDescending(x=>x.CreatedOn).ToListAsync();
+
+            var players = games.SelectMany(x => x.ReplayGoals.Select(x => x.Player)).Distinct().ToList();
+            var goals = games.SelectMany(x => x.ReplayGoals).ToList();
+
+            foreach(var player in players)
+            {
+                var playerGoals = goals.Where(x => x.Player == player).Select(x => x.Id).ToList();
+
+                result.Add(new StoryViewModel
+                {
+                    PlayerId = player.Id,
+                    Name = player.Name,
+                    GoalIds = playerGoals
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<ReplayViewerViewModel> GetStoryReplayViewer(StoryReplayViewerRequest request)
+        {
+            var result = new ReplayViewerViewModel();
+
+            var goal = await _dbContext.ReplayGoals.FirstOrDefaultAsync(x=>x.Id == request.Id);
+
+            if (goal != null)
+            {
+                var path = goal.Url;
+
+                var json = await _storageService.LoadTextFile(path);
+                var data = JsonConvert.DeserializeObject<ReplayTick[]>(json);
+
+                result.Index = 0;
+                result.Data = data;
+                result.Fragments = new List<ReplayViewerFragmentViewModel> {
+                   new ReplayViewerFragmentViewModel{
+                    Index = 0,
+                     Min = data.FirstOrDefault().PacketNumber,
+                     Max = data.LastOrDefault().PacketNumber
+                   }
+                };
             }
 
             return result;

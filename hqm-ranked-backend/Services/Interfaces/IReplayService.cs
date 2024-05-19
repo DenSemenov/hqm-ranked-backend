@@ -14,5 +14,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<ReplayViewerViewModel> GetReplayViewer(ReplayViewerRequest request);
         Task<List<ReplayGoal>> GetReplayGoals(ReplayRequest request);
         Task<List<ReplayChat>> GetReplayChatMessages(ReplayRequest request);
+        Task<List<StoryViewModel>> GetReplayStories();
+        Task<ReplayViewerViewModel> GetStoryReplayViewer(StoryReplayViewerRequest request);
     }
 }

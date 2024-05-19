@@ -20,11 +20,15 @@ namespace hqm_ranked_backend.Services
             var settings = _dbContext.Settings.FirstOrDefault();
             if (FirebaseApp.DefaultInstance == null)
             {
-                FirebaseApp.Create(new AppOptions()
+                try
                 {
-                    Credential = GoogleCredential.FromJson(settings.PushJson),
-                    ProjectId = "hqmpush"
-                });
+                    FirebaseApp.Create(new AppOptions()
+                    {
+                        Credential = GoogleCredential.FromJson(settings.PushJson),
+                        ProjectId = "hqmpush"
+                    });
+                }
+                catch { }
             }
         }
 
