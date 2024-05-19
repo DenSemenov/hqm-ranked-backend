@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Helpers;
+﻿using FirebaseAdmin.Messaging;
+using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
@@ -173,30 +174,33 @@ namespace hqm_ranked_backend.Services
 
         public async Task AddPushToken(PushTokenRequest request, int userId)
         {
-            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
-            if (user != null)
+            var notification = await _dbContext.PlayerNotifications.Include(x => x.Player).SingleOrDefaultAsync(x => x.Player.Id == userId);
+            if (notification != null)
             {
-                if (user.Notifications != null)
-                {
-                    user.Notifications.Token = request.Token;
-                }
-                else
-                {
-                    user.Notifications = new PlayerNotificationSetting
-                    {
-                        Token = request.Token
-                    };
-                }
-                await _dbContext.SaveChangesAsync();
+                notification.Token = request.Token;
             }
+            else
+            {
+                var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
+                if (player != null)
+                {
+                    _dbContext.PlayerNotifications.Add(new PlayerNotification
+                    {
+                        Player = player,
+                        Token = request.Token
+                    });
+                }
+
+            }
+            await _dbContext.SaveChangesAsync();
         }
+
         public async Task RemovePushToken(PushTokenRequest request, int userId)
         {
-            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
-            if (user != null)
+            var notification = await _dbContext.PlayerNotifications.Include(x => x.Player).SingleOrDefaultAsync(x => x.Player.Id == userId);
+            if (notification != null)
             {
-                user.Notifications = null;
-
+                _dbContext.PlayerNotifications.Remove(notification);
                 await _dbContext.SaveChangesAsync();
             }
         }
@@ -205,15 +209,15 @@ namespace hqm_ranked_backend.Services
         {
             var result = new PlayerNotificationsViewModel();
 
-            var user = await _dbContext.Players.Include(x=>x.Notifications).SingleOrDefaultAsync(x => x.Id == userId);
-            if (user != null)
+            var notification = await _dbContext.PlayerNotifications.Include(x => x.Player).SingleOrDefaultAsync(x => x.Player.Id == userId);
+            if (notification != null)
             {
-                if (user.Notifications != null)
+                if (notification != null)
                 {
-                    result.Token = user.Notifications.Token;
-                    result.GameStarted = user.Notifications.GameStarted;
-                    result.GameEnded = user.Notifications.GameEnded;
-                    result.LogsCount = user.Notifications.LogsCount;
+                    result.Token = notification.Token;
+                    result.GameStarted = notification.GameStarted;
+                    result.GameEnded = notification.GameEnded;
+                    result.LogsCount = notification.LogsCount;
                 }
             }
 
@@ -222,26 +226,12 @@ namespace hqm_ranked_backend.Services
 
         public async Task SavePlayerNotifications(int userId, PlayerNotificationsViewModel request)
         {
-            var user = await _dbContext.Players.Include(x => x.Notifications).SingleOrDefaultAsync(x => x.Id == userId);
-            if (user != null)
+            var notification = await _dbContext.PlayerNotifications.Include(x => x.Player).SingleOrDefaultAsync(x => x.Player.Id == userId);
+            if (notification != null)
             {
-                if (user.Notifications != null)
-                {
-                    user.Notifications.GameStarted = request.GameStarted;
-                    user.Notifications.GameEnded = request.GameEnded;
-                    user.Notifications.LogsCount = request.LogsCount;
-                }
-                else
-                {
-                    user.Notifications = new PlayerNotificationSetting
-                    {
-                        LogsCount = request.LogsCount,
-                        GameEnded = request.GameEnded,
-                        GameStarted = request.GameStarted,
-                        Token = request.Token
-                    };
-                }
-
+                notification.GameStarted = request.GameStarted;
+                notification.GameEnded = request.GameEnded;
+                notification.LogsCount = request.LogsCount;
 
                 await _dbContext.SaveChangesAsync();
             }

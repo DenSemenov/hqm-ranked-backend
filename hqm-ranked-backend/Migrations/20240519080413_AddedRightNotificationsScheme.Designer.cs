@@ -12,8 +12,8 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    [Migration("20240518140639_NotificationChange")]
-    partial class NotificationChange
+    [Migration("20240519080413_AddedRightNotificationsScheme")]
+    partial class AddedRightNotificationsScheme
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -369,9 +369,6 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("NotificationsId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
@@ -381,14 +378,12 @@ namespace hqm_ranked_backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NotificationsId");
-
                     b.HasIndex("RoleId");
 
                     b.ToTable("Players");
                 });
 
-            modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.PlayerNotificationSetting", b =>
+            modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.PlayerNotification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -412,13 +407,18 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<int>("LogsCount")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PlayerNotificationSettings");
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("PlayerNotifications");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ReplayChat", b =>
@@ -524,13 +524,22 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<int>("Period")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("ReplayDataId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Time")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
 
                     b.HasIndex("ReplayDataId");
 
@@ -896,21 +905,24 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Player", b =>
                 {
-                    b.HasOne("hqm_ranked_backend.Models.DbModels.PlayerNotificationSetting", "Notifications")
-                        .WithMany()
-                        .HasForeignKey("NotificationsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("hqm_ranked_backend.Models.DbModels.Role", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Notifications");
-
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.PlayerNotification", b =>
+                {
+                    b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ReplayChat", b =>
@@ -944,9 +956,17 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ReplayGoal", b =>
                 {
+                    b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("hqm_ranked_backend.Models.DbModels.ReplayData", null)
                         .WithMany("ReplayGoals")
                         .HasForeignKey("ReplayDataId");
+
+                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Reports", b =>

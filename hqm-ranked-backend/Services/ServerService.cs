@@ -250,11 +250,11 @@ namespace hqm_ranked_backend.Services
                 await _notificationService.SendDiscordStartGameNotification(server.Name);
 
                 var playersIds = result.Players.Select(x => x.Id).ToList();
-                var tokens = await _dbContext.Players
-                        .Include(x => x.Notifications)
-                         .Where(x => x.Notifications != null && !String.IsNullOrEmpty(x.Notifications.Token))
-                        .Where(x => x.Notifications.GameStarted == NotifyType.On || (x.Notifications.GameStarted == NotifyType.OnWithMe && playersIds.Contains(x.Id)))
-                        .Select(x => x.Notifications.Token)
+                var tokens = await _dbContext.PlayerNotifications
+                        .Include(x => x.Player)
+                         .Where(x => !String.IsNullOrEmpty(x.Token))
+                        .Where(x => x.GameStarted == NotifyType.Enabled || (x.GameStarted == NotifyType.EnabledWithMe && playersIds.Contains(x.Player.Id)))
+                        .Select(x => x.Token)
                         .ToListAsync();
                 await _notificationService.SendPush(server.Name, String.Format("Game started"), tokens);
             }
@@ -428,12 +428,12 @@ namespace hqm_ranked_backend.Services
 
                     await _notificationService.SendDiscordEndGameNotification(server.Name);
 
-                    var playersIds = game.GamePlayers.Select(x=>x.PlayerId).ToList();
-                    var tokens = await _dbContext.Players
-                        .Include(x => x.Notifications)
-                         .Where(x => x.Notifications != null && !String.IsNullOrEmpty(x.Notifications.Token))
-                        .Where(x => x.Notifications.GameEnded == NotifyType.On || (x.Notifications.GameEnded == NotifyType.OnWithMe && playersIds.Contains(x.Id)))
-                        .Select(x=>x.Notifications.Token)
+                    var playersIds = game.GamePlayers.Select(x => x.PlayerId).ToList();
+                    var tokens = await _dbContext.PlayerNotifications
+                        .Include(x => x.Player)
+                         .Where(x =>!String.IsNullOrEmpty(x.Token))
+                        .Where(x => x.GameEnded == NotifyType.Enabled || (x.GameEnded == NotifyType.EnabledWithMe && playersIds.Contains(x.Player.Id)))
+                        .Select(x => x.Token)
                         .ToListAsync();
 
                     await _notificationService.SendPush(server.Name, String.Format("Game ended"), tokens);
@@ -477,11 +477,11 @@ namespace hqm_ranked_backend.Services
                 {
                     await _notificationService.SendDiscordNotification(server.Name, server.LoggedIn, server.TeamMax);
 
-                    var tokens = await _dbContext.Players
-                                .Include(x => x.Notifications)
-                                 .Where(x => x.Notifications != null && !String.IsNullOrEmpty(x.Notifications.Token))
-                                .Where(x => x.Notifications.LogsCount <= server.LoggedIn)
-                                .Select(x => x.Notifications.Token)
+                    var tokens = await _dbContext.PlayerNotifications
+                                .Include(x => x.Player)
+                                 .Where(x => !String.IsNullOrEmpty(x.Token))
+                                .Where(x => x.LogsCount <= server.LoggedIn)
+                                .Select(x => x.Token)
                                 .ToListAsync();
                     await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2), tokens);
                 }
