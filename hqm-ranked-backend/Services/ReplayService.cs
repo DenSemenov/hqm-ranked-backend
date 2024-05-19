@@ -87,6 +87,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
+        [DisableConcurrentExecution(10)]
         public void ParseReplay(ReplayRequest request)
         {
             var replayData = _dbContext.ReplayData.Include(x => x.Game).FirstOrDefault(x => x.Game.Id == request.Id);
