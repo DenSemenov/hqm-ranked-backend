@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
@@ -64,7 +65,6 @@ namespace hqm_ranked_backend.Services
                 _dbContext.SaveChanges();
             }
         }
-
         public void ParseAllReplays()
         {
             var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0);
@@ -107,14 +107,19 @@ namespace hqm_ranked_backend.Services
 
                 var processedData = ReplayDataHelper.GetReplayCalcData(result);
 
+                var chatsToAdd = new List<ReplayChat>();
+
                 foreach (var msg in processedData.Chats)
                 {
-                    replayData.ReplayChats.Add(new ReplayChat
+                    chatsToAdd.Add(new ReplayChat
                     {
                         Packet = msg.Packet,
                         Text = msg.Text,
+                        ReplayData = replayData
                     });
                 }
+
+                var goalsToAdd = new List<ReplayGoal>();
 
                 foreach (var goal in processedData.Goals)
                 {
@@ -129,7 +134,7 @@ namespace hqm_ranked_backend.Services
 
                     var player = _dbContext.Players.FirstOrDefault(x => x.Name == goal.GoalBy);
 
-                    replayData.ReplayGoals.Add(new ReplayGoal
+                    goalsToAdd.Add(new ReplayGoal
                     {
                         Id = id,
                         Packet = goal.Packet,
@@ -137,7 +142,8 @@ namespace hqm_ranked_backend.Services
                         Period = goal.Period,
                         Time = goal.Time,
                         Player = player,
-                        Url = path
+                        Url = path,
+                        ReplayData = replayData
                     });
                 }
 
@@ -150,6 +156,8 @@ namespace hqm_ranked_backend.Services
 
                 replayData.ReplayFragments = new List<ReplayFragment>();
 
+                var fragmentsToAdd = new List<ReplayFragment>();
+
                 for (int i = 0; i < count; i++)
                 {
                     var fragment = result.Skip(i * fragmentLenght).Take(fragmentLenght).ToArray();
@@ -159,14 +167,31 @@ namespace hqm_ranked_backend.Services
 
                     _storageService.UploadTextFile(path, json).Wait();
 
-                    replayData.ReplayFragments.Add(new ReplayFragment
+                    fragmentsToAdd.Add(new ReplayFragment
                     {
                         Data = path,
                         Index = i,
                         Min = fragment.Min(x => x.PacketNumber),
-                        Max = fragment.Max(x => x.PacketNumber)
+                        Max = fragment.Max(x => x.PacketNumber),
+                        ReplayData = replayData
                     });
                 }
+
+                foreach(var goal in goalsToAdd)
+                {
+                    _dbContext.ReplayGoals.Add(goal);
+                }
+
+                foreach (var chat in chatsToAdd)
+                {
+                    _dbContext.ReplayChats.Add(chat);
+                }
+
+                foreach (var fragment in fragmentsToAdd)
+                {
+                    _dbContext.ReplayFragments.Add(fragment);
+                }
+
                 _dbContext.SaveChanges();
             }
         }

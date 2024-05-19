@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using Hangfire;
+using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 
@@ -8,6 +9,7 @@ namespace hqm_ranked_backend.Services.Interfaces
     {
         Task PushReplay(Guid gameId, IFormFile file, string token);
         void RemoveOldReplays();
+        [DisableConcurrentExecution(10)]
         void ParseReplay(ReplayRequest request);
         Task<ReplayViewerViewModel> GetReplayViewer(ReplayViewerRequest request);
         Task<List<ReplayGoal>> GetReplayGoals(ReplayRequest request);

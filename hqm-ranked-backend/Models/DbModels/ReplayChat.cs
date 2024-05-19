@@ -9,5 +9,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public Guid Id { get; set; }
         public uint Packet { get; set; }
         public string Text { get; set; }
+        public ReplayData ReplayData { get; set; }
     }
 }
