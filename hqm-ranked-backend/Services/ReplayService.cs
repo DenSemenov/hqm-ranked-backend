@@ -221,7 +221,7 @@ namespace hqm_ranked_backend.Services
                 _dbContext.ReplayFragments.AddRange(fragmentsToAdd);
                 _dbContext.ReplayHighlights.AddRange(highlightsToAdd);
 
-                var game = _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player.Name).FirstOrDefault(x => x.Id == replayData.Game.Id);
+                var game = _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefault(x => x.Id == replayData.Game.Id);
                 if (game != null)
                 {
                     var sum = processedData.Possession.Sum(x => x.Touches);
