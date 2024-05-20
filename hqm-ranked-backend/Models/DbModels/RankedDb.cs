@@ -23,6 +23,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<ReplayFragment> ReplayFragments { get; set; }
         public DbSet<ReplayChat> ReplayChats { get; set; }
         public DbSet<ReplayGoal> ReplayGoals { get; set; }
+        public DbSet<ReplayHighlight> ReplayHighlights { get; set; }
         public DbSet<Reports> Reports { get; set; }
         public DbSet<PlayerNotification> PlayerNotifications { get; set; }
 

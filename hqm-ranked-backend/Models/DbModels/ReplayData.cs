@@ -11,5 +11,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public List<ReplayFragment> ReplayFragments { get; set; }
         public List<ReplayChat> ReplayChats { get; set; } = new List<ReplayChat>();
         public List<ReplayGoal> ReplayGoals { get; set; } = new List<ReplayGoal>();
+        public List<ReplayHighlight> ReplayHighlight { get; set; } = new List<ReplayHighlight>();
     }
 }

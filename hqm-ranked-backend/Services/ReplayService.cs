@@ -155,6 +155,37 @@ namespace hqm_ranked_backend.Services
                     });
                 }
 
+                var highlightsToAdd = new List<ReplayHighlight>();
+
+                foreach (var shot in processedData.Shots)
+                {
+                    var player = _dbContext.Players.FirstOrDefault(x => x.Name == shot.Name);
+
+                    highlightsToAdd.Add(new ReplayHighlight
+                    {
+                        Packet = shot.Packet,
+                        Type = HighlightType.Shot,
+                        ReplayData = replayData,
+                        Name = shot.Name,
+                        Player = player
+                    });
+                }
+
+
+                foreach (var save in processedData.Saves)
+                {
+                    var player = _dbContext.Players.FirstOrDefault(x => x.Name == save.Name);
+
+                    highlightsToAdd.Add(new ReplayHighlight
+                    {
+                        Packet = save.Packet,
+                        Type = HighlightType.Save,
+                        ReplayData = replayData,
+                        Name = save.Name,
+                        Player = player
+                    });
+                }
+
                 var fragmentLenght = 1000;
 
                 var count = Math.Ceiling((double)result.Count / (double)fragmentLenght);
@@ -185,19 +216,35 @@ namespace hqm_ranked_backend.Services
                     });
                 }
 
-                foreach(var goal in goalsToAdd)
-                {
-                    _dbContext.ReplayGoals.Add(goal);
-                }
+                _dbContext.ReplayGoals.AddRange(goalsToAdd);
+                _dbContext.ReplayChats.AddRange(chatsToAdd);
+                _dbContext.ReplayFragments.AddRange(fragmentsToAdd);
+                _dbContext.ReplayHighlights.AddRange(highlightsToAdd);
 
-                foreach (var chat in chatsToAdd)
+                var game = _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player.Name).FirstOrDefault(x => x.Id == replayData.Game.Id);
+                if (game != null)
                 {
-                    _dbContext.ReplayChats.Add(chat);
-                }
+                    var sum = processedData.Possession.Sum(x => x.Touches);
 
-                foreach (var fragment in fragmentsToAdd)
-                {
-                    _dbContext.ReplayFragments.Add(fragment);
+                    foreach (var player in game.GamePlayers)
+                    {
+                        var foundPossession = processedData.Possession.FirstOrDefault(x => x.Name == player.Player.Name);
+                        if (foundPossession != null)
+                        {
+                            player.Possession = (double)sum / (double)foundPossession.Touches;
+                        }
+
+                        player.Shots = processedData.Shots.Count(x => x.Name == player.Player.Name);
+                        player.Saves = processedData.Saves.Count(x => x.Name == player.Player.Name);
+
+                        player.Conceded = 0;
+
+                        var goaliePositions = processedData.Goalies.Where(x=>x.Name == player.Player.Name).ToList();
+                        foreach(var gp in goaliePositions)
+                        {
+                            player.Conceded += processedData.Goals.Count(x => x.Packet > gp.StartPacket && x.Packet < gp.EndPacket);
+                        }
+                    }
                 }
 
                 _dbContext.SaveChanges();

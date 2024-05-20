@@ -21,5 +21,9 @@ namespace hqm_ranked_backend.Models.DbModels
         public int Ping { get; set; }
         public string Ip { get; set; }
         public bool IsCaptain { get; set; }
+        public int Shots { get; set; }
+        public int Saves { get; set; }
+        public int Conceded { get; set; }
+        public double Possession { get; set; }
     }
 }

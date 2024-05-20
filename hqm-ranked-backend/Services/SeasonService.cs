@@ -235,7 +235,7 @@ namespace hqm_ranked_backend.Services
                     ReplayId = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().Id : null,
                     HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
                     ChatMessages = new List<ReplayChat>(),
-                    Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals : new List<ReplayGoal>(),
+                    Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals.OrderBy(x=>x.Packet).ToList() : new List<ReplayGoal>(),
                     ReplayUrl = storageUrl + "replays/" + game.Id.ToString() + ".hrp",
                     Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                     {
