@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Storage;
 using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
@@ -65,24 +66,30 @@ namespace hqm_ranked_backend.Services
                 _dbContext.SaveChanges();
             }
         }
-        [DisableConcurrentExecution(10)]
         public void ParseAllReplays()
         {
-            var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0);
-            if (!isPlayersOnServer)
+            IMonitoringApi monitorApi = JobStorage.Current.GetMonitoringApi();
+
+            var jobIds = monitorApi.ProcessingJobs(0, 999).ToList();
+
+            if (jobIds.Count >= 1)
             {
-                var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x=>x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
-
-                foreach(var replayId in replayIds)
+                var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0);
+                if (!isPlayersOnServer)
                 {
-                    ParseReplay(new ReplayRequest
-                    {
-                        Id = replayId
-                    });
+                    var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
 
-                    if (_dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0))
+                    foreach (var replayId in replayIds)
                     {
-                        break;
+                        ParseReplay(new ReplayRequest
+                        {
+                            Id = replayId
+                        });
+
+                        if (_dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0))
+                        {
+                            break;
+                        }
                     }
                 }
             }
