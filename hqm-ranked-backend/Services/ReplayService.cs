@@ -74,7 +74,7 @@ namespace hqm_ranked_backend.Services
 
             if (jobIds.Count >= 1)
             {
-                var isPlayersOnServer = _dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0);
+                var isPlayersOnServer = false;
                 if (!isPlayersOnServer)
                 {
                     var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
@@ -167,7 +167,8 @@ namespace hqm_ranked_backend.Services
                         Type = HighlightType.Shot,
                         ReplayData = replayData,
                         Name = shot.Name,
-                        Player = player
+                        Player = player,
+                        Url = String.Empty
                     });
                 }
 
@@ -182,7 +183,8 @@ namespace hqm_ranked_backend.Services
                         Type = HighlightType.Save,
                         ReplayData = replayData,
                         Name = save.Name,
-                        Player = player
+                        Player = player,
+                        Url = String.Empty
                     });
                 }
 
