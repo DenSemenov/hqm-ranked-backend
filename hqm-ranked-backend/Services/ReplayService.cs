@@ -310,6 +310,19 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
+        public async Task<List<ReplayHighlight>> GetReplayHighlights(ReplayRequest request)
+        {
+            var result = new List<ReplayHighlight>();
+
+            var replayData = await _dbContext.ReplayData.Include(x => x.ReplayHighlight).Where(x => x.Id == request.Id).Select(x => x.ReplayHighlight).FirstOrDefaultAsync();
+            if (replayData != null)
+            {
+                result = replayData.OrderBy(x => x.Packet).ToList();
+            }
+
+            return result;
+        }
+
         public async Task<List<StoryViewModel>> GetReplayStories()
         {
             var result = new List<StoryViewModel>();

@@ -46,6 +46,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+        [HttpPost("GetReplayHighlights")]
+        public async Task<IActionResult> GetReplayHighlights(ReplayRequest request)
+        {
+            var result = await _replayService.GetReplayHighlights(request);
+
+            return Ok(result);
+        }
 
         [HttpPost("GetReplayStories")]
         public async Task<IActionResult> GetReplayStories()

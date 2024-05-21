@@ -131,7 +131,7 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CreateNewDailyEvent", () => eventService.CreateNewEvent(), Cron.Daily);
             var replayService = scope.ServiceProvider.GetRequiredService<IReplayService>() as ReplayService;
             RecurringJob.AddOrUpdate("RemoveOldReplays", () => replayService.RemoveOldReplays(), Cron.Daily);
-            RecurringJob.AddOrUpdate("ParseReplays", () => replayService.ParseAllReplays(), Cron.MinuteInterval(10));
+            RecurringJob.AddOrUpdate("ParseReplays", () => replayService.ParseAllReplays(), Cron.MinuteInterval(2));
         }
     }
 }
