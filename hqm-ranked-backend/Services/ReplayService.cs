@@ -255,7 +255,7 @@ namespace hqm_ranked_backend.Services
                         var goaliePositions = processedData.Goalies.Where(x=>x.Name == player.Player.Name).ToList();
                         foreach(var gp in goaliePositions)
                         {
-                            player.Conceded += processedData.Goals.Count(x => x.Packet > gp.StartPacket && x.Packet < gp.EndPacket);
+                            player.Conceded += processedData.Goals.Count(x => x.Packet < gp.StartPacket && x.Packet > gp.EndPacket);
                         }
                     }
                 }
