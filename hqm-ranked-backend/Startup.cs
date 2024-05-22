@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.WindowsTokenService;
 using Microsoft.OpenApi.Models;
@@ -34,7 +35,10 @@ namespace hqm_ranked_backend
         {
             var db = Configuration.GetSection("Database:Connection").Value;
             services.AddCors();
-            services.AddDbContextPool<RankedDb>(options => options.UseNpgsql(db));
+            services.AddDbContextPool<RankedDb>(options => {
+                options.UseNpgsql(db);
+                options.ConfigureWarnings(warnings =>warnings.Ignore(CoreEventId.NavigationBaseIncludeIgnored));
+            });
             services.AddScoped<ApplicationDbInitializer>();
 
             services.AddScoped<IPlayerService, PlayerService>();
