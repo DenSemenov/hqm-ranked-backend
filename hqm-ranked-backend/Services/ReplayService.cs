@@ -218,10 +218,21 @@ namespace hqm_ranked_backend.Services
                     });
                 }
 
-                _dbContext.ReplayGoals.AddRange(goalsToAdd);
-                _dbContext.ReplayChats.AddRange(chatsToAdd);
-                _dbContext.ReplayFragments.AddRange(fragmentsToAdd);
-                _dbContext.ReplayHighlights.AddRange(highlightsToAdd);
+                var wasAdded = false;
+                var replayDataItem =_dbContext.ReplayData.Include(x => x.Game).Include(x=>x.ReplayFragments).FirstOrDefault(x => x.Game.Id == request.Id);
+
+                if (replayDataItem != null)
+                {
+                    wasAdded = replayDataItem.ReplayFragments.Any();
+                }
+
+                if (!wasAdded)
+                {
+                    _dbContext.ReplayGoals.AddRange(goalsToAdd);
+                    _dbContext.ReplayChats.AddRange(chatsToAdd);
+                    _dbContext.ReplayFragments.AddRange(fragmentsToAdd);
+                    _dbContext.ReplayHighlights.AddRange(highlightsToAdd);
+                }
 
                 var game = _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefault(x => x.Id == replayData.Game.Id);
                 if (game != null)

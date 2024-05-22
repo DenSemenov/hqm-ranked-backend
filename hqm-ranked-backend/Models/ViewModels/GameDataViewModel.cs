@@ -25,5 +25,9 @@ namespace hqm_ranked_backend.Models.ViewModels
         public int Assists { get; set; }
         public int Score { get; set; }  
         public int Team { get; set; }
+        public int Shots { get; set; }
+        public int Saves { get; set; }
+        public int Conceded { get; set; }
+        public double Possession { get; set; }
     }
 }
