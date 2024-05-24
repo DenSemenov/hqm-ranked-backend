@@ -128,5 +128,14 @@ namespace hqm_ranked_backend.Controllers
                 return Ok(ex);
             }
         }
+
+        [Authorize]
+        [HttpPost("AcceptRules")]
+        public async Task<IActionResult> AcceptRules()
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.AcceptRules(userId);
+            return Ok();
+        }
     }
 }

@@ -237,5 +237,16 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
+
+        public async Task AcceptRules(int userId)
+        {
+            var player = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (player != null)
+            {
+                player.IsAcceptedRules = true;
+
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }

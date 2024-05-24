@@ -14,5 +14,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task RemovePushToken(PushTokenRequest request, int userId);
         Task<PlayerNotificationsViewModel> GetPlayerNotifications(int userId);
         Task SavePlayerNotifications(int userId, PlayerNotificationsViewModel request);
+        Task AcceptRules(int userId);
     }
 }
