@@ -74,30 +74,14 @@ namespace hqm_ranked_backend.Services
         }
         public void ParseAllReplays()
         {
-            IMonitoringApi monitorApi = JobStorage.Current.GetMonitoringApi();
+            var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
 
-            var jobIds = monitorApi.ProcessingJobs(0, 999).ToList();
-
-            if (jobIds.Count == 0)
+            foreach (var replayId in replayIds)
             {
-                var isPlayersOnServer = false;
-                if (!isPlayersOnServer)
+                ParseReplay(new ReplayRequest
                 {
-                    var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
-
-                    foreach (var replayId in replayIds)
-                    {
-                        ParseReplay(new ReplayRequest
-                        {
-                            Id = replayId
-                        });
-
-                        if (_dbContext.Servers.Any(x => x.LoggedIn > 4 || x.State != 0))
-                        {
-                            break;
-                        }
-                    }
-                }
+                    Id = replayId
+                });
             }
         }
 
