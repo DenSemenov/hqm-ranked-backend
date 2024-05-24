@@ -43,6 +43,10 @@ namespace hqm_ranked_backend.Services
                         });
 
                         await _dbContext.SaveChangesAsync();
+
+                        BackgroundJob.Enqueue(() => ParseReplay(new ReplayRequest { 
+                            Id = entity.Entity.Id
+                        }));
                     }
                 }
             }
