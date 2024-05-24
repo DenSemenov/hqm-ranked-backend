@@ -115,7 +115,9 @@ namespace ReplayHandler.Classes
         public double HeadTurn { get; set; }
         [JsonProperty("bl")]
         public double BodyLean { get; set; }
-
+        public ReplayTeam Team { get; set; }
+        public string Name { get; set; }
+        public int? ListIndex { get; set; }
         public ReplayPlayer()
         {
             PosX = 0;

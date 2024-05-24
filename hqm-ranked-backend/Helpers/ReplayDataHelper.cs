@@ -204,6 +204,7 @@ namespace hqm_ranked_backend.Helpers
                                         Name = foundPlayer.Name,
                                         StartPacket = pause.EndPacket,
                                         Team = ReplayTeam.Blue,
+                                        EndPacket = ticks.LastOrDefault().PacketNumber
                                     });
                                 }
                             }
@@ -214,6 +215,7 @@ namespace hqm_ranked_backend.Helpers
                                     Name = foundPlayer.Name,
                                     StartPacket = pause.EndPacket,
                                     Team = ReplayTeam.Blue,
+                                    EndPacket = ticks.LastOrDefault().PacketNumber
                                 });
                             }
                         }

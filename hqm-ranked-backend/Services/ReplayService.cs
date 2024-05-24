@@ -9,7 +9,9 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace hqm_ranked_backend.Services
 {
@@ -76,7 +78,7 @@ namespace hqm_ranked_backend.Services
 
             var jobIds = monitorApi.ProcessingJobs(0, 999).ToList();
 
-            if (jobIds.Count >= 1)
+            if (jobIds.Count == 0)
             {
                 var isPlayersOnServer = false;
                 if (!isPlayersOnServer)
@@ -133,6 +135,8 @@ namespace hqm_ranked_backend.Services
 
                 var goalsToAdd = new List<ReplayGoal>();
 
+                var goalTaskList = new List<Task>();
+
                 foreach (var goal in processedData.Goals)
                 {
                     var id = Guid.NewGuid();
@@ -142,22 +146,26 @@ namespace hqm_ranked_backend.Services
                     var json = JsonConvert.SerializeObject(goalTicks);
                     var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
 
-                    _storageService.UploadTextFile(path, json).Wait();
-
+                    goalTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
+                    
                     var player = _dbContext.Players.FirstOrDefault(x => x.Name == goal.GoalBy);
-
-                    goalsToAdd.Add(new ReplayGoal
+                    if (player != null)
                     {
-                        Id = id,
-                        Packet = goal.Packet,
-                        GoalBy = goal.GoalBy ?? String.Empty,
-                        Period = goal.Period,
-                        Time = goal.Time,
-                        Player = player,
-                        Url = path,
-                        ReplayData = replayData
-                    });
+                        goalsToAdd.Add(new ReplayGoal
+                        {
+                            Id = id,
+                            Packet = goal.Packet,
+                            GoalBy = goal.GoalBy ?? String.Empty,
+                            Period = goal.Period,
+                            Time = goal.Time,
+                            Player = player,
+                            Url = path,
+                            ReplayData = replayData
+                        });
+                    }
                 }
+                var t = Task.WhenAll(goalTaskList);
+                t.Wait();
 
                 var highlightsToAdd = new List<ReplayHighlight>();
 
@@ -201,6 +209,7 @@ namespace hqm_ranked_backend.Services
 
                 replayData.ReplayFragments = new List<ReplayFragment>();
 
+                var fragmentsTaskList = new List<Task>();
                 var fragmentsToAdd = new List<ReplayFragment>();
 
                 for (int i = 0; i < count; i++)
@@ -210,7 +219,7 @@ namespace hqm_ranked_backend.Services
                     var json = JsonConvert.SerializeObject(fragment);
                     var path = "replayFragments/" + request.Id.ToString() + i.ToString() + ".json";
 
-                    _storageService.UploadTextFile(path, json).Wait();
+                    fragmentsTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
 
                     fragmentsToAdd.Add(new ReplayFragment
                     {
@@ -221,6 +230,9 @@ namespace hqm_ranked_backend.Services
                         ReplayData = replayData
                     });
                 }
+
+                var t2 = Task.WhenAll(fragmentsTaskList);
+                t2.Wait();
 
                 var wasAdded = false;
                 var replayDataItem =_dbContext.ReplayData.Include(x => x.Game).Include(x=>x.ReplayFragments).FirstOrDefault(x => x.Game.Id == request.Id);
@@ -248,7 +260,7 @@ namespace hqm_ranked_backend.Services
                         var foundPossession = processedData.Possession.FirstOrDefault(x => x.Name == player.Player.Name);
                         if (foundPossession != null)
                         {
-                            player.Possession = (double)sum / (double)foundPossession.Touches;
+                            player.Possession = (double)foundPossession.Touches/(double)sum * 100;
                         }
 
                         player.Shots = processedData.Shots.Count(x => x.Name == player.Player.Name);
@@ -259,8 +271,21 @@ namespace hqm_ranked_backend.Services
                         var goaliePositions = processedData.Goalies.Where(x=>x.Name == player.Player.Name).ToList();
                         foreach(var gp in goaliePositions)
                         {
-                            
-                            player.Conceded += processedData.Goals.Where(x=> game.GamePlayers.FirstOrDefault(x=>x.Player == x.Player).Team != player.Team).Count(x => x.Packet < gp.StartPacket && x.Packet > gp.EndPacket);
+                            var conceded = 0;
+
+                            foreach (var goal in goalsToAdd)
+                            {
+                                var scorer = game.GamePlayers.FirstOrDefault(x => x.Player == goal.Player);
+                                if (player.Team != scorer.Team)
+                                {
+                                    if (goal.Packet >gp.StartPacket  &&  goal.Packet < gp.EndPacket)
+                                    {
+                                        conceded++;
+                                    }
+                                }
+                            }
+
+                            player.Conceded = conceded;
                         }
                     }
                 }

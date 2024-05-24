@@ -13,7 +13,7 @@ namespace ReplayHandler.Classes
         static readonly DLA.Vector UZP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 0.0, 1.0 });
         static readonly DLA.Vector UZN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 0.0, -1.0 });
 
-        static DLA.Vector[][] TABLE = new DLA.Vector[][]
+        static readonly DLA.Vector[][] TABLE = new DLA.Vector[][]
         {
             new DLA.Vector[] { UYP, UXP, UZP },
             new DLA.Vector[] { UYP, UZP, UXN },
@@ -24,20 +24,22 @@ namespace ReplayHandler.Classes
             new DLA.Vector[] { UXP, UZN, UYN },
             new DLA.Vector[] { UZN, UXN, UYN },
         };
-        public static DLA.Vector Cross(MathNet.Numerics.LinearAlgebra.Vector<double> left, MathNet.Numerics.LinearAlgebra.Vector<double> right)
-        {
-            if ((left.Count != 3 || right.Count != 3))
-            {
-                string message = "Vectors must have a length of 3.";
-                throw new Exception(message);
-            }
-            DLA.Vector result = new DLA.DenseVector(3);
-            result[0] = left[1] * right[2] - left[2] * right[1];
-            result[1] = -left[0] * right[2] + left[2] * right[0];
-            result[2] = left[0] * right[1] - left[1] * right[0];
 
-            return result;
+        public static DLA.Vector Cross(DLA.Vector left, DLA.Vector right)
+        {
+            if (left.Count != 3 || right.Count != 3)
+            {
+                throw new ArgumentException("Vectors must have a length of 3.");
+            }
+
+            return (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[]
+            {
+                left[1] * right[2] - left[2] * right[1],
+                left[2] * right[0] - left[0] * right[2],
+                left[0] * right[1] - left[1] * right[0]
+            });
         }
+
         public static (float x, float y, float z) ConvertMatrixFromNetwork(byte b, uint v1, uint v2)
         {
             DLA.Vector r1 = ConvertRotColumnFromNetwork(b, v1);
@@ -45,12 +47,12 @@ namespace ReplayHandler.Classes
             DLA.Vector r0 = Cross(r1, r2);
             var m = Matrix<double>.Build.DenseOfColumnVectors(r0, r1, r2);
 
-            Matrix4x4 matrix4x4 = new Matrix4x4(
+            var matrix4x4 = new Matrix4x4(
                 (float)m[0, 0], (float)m[0, 1], (float)m[0, 2], 0.0f,
-                 (float)m[1, 0], (float)m[1, 1], (float)m[1, 2], 0.0f,
-                 (float)m[2, 0], (float)m[2, 1], (float)m[2, 2], 0.0f,
-                0.0f, 0.0f, 0.0f, 0.0f
-                );
+                (float)m[1, 0], (float)m[1, 1], (float)m[1, 2], 0.0f,
+                (float)m[2, 0], (float)m[2, 1], (float)m[2, 2], 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            );
 
             var r = ConvertMatrixToEulerAngles(matrix4x4);
             return (r.X, r.Y, r.Z);
@@ -111,8 +113,6 @@ namespace ReplayHandler.Classes
                         temp2 = c2;
                         temp3 = c3;
                         break;
-                    default:
-                        throw new Exception();
                 }
                 pos += 2;
             }

@@ -11,9 +11,30 @@ namespace hqm_ranked_backend.Services
     public class StorageService: IStorageService
     {
         private RankedDb _dbContext;
+        private AmazonS3Client? _client;
+        private string _S3Domain;
+        private string _S3Bucket;
+        private Guid _S3Id;
         public StorageService(RankedDb dbContext)
         {
             _dbContext = dbContext;
+
+            var settings = _dbContext.Settings.FirstOrDefault();
+
+            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            {
+                _S3Domain = settings.S3Domain;
+                _S3Bucket = settings.S3Bucket;
+                _S3Id = settings.Id;
+
+                AmazonS3Config config = new AmazonS3Config()
+                {
+                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
+                    UseHttp = false,
+                };
+                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
+                _client = new AmazonS3Client(creds, config);
+            }
         }
 
         public async Task<string> GetStorage()
@@ -32,18 +53,10 @@ namespace hqm_ranked_backend.Services
         public async Task<List<string>> GetAllFileNames()
         {
             var fileNames = new List<string>();
-            var settings = _dbContext.Settings.FirstOrDefault();
 
-            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            if (_client !=null)
             {
-                AmazonS3Config config = new AmazonS3Config()
-                {
-                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false,
-                };
-                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
-                AmazonS3Client client = new AmazonS3Client(creds, config);
-                var files = await client.ListObjectsAsync(settings.S3Bucket, settings.Id.ToString());
+                var files = await _client.ListObjectsAsync(_S3Bucket, _S3Id.ToString());
                 fileNames = files.S3Objects.Select(x => x.Key).ToList();
             }
 
@@ -52,26 +65,16 @@ namespace hqm_ranked_backend.Services
 
         public async Task<bool> UploadFile(string name, IFormFile file)
         {
-            var settings = _dbContext.Settings.FirstOrDefault();
-
-            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            if (_client != null)
             {
-                AmazonS3Config config = new AmazonS3Config()
-                {
-                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false,
-                };
-                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
-                AmazonS3Client client = new AmazonS3Client(creds, config);
-
                 using (Stream fileToUpload = file.OpenReadStream())
                 {
                     var putObjectRequest = new PutObjectRequest();
-                    putObjectRequest.BucketName = settings.S3Bucket;
-                    putObjectRequest.Key = settings.Id.ToString()+"/"+name;
+                    putObjectRequest.BucketName = _S3Bucket;
+                    putObjectRequest.Key = _S3Id.ToString()+"/"+name;
                     putObjectRequest.InputStream = fileToUpload;
 
-                    await client.PutObjectAsync(putObjectRequest);
+                    await _client.PutObjectAsync(putObjectRequest);
                 }
 
                 return true;
@@ -84,24 +87,15 @@ namespace hqm_ranked_backend.Services
 
         public async Task<bool> UploadFileStream(string name, Stream file)
         {
-            var settings = _dbContext.Settings.FirstOrDefault();
 
-            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            if (_client != null)
             {
-                AmazonS3Config config = new AmazonS3Config()
-                {
-                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false,
-                };
-                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
-                AmazonS3Client client = new AmazonS3Client(creds, config);
-
                 var putObjectRequest = new PutObjectRequest();
-                putObjectRequest.BucketName = settings.S3Bucket;
-                putObjectRequest.Key = settings.Id.ToString() + "/" + name;
+                putObjectRequest.BucketName = _S3Bucket;
+                putObjectRequest.Key = _S3Id.ToString() + "/" + name;
                 putObjectRequest.InputStream = file;
 
-                await client.PutObjectAsync(putObjectRequest);
+                await _client.PutObjectAsync(putObjectRequest);
 
                 return true;
             }
@@ -113,26 +107,16 @@ namespace hqm_ranked_backend.Services
 
         public async Task<bool> UploadTextFile(string name, string text)
         {
-            var settings = _dbContext.Settings.FirstOrDefault();
-
-            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            if (_client != null)
             {
-                AmazonS3Config config = new AmazonS3Config()
-                {
-                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false,
-                };
-                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
-                AmazonS3Client client = new AmazonS3Client(creds, config);
-
                 using (Stream fileToUpload = GenerateStreamFromString(text))
                 {
                     var putObjectRequest = new PutObjectRequest();
-                    putObjectRequest.BucketName = settings.S3Bucket;
-                    putObjectRequest.Key = settings.Id.ToString() + "/" + name;
+                    putObjectRequest.BucketName = _S3Bucket;
+                    putObjectRequest.Key = _S3Id.ToString() + "/" + name;
                     putObjectRequest.InputStream = fileToUpload;
 
-                    await client.PutObjectAsync(putObjectRequest);
+                    await _client.PutObjectAsync(putObjectRequest);
                 }
                 return true;
             }
@@ -146,25 +130,14 @@ namespace hqm_ranked_backend.Services
         {
             var result = String.Empty;
 
-            var settings = _dbContext.Settings.FirstOrDefault();
-
-            if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
+            if (_client != null)
             {
-                AmazonS3Config config = new AmazonS3Config()
-                {
-                    ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false,
-                };
-                AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
-                AmazonS3Client client = new AmazonS3Client(creds, config);
-
-                var file = await client.GetObjectAsync(settings.S3Bucket, settings.Id.ToString() + "/" + name);
+                var file = await _client.GetObjectAsync(_S3Bucket, _S3Id.ToString() + "/" + name);
 
                 using (StreamReader reader = new StreamReader(file.ResponseStream))
                 {
                     result = reader.ReadToEnd();
                 }
-
             }
 
             return result;
