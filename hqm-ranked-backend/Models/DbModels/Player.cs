@@ -18,6 +18,8 @@ namespace hqm_ranked_backend.Models.DbModels
         public ICollection<NicknameChanges> NicknameChanges { get; set; }
         [Required]
         public bool IsApproved { get; set; } = true;
+        [Required]
+        public bool IsAcceptedRules { get; set; } = false;
 
     }
 }

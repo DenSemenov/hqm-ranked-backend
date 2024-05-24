@@ -129,6 +129,17 @@ namespace hqm_ranked_backend.Services
                             else
                             {
                                 var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
+                                
+                                if (!player.IsAcceptedRules)
+                                {
+                                    return new ServerLoginViewModel
+                                    {
+                                        Id = 0,
+                                        Success = false,
+                                        ErrorMessage = "[Server] Accept rules on website to log in"
+                                    };
+                                }
+
                                 if ((approveRequired && player.IsApproved) || !approveRequired)
                                 {
                                     var oldNickname = String.Empty;

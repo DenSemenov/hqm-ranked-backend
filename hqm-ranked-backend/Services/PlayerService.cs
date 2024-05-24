@@ -114,6 +114,7 @@ namespace hqm_ranked_backend.Services
                 result.Name = user.Name;
                 result.Email = user.Email;
                 result.Role = user.Role.Name;
+                result.IsAcceptedRules = user.IsAcceptedRules;
 
                 var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
 
