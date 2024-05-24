@@ -132,11 +132,21 @@ namespace hqm_ranked_backend.Services
 
             result.Id = request.Id;
 
-            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x=>x.NicknameChanges).SingleOrDefaultAsync(x => x.Id == request.Id);
+            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x => x.NicknameChanges).Select(x =>
+            new {
+                Id = x.Id,
+                Name = x.Name,
+                Count = x.GamePlayers.Count,
+                Goals = x.GamePlayers.Sum(x => x.Goals),
+                Assists = x.GamePlayers.Sum(x => x.Assists),
+                LastGames = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3),
+                NicknameChanges = x.NicknameChanges
+            }).SingleOrDefaultAsync(x => x.Id == request.Id);
+
             result.Name = player.Name;
-            result.Games = player.GamePlayers.Count;
-            result.Goals = player.GamePlayers.Sum(x => x.Goals);
-            result.Assists = player.GamePlayers.Sum(x => x.Assists);
+            result.Games = player.Count;
+            result.Goals = player.Goals;
+            result.Assists = player.Assists;
             result.Points = result.Goals + result.Assists;
 
             var currentSeasonStats = await GetSeasons();
@@ -172,7 +182,7 @@ namespace hqm_ranked_backend.Services
                 }
             }
 
-            result.LastGames = player.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3).Select(x => new PlayerLastGamesViewModel
+            result.LastGames = player.LastGames.Select(x => new PlayerLastGamesViewModel
             {
                 Date = x.CreatedOn,
                 GameId = x.Game.Id,
@@ -193,18 +203,6 @@ namespace hqm_ranked_backend.Services
             }).ToList();
 
             result.CalcData = new PlayerCalcDataViewModel();
-
-            var score = 0;
-            foreach(var game in player.GamePlayers)
-            {
-
-                score += game.Score;
-                result.PlayerPoints.Add(new PlayerPoint
-                {
-                    GameId = game.Game.Id,
-                    Score = score
-                });
-            }
 
             result.OldNicknames = player.NicknameChanges.OrderByDescending(x=>x.CreatedOn).Select(x=>x.OldNickname).ToList();
 
