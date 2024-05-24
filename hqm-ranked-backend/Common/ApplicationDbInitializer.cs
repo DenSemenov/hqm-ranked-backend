@@ -201,6 +201,59 @@ namespace hqm_ranked_backend.Common
 
             }
 
+            if (!await _dbContext.Rules.AnyAsync())
+            {
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Blocking the view",
+                    Description = "Blocking the view with a stick by poking the stick into the player's camera"
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Ignoring the 1/3 system",
+                    Description = "The player selected by the 1/3 system must be a goalkeeper with his period"
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Gint",
+                    Description = "It is forbidden to push the goalkeeper out of the goalie's area"
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Sabotage",
+                    Description = "Sabotage is considered to be intentionally scoring a goal in their own goal, intentionally blocking the view with their teammate's stick, intentionally interfering with the movement of the teammate, maliciously using the goaltending position for greater possession of the puck without intending to play \"for the team\""
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "AFK",
+                    Description = "No attempts to play for more than 30 seconds"
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Offense",
+                    Description = "It is forbidden to use statements aimed at insulting or humiliating players"
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Anti fair play",
+                    Description = "It is necessary to compensate for a goal that was scored in violation of the rules"
+                });
+
+                _dbContext.Rules.Add(new Rule
+                {
+                    Title = "Multiple accounts",
+                    Description = "It is forbidden to have more than one account, in case of loss of the password, you must write to the administrator"
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
+
             await _dbContext.SaveChangesAsync();
 
         }

@@ -13,7 +13,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<GameDataViewModel> GetGameData(GameRequest request);
         Task<Season> GetCurrentSeason();
         Task<int> GetPlayerElo(int id);
-        Task<string> GetRules();
+        Task<RulesViewModel> GetRules();
         Task<string> GetStorage();
 
     }

@@ -268,14 +268,19 @@ namespace hqm_ranked_backend.Services
             return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : startingElo);
         }
 
-        public async Task<string> GetRules()
+        public async Task<RulesViewModel> GetRules()
         {
-            var rules = String.Empty;
+            var rules = new RulesViewModel();
 
             var setting = await _dbContext.Settings.FirstOrDefaultAsync();
             if (setting != null)
             {
-                rules = setting.Rules;
+                rules.Text = setting.Rules;
+                rules.Rules = await _dbContext.Rules.Select(x => new RulesItemViewModel
+                {
+                    Title = x.Title,
+                    Description = x.Description,
+                }).ToListAsync();
             }
 
             return rules;
