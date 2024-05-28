@@ -12,7 +12,15 @@
         public Guid Id { get; set; }
         public DateTime Date { get; set; }
         public Guid ReplayId { get; set; }  
-        public uint Packet {  get; set; }   
+        public uint Packet {  get; set; }
+        public List<StoryLikeViewModel> Likes { get; set; }
+
+    }
+
+    public class StoryLikeViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
 
     }
 }

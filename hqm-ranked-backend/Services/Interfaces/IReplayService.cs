@@ -17,5 +17,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<ReplayHighlight>> GetReplayHighlights(ReplayRequest request);
         Task<List<StoryViewModel>> GetReplayStories();
         Task<ReplayViewerViewModel> GetStoryReplayViewer(StoryReplayViewerRequest request);
+        Task LikeStory(Guid storyId, int userId);
     }
 }

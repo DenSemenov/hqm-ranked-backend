@@ -360,20 +360,25 @@ namespace hqm_ranked_backend.Services
             var result = new List<StoryViewModel>();
 
             var checkDate = DateTime.UtcNow.Date.AddDays(-1);
-            var games = await _dbContext.ReplayData.Where(x => x.CreatedOn >= checkDate).Include(x => x.ReplayGoals).ThenInclude(x => x.Player).Include(x => x.ReplayGoals).ThenInclude(x => x.ReplayData).OrderByDescending(x=>x.CreatedOn).ToListAsync();
+            var games = await _dbContext.ReplayData.Where(x => x.CreatedOn >= checkDate).Include(x => x.ReplayGoals).ThenInclude(x => x.Player).Include(x => x.ReplayGoals).ThenInclude(x => x.ReplayData).Include(x => x.ReplayGoals).ThenInclude(x => x.Likes).OrderByDescending(x => x.CreatedOn).ToListAsync();
 
             var players = games.SelectMany(x => x.ReplayGoals.Select(x => x.Player)).Distinct().ToList();
             var goals = games.SelectMany(x => x.ReplayGoals).ToList();
 
-            foreach(var player in players)
+            foreach (var player in players)
             {
                 var playerGoals = goals.Where(x => x.Player == player).Select(x => new StoryGoalViewModel
                 {
                     Id = x.Id,
                     Date = x.ReplayData.CreatedOn,
                     Packet = x.Packet,
-                    ReplayId = x.ReplayData.Id
-                }).DistinctBy(x => x.Packet).OrderBy(x=>x.Date).ToList();
+                    ReplayId = x.ReplayData.Id,
+                    Likes = x.Likes.Select(l => new StoryLikeViewModel
+                    {
+                        Id = l.Id,
+                        Name = l.Name,
+                    }).ToList()
+                }).DistinctBy(x => x.Packet).OrderBy(x => x.Date).ToList();
 
                 result.Add(new StoryViewModel
                 {
@@ -411,6 +416,27 @@ namespace hqm_ranked_backend.Services
             }
 
             return result;
+        }
+
+        public async Task LikeStory(Guid storyId, int userId)
+        {
+            var goal = await _dbContext.ReplayGoals.FirstOrDefaultAsync(x => x.Id == storyId);
+
+            if (goal != null)
+            {
+                var like = goal.Likes.FirstOrDefault(x => x.Id == userId);
+                if (like !=null)
+                {
+                    goal.Likes.Remove(like);
+                }
+                else
+                {
+                    var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
+                    goal.Likes.Add(player);
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 }

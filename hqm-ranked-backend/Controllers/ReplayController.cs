@@ -1,5 +1,7 @@
-﻿using hqm_ranked_backend.Models.InputModels;
+﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace hqm_ranked_backend.Controllers
@@ -68,6 +70,16 @@ namespace hqm_ranked_backend.Controllers
             var result = await _replayService.GetStoryReplayViewer(request);
 
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("LikeStory")]
+        public async Task<IActionResult> LikeStory(StoryLikeRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _replayService.LikeStory(request.Id, userId);
+
+            return Ok();
         }
     }
 }

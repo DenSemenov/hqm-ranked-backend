@@ -13,5 +13,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public Player Player { get; set; }
         public string Url { get; set; }
         public ReplayData ReplayData { get; set; }
+        public List<Player> Likes { get; set; } = new List<Player>();
     }
 }
