@@ -18,9 +18,7 @@ namespace hqm_ranked_backend.Services
         public StorageService(RankedDb dbContext)
         {
             _dbContext = dbContext;
-
             var settings = _dbContext.Settings.FirstOrDefault();
-
             if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
             {
                 _S3Domain = settings.S3Domain;
@@ -31,6 +29,9 @@ namespace hqm_ranked_backend.Services
                 {
                     ServiceURL = string.Format("https://{0}", settings.S3Domain),
                     UseHttp = false,
+                    Timeout = TimeSpan.FromSeconds(30),
+                    RetryMode = RequestRetryMode.Standard,
+                    MaxErrorRetry = 10
                 };
                 AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
                 _client = new AmazonS3Client(creds, config);

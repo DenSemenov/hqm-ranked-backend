@@ -48,6 +48,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IImageGeneratorService, ImageGeneratorService>();
             services.AddScoped<IReplayService, ReplayService>();
+            services.AddScoped<IReplayCalcService, ReplayCalcService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IStorageService, StorageService>();
 
