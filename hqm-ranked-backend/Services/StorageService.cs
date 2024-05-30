@@ -29,7 +29,7 @@ namespace hqm_ranked_backend.Services
                 {
                     ServiceURL = string.Format("https://{0}", settings.S3Domain),
                     UseHttp = false,
-                    Timeout = TimeSpan.FromSeconds(30),
+                    Timeout = TimeSpan.FromMinutes(5),
                     RetryMode = RequestRetryMode.Standard,
                     MaxErrorRetry = 10
                 };
