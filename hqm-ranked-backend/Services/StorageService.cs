@@ -28,10 +28,7 @@ namespace hqm_ranked_backend.Services
                 AmazonS3Config config = new AmazonS3Config()
                 {
                     ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false,
-                    Timeout = TimeSpan.FromMinutes(5),
-                    RetryMode = RequestRetryMode.Standard,
-                    MaxErrorRetry = 10
+                    UseHttp = false
                 };
                 AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
                 _client = new AmazonS3Client(creds, config);

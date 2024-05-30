@@ -55,6 +55,7 @@ namespace hqm_ranked_backend.Services
                         Id = 0,
                         Success = false,
                         Token = String.Empty,
+                        IsExists = true
                     };
                 }
 
