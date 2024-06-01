@@ -85,7 +85,6 @@ namespace hqm_ranked_backend.Services
 
         public async Task<bool> UploadFileStream(string name, Stream file)
         {
-
             if (_client != null)
             {
                 var putObjectRequest = new PutObjectRequest();

@@ -9,15 +9,16 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.WindowsTokenService;
 using Microsoft.OpenApi.Models;
-using System.Data;
+using Serilog;
+using Serilog.Events;
 
 namespace hqm_ranked_backend
 {
@@ -27,12 +28,19 @@ namespace hqm_ranked_backend
         {
             Configuration = configuration;
 
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
         }
 
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            Log.Information("Starting the Web Host...");
             var db = Configuration.GetSection("Database:Connection").Value;
             services.AddCors();
             services.AddDbContextPool<RankedDb>(options => {
@@ -51,6 +59,8 @@ namespace hqm_ranked_backend
             services.AddScoped<IReplayCalcService, ReplayCalcService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IStorageService, StorageService>();
+
+            services.AddScoped<ExceptionMiddleware>();
 
             services.AddMemoryCache();
             services.AddHangfire(x => x.UsePostgreSqlStorage(db));
@@ -107,10 +117,11 @@ namespace hqm_ranked_backend
                 c.RoutePrefix = "";
             });
 
-            app.UseRouting();
+            app.UseRouting().UseMiddleware<ExceptionMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
 
             app.UseCors(x => x
                  .AllowAnyMethod()
