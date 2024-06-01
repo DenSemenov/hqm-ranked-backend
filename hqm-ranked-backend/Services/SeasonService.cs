@@ -89,6 +89,13 @@ namespace hqm_ranked_backend.Services
 
             result = result.OrderByDescending(x => x.Rating).ToList();
 
+            var i = 1;
+            foreach(var player in result)
+            {
+                player.Place = i;
+                i++;
+            }
+
             return result;
         }
 
