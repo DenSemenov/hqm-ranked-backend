@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -32,7 +33,7 @@ namespace hqm_ranked_backend
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles", "logs", "log.txt"), rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         }
 
@@ -140,6 +141,14 @@ namespace hqm_ranked_backend
                 Authorization = new[] { new AuthorizationFilter() }
             });
             app.UseHangfireServer();
+
+            app.UseFileServer(new FileServerOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles")),
+                RequestPath = "/StaticFiles",
+                EnableDefaultFiles = true,
+                EnableDirectoryBrowsing = true,
+            });
 
             var scope = app.ApplicationServices.CreateScope();
 
