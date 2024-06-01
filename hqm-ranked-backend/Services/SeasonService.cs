@@ -303,5 +303,36 @@ namespace hqm_ranked_backend.Services
 
             return storageUrl;
         }
+
+        public async Task<List<TopStatsViewModel>> GetTopStats()
+        {
+            var result = new List<TopStatsViewModel>();
+
+            var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+            var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+
+            result = await _dbContext.Players
+                .Include(x => x.GamePlayers)
+                .ThenInclude(x => x.Game)
+                .Where(x => x.GamePlayers.Count > 50)
+                .Select(x => new TopStatsViewModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Gp = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Count(),
+                    Goals = x.GamePlayers.Where(x=>x.Game.State == ended || x.Game.State == resigned).Sum(gp=>gp.Goals),
+                    Assists = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Sum(gp => gp.Assists),
+                    Wins = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Count(gp => (gp.Team == 0 && gp.Game.RedScore > gp.Game.BlueScore) || (gp.Team == 1 && gp.Game.RedScore < gp.Game.BlueScore)),
+                    Loses = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Count(gp => (gp.Team == 1 && gp.Game.RedScore > gp.Game.BlueScore) || (gp.Team == 0 && gp.Game.RedScore < gp.Game.BlueScore)),
+                    GoalsPerGame = Math.Round(x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Sum(gp => gp.Goals) / (double)x.GamePlayers.Count, 2),
+                    AssistsPerGame = Math.Round(x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Sum(gp => gp.Assists) / (double)x.GamePlayers.Count, 2),
+                    Winrate = Math.Round(x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Count(gp => (gp.Team == 0 && gp.Game.RedScore > gp.Game.BlueScore) || (gp.Team == 1 && gp.Game.RedScore < gp.Game.BlueScore)) / (double)x.GamePlayers.Count * 100, 2),
+                    Elo = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Sum(gp=>gp.Score),
+                })
+                .OrderByDescending(x=>x.Elo)
+                .ToListAsync();
+
+            return result;
+        }
     }
 }

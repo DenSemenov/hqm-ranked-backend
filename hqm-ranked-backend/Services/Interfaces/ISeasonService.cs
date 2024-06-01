@@ -15,6 +15,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<int> GetPlayerElo(int id);
         Task<RulesViewModel> GetRules();
         Task<string> GetStorage();
+        Task<List<TopStatsViewModel>> GetTopStats();
 
     }
 }

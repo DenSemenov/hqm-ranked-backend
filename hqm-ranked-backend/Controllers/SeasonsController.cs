@@ -72,5 +72,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("GetTopStats")]
+        public async Task<IActionResult> GetTopStats()
+        {
+            var result = await _seasonService.GetTopStats();
+
+            return Ok(result);
+        }
     }
 }
