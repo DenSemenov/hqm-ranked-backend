@@ -157,6 +157,7 @@ namespace hqm_ranked_backend.Services
             {
                 Text = request.Text,
                 Expiration = request.Expiration,
+                Link = request.Link,
             });
 
             await _dbContext.SaveChangesAsync();
@@ -180,6 +181,7 @@ namespace hqm_ranked_backend.Services
                 Date = x.CreatedOn,
                 Text = x.Text,
                 Expiration = x.Expiration,
+                Link = x.Link,
             }).ToListAsync();
             return result;
         }

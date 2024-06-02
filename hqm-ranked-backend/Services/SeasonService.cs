@@ -345,6 +345,7 @@ namespace hqm_ranked_backend.Services
                 Date = x.CreatedOn,
                 Text = x.Text,
                 Expiration = x.Expiration,
+                Link = x.Link
             }).ToListAsync();
             return result;
         }
