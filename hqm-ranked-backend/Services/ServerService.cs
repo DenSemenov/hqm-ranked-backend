@@ -227,7 +227,7 @@ namespace hqm_ranked_backend.Services
                     });
                 }
 
-                result.Players = result.Players.OrderByDescending(x=>x.Reports).ThenBy(x=>x.Count).Take(count).ToList();
+                result.Players = result.Players.OrderBy(x=>x.Reports).ThenBy(x=>x.Count).Take(count).ToList();
 
                 result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
                 result.CaptainRed = result.Players[1].Id;
