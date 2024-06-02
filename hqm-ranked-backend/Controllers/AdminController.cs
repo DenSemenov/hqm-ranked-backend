@@ -97,12 +97,37 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
         [HttpPost("ApproveUser")]
         public async Task<IActionResult> ApproveUser(IApproveRequest request)
         {
             await _adminService.ApproveUser(request);
 
             return Ok();
+        }
+
+        [HttpPost("AddAdminStory")]
+        public async Task<IActionResult> AddAdminStory(AdminStoryRequest request)
+        {
+            await _adminService.AddAdminStory(request);
+
+            return Ok();
+        }
+
+        [HttpPost("RemoveAdminStory")]
+        public async Task<IActionResult> RemoveAdminStory(RemoveAdminStoryRequest request)
+        {
+            await _adminService.RemoveAdminStory(request);
+
+            return Ok();
+        }
+
+        [HttpPost("GetAdminStories")]
+        public async Task<IActionResult> GetAdminStories()
+        {
+            var result = await _adminService.GetAdminStories();
+
+            return Ok(result);
         }
     }
 }

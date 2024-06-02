@@ -2,7 +2,6 @@
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services
@@ -151,6 +150,36 @@ namespace hqm_ranked_backend.Services
 
                 await _dbContext.SaveChangesAsync();
             }
+        }
+        public async Task AddAdminStory(AdminStoryRequest request)
+        {
+            _dbContext.AdminStories.Add(new AdminStory
+            {
+                Text = request.Text,
+                Expiration = request.Expiration,
+            });
+
+            await _dbContext.SaveChangesAsync();
+        }
+        public async Task RemoveAdminStory(RemoveAdminStoryRequest request)
+        {
+            var story = await _dbContext.AdminStories.FirstOrDefaultAsync(x => x.Id == request.Id);
+            if (story != null)
+            {
+                _dbContext.AdminStories.Remove(story);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        public async Task<List<AdminStoryViewModel>> GetAdminStories()
+        {
+            var result = await _dbContext.AdminStories.OrderByDescending(x => x.CreatedOn).Select(x => new AdminStoryViewModel
+            {
+                Id = x.Id,
+                Date = x.CreatedOn,
+                Text = x.Text,
+                Expiration = x.Expiration,
+            }).ToListAsync();
+            return result;
         }
     }
 }

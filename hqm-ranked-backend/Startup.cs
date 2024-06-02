@@ -43,6 +43,7 @@ namespace hqm_ranked_backend
         public void ConfigureServices(IServiceCollection services)
         {
             Log.Information(LogHelper.GetInfoLog("Starting the Web Host..."));
+
             var db = Configuration.GetSection("Database:Connection").Value;
             services.AddCors();
             services.AddDbContextPool<RankedDb>(options => {
@@ -104,6 +105,9 @@ namespace hqm_ranked_backend
         {
 
             DbStartup.InitializeDatabasesAsync(app.ApplicationServices).Wait();
+
+            Log.Information(LogHelper.GetInfoLog("DB connected"));
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

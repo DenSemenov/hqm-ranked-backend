@@ -17,5 +17,8 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task SaveSettings(Setting request);
         Task<List<AdminPlayerViewModel>> GetUnApprovedUsers();
         Task ApproveUser(IApproveRequest request);
+        Task AddAdminStory(AdminStoryRequest request);
+        Task RemoveAdminStory(RemoveAdminStoryRequest request);
+        Task<List<AdminStoryViewModel>> GetAdminStories();
     }
 }
