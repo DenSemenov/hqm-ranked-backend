@@ -36,6 +36,7 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="StaticFiles\" />
+    <Folder Include="StaticFiles\logs\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

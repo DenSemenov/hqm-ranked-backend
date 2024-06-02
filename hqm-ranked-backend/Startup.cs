@@ -4,6 +4,7 @@ using Amazon.S3.Model;
 using Hangfire;
 using Hangfire.PostgreSql;
 using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
@@ -33,7 +34,7 @@ namespace hqm_ranked_backend
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles", "logs", "log.txt"), rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles", "logs", "log.html"), rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         }
 
@@ -41,7 +42,7 @@ namespace hqm_ranked_backend
 
         public void ConfigureServices(IServiceCollection services)
         {
-            Log.Information("Starting the Web Host...");
+            Log.Information(LogHelper.GetInfoLog("Starting the Web Host..."));
             var db = Configuration.GetSection("Database:Connection").Value;
             services.AddCors();
             services.AddDbContextPool<RankedDb>(options => {
