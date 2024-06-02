@@ -16,6 +16,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<RulesViewModel> GetRules();
         Task<string> GetStorage();
         Task<List<TopStatsViewModel>> GetTopStats();
+        Task<List<AdminStoryViewModel>> GetMainStories();
 
     }
 }

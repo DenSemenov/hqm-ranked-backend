@@ -172,7 +172,9 @@ namespace hqm_ranked_backend.Services
         }
         public async Task<List<AdminStoryViewModel>> GetAdminStories()
         {
-            var result = await _dbContext.AdminStories.OrderByDescending(x => x.CreatedOn).Select(x => new AdminStoryViewModel
+            var dateDayBefore = DateTime.UtcNow.AddDays(-1);
+
+            var result = await _dbContext.AdminStories.Where(x=>(x.Expiration && x.CreatedOn > dateDayBefore) || !x.Expiration).OrderByDescending(x => x.CreatedOn).Select(x => new AdminStoryViewModel
             {
                 Id = x.Id,
                 Date = x.CreatedOn,

@@ -80,5 +80,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("GetMainStories")]
+        public async Task<IActionResult> GetMainStories()
+        {
+            var result = await _seasonService.GetMainStories();
+
+            return Ok(result);
+        }
     }
 }

@@ -334,5 +334,19 @@ namespace hqm_ranked_backend.Services
 
             return result;
         }
+
+        public async Task<List<AdminStoryViewModel>> GetMainStories()
+        {
+            var dateDayBefore = DateTime.UtcNow.AddDays(-1);
+
+            var result = await _dbContext.AdminStories.Where(x => (x.Expiration && x.CreatedOn > dateDayBefore) || !x.Expiration).OrderByDescending(x => x.CreatedOn).Select(x => new AdminStoryViewModel
+            {
+                Id = x.Id,
+                Date = x.CreatedOn,
+                Text = x.Text,
+                Expiration = x.Expiration,
+            }).ToListAsync();
+            return result;
+        }
     }
 }
