@@ -5,6 +5,10 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using hqm_ranked_backend.Common;
+using System;
+using hqm_ranked_backend.Helpers;
 
 namespace hqm_ranked_backend.Services
 {
@@ -63,6 +67,7 @@ namespace hqm_ranked_backend.Services
 
         public async Task<bool> UploadFile(string name, IFormFile file)
         {
+            Exception? lastExc = null;
             if (_client != null)
             {
                 var attempt = 0;
@@ -81,9 +86,18 @@ namespace hqm_ranked_backend.Services
                             await _client.PutObjectAsync(putObjectRequest);
                         }
                     }
+                    else
+                    {
+                        if (lastExc != null)
+                        {
+                            var log = LogHelper.GetErrorLog(lastExc.Message, lastExc.StackTrace);
+                            Log.Error(log);
+                        }
+                    }
                 }
-                catch
+                catch(Exception ex)
                 {
+                    lastExc = ex;
                     attempt++;
                     goto Retry;
                 }
