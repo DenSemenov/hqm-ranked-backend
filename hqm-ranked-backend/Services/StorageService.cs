@@ -65,14 +65,27 @@ namespace hqm_ranked_backend.Services
         {
             if (_client != null)
             {
-                using (Stream fileToUpload = file.OpenReadStream())
+                var attempt = 0;
+            Retry:
+                try
                 {
-                    var putObjectRequest = new PutObjectRequest();
-                    putObjectRequest.BucketName = _S3Bucket;
-                    putObjectRequest.Key = _S3Id.ToString()+"/"+name;
-                    putObjectRequest.InputStream = fileToUpload;
+                    if (attempt != 50)
+                    {
+                        using (Stream fileToUpload = file.OpenReadStream())
+                        {
+                            var putObjectRequest = new PutObjectRequest();
+                            putObjectRequest.BucketName = _S3Bucket;
+                            putObjectRequest.Key = _S3Id.ToString() + "/" + name;
+                            putObjectRequest.InputStream = fileToUpload;
 
-                    await _client.PutObjectAsync(putObjectRequest);
+                            await _client.PutObjectAsync(putObjectRequest);
+                        }
+                    }
+                }
+                catch
+                {
+                    attempt++;
+                    goto Retry;
                 }
 
                 return true;
@@ -87,13 +100,25 @@ namespace hqm_ranked_backend.Services
         {
             if (_client != null)
             {
-                var putObjectRequest = new PutObjectRequest();
-                putObjectRequest.BucketName = _S3Bucket;
-                putObjectRequest.Key = _S3Id.ToString() + "/" + name;
-                putObjectRequest.InputStream = file;
+                var attempt = 0;
+            Retry:
+                try
+                {
+                    if (attempt != 50)
+                    {
+                        var putObjectRequest = new PutObjectRequest();
+                        putObjectRequest.BucketName = _S3Bucket;
+                        putObjectRequest.Key = _S3Id.ToString() + "/" + name;
+                        putObjectRequest.InputStream = file;
 
-                await _client.PutObjectAsync(putObjectRequest);
-
+                        await _client.PutObjectAsync(putObjectRequest);
+                    }
+                }
+                catch
+                {
+                    attempt++;
+                    goto Retry;
+                }
                 return true;
             }
             else
@@ -106,14 +131,27 @@ namespace hqm_ranked_backend.Services
         {
             if (_client != null)
             {
-                using (Stream fileToUpload = GenerateStreamFromString(text))
+                var attempt = 0;
+            Retry:
+                try
                 {
-                    var putObjectRequest = new PutObjectRequest();
-                    putObjectRequest.BucketName = _S3Bucket;
-                    putObjectRequest.Key = _S3Id.ToString() + "/" + name;
-                    putObjectRequest.InputStream = fileToUpload;
+                    if (attempt != 50)
+                    {
+                        using (Stream fileToUpload = GenerateStreamFromString(text))
+                        {
+                            var putObjectRequest = new PutObjectRequest();
+                            putObjectRequest.BucketName = _S3Bucket;
+                            putObjectRequest.Key = _S3Id.ToString() + "/" + name;
+                            putObjectRequest.InputStream = fileToUpload;
 
-                    await _client.PutObjectAsync(putObjectRequest);
+                            await _client.PutObjectAsync(putObjectRequest);
+                        }
+                    }
+                }
+                catch
+                {
+                    attempt++;
+                    goto Retry;
                 }
                 return true;
             }
