@@ -7,8 +7,8 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using hqm_ranked_backend.Common;
-using System;
 using hqm_ranked_backend.Helpers;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace hqm_ranked_backend.Services
 {
@@ -18,10 +18,13 @@ namespace hqm_ranked_backend.Services
         private AmazonS3Client? _client;
         private string _S3Domain;
         private string _S3Bucket;
-        private Guid _S3Id;
-        public StorageService(RankedDb dbContext)
+        private Guid _S3Id; 
+        private readonly IHostingEnvironment _hostingEnvironment;
+        public StorageService(RankedDb dbContext, IHostingEnvironment hostingEnvironment)
         {
             _dbContext = dbContext;
+            _hostingEnvironment = hostingEnvironment;
+
             var settings = _dbContext.Settings.FirstOrDefault();
             if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
             {
@@ -65,92 +68,124 @@ namespace hqm_ranked_backend.Services
             return fileNames;
         }
 
-        public async Task<bool> UploadFile(string name, IFormFile file)
+        public async Task<StorageType> UploadFile(string name, IFormFile file)
         {
-            Exception? lastExc = null;
+            var result = StorageType.S3;
             if (_client != null)
             {
-                var attempt = 0;
-            Retry:
                 try
                 {
-                    if (attempt != 50)
-                    {
-                        using (Stream fileToUpload = file.OpenReadStream())
-                        {
-                            var putObjectRequest = new PutObjectRequest();
-                            putObjectRequest.BucketName = _S3Bucket;
-                            putObjectRequest.Key = _S3Id.ToString() + "/" + name;
-                            putObjectRequest.InputStream = fileToUpload;
-
-                            await _client.PutObjectAsync(putObjectRequest);
-                        }
-                    }
-                    else
-                    {
-                        if (lastExc != null)
-                        {
-                            var log = LogHelper.GetErrorLog(lastExc.Message, lastExc.StackTrace);
-                            Log.Error(log);
-                        }
-                    }
-                }
-                catch(Exception ex)
-                {
-                    lastExc = ex;
-                    attempt++;
-                    goto Retry;
-                }
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public async Task<bool> UploadFileStream(string name, Stream file)
-        {
-            if (_client != null)
-            {
-                var attempt = 0;
-            Retry:
-                try
-                {
-                    if (attempt != 50)
+                    using (Stream fileToUpload = file.OpenReadStream())
                     {
                         var putObjectRequest = new PutObjectRequest();
                         putObjectRequest.BucketName = _S3Bucket;
                         putObjectRequest.Key = _S3Id.ToString() + "/" + name;
-                        putObjectRequest.InputStream = file;
+                        putObjectRequest.InputStream = fileToUpload;
 
                         await _client.PutObjectAsync(putObjectRequest);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    attempt++;
-                    goto Retry;
+                    var log = LogHelper.GetErrorLog(ex.Message, ex.StackTrace);
+                    Log.Error(log);
+
+                    await UploadFileLocal(name, file);
+                    result = StorageType.Local;
                 }
-                return true;
             }
             else
             {
-                return false;
+                await UploadFileLocal(name, file);
+                result = StorageType.Local;
+            }
+
+            return result;
+        }
+
+        public async Task UploadFileLocal(string name, IFormFile file)
+        {
+            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath,"StaticFiles",_S3Id.ToString(), name);
+            var localPathWithoutName = Path.GetDirectoryName(localPath);
+            if (!Directory.Exists(localPathWithoutName))
+            {
+                Directory.CreateDirectory(localPathWithoutName);
+            }
+
+            using (Stream fileToUpload = file.OpenReadStream())
+            {
+                using (Stream f = File.Create(localPath))
+                {
+                    byte[] buffer = new byte[8 * 1024];
+                    int len;
+                    while ((len = fileToUpload.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        f.Write(buffer, 0, len);
+                    }
+                }
             }
         }
 
-        public async Task<bool> UploadTextFile(string name, string text)
+        public async Task<StorageType> UploadFileStream(string name, Stream file)
         {
+            var result = StorageType.S3;
             if (_client != null)
             {
-                var attempt = 0;
-            Retry:
                 try
                 {
-                    if (attempt != 50)
-                    {
+                    var putObjectRequest = new PutObjectRequest();
+                    putObjectRequest.BucketName = _S3Bucket;
+                    putObjectRequest.Key = _S3Id.ToString() + "/" + name;
+                    putObjectRequest.InputStream = file;
+
+                    await _client.PutObjectAsync(putObjectRequest);
+                }
+                catch (Exception ex)
+                {
+                    var log = LogHelper.GetErrorLog(ex.Message, ex.StackTrace);
+                    Log.Error(log);
+
+                    await UploadFileStreamLocal(name, file);
+                    result = StorageType.Local;
+                }
+
+            }
+            else
+            {
+                await UploadFileStreamLocal(name, file);
+                result = StorageType.Local;
+            }
+
+            return result;
+        }
+
+        public async Task UploadFileStreamLocal(string name, Stream file)
+        {
+            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", _S3Id.ToString(), name);
+            var localPathWithoutName = Path.GetDirectoryName(localPath);
+            if (!Directory.Exists(localPathWithoutName))
+            {
+                Directory.CreateDirectory(localPathWithoutName);
+            }
+
+            using (Stream f = File.Create(localPath))
+            {
+                byte[] buffer = new byte[8 * 1024];
+                int len;
+                while ((len = file.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    f.Write(buffer, 0, len);
+                }
+            }
+        }
+
+        public async Task<StorageType> UploadTextFile(string name, string text)
+        {
+            var result = StorageType.S3;
+            if (_client != null)
+            {
+                try
+                {
                         using (Stream fileToUpload = GenerateStreamFromString(text))
                         {
                             var putObjectRequest = new PutObjectRequest();
@@ -160,18 +195,46 @@ namespace hqm_ranked_backend.Services
 
                             await _client.PutObjectAsync(putObjectRequest);
                         }
-                    }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    attempt++;
-                    goto Retry;
+                    var log = LogHelper.GetErrorLog(ex.Message, ex.StackTrace);
+                    Log.Error(log);
+
+                    await UploadTextFileLocal(name, text);
+                    result = StorageType.Local;
                 }
-                return true;
+
             }
             else
             {
-                return false;
+                await UploadTextFileLocal(name, text);
+                result = StorageType.Local;
+            }
+
+            return result;
+        }
+
+        public async Task UploadTextFileLocal(string name, string text)
+        {
+            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", _S3Id.ToString(), name);
+            var localPathWithoutName = Path.GetDirectoryName(localPath);
+            if (!Directory.Exists(localPathWithoutName))
+            {
+                Directory.CreateDirectory(localPathWithoutName);
+            }
+
+            using (Stream fileToUpload = GenerateStreamFromString(text))
+            {
+                using (Stream f = File.Create(localPath))
+                {
+                    byte[] buffer = new byte[8 * 1024];
+                    int len;
+                    while ((len = fileToUpload.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        f.Write(buffer, 0, len);
+                    }
+                }
             }
         }
 
@@ -187,6 +250,18 @@ namespace hqm_ranked_backend.Services
                 {
                     result = reader.ReadToEnd();
                 }
+            }
+
+            return result;
+        }
+
+        public async Task<string> RemoveFile(string name)
+        {
+            var result = String.Empty;
+
+            if (_client != null)
+            {
+                await _client.DeleteObjectAsync(_S3Bucket, _S3Id.ToString() + "/" + name);
             }
 
             return result;

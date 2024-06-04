@@ -4,35 +4,49 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Drawing.Imaging;
+using System.Xml.Linq;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace hqm_ranked_backend.Services
 {
     public class ReplayCalcService: IReplayCalcService
     {
         private RankedDb _dbContext;
-        private IStorageService _storageService;
-        public ReplayCalcService(RankedDb dbContext, IStorageService storageService)
+        private IStorageService _storageService; 
+        private readonly IHostingEnvironment _hostingEnvironment;
+        public ReplayCalcService(RankedDb dbContext, IStorageService storageService,  IHostingEnvironment hostingEnvironment)
         {
             _dbContext = dbContext;
             _storageService = storageService;
+            _hostingEnvironment = hostingEnvironment;
         }
-        public void ParseReplay(ReplayRequest request)
+        public async Task ParseReplay(ReplayRequest request)
         {
-            var replayData = _dbContext.ReplayData.Include(x => x.Game).FirstOrDefault(x => x.Game.Id == request.Id);
+            var replayData = await _dbContext.ReplayData.Include(x => x.Game).FirstOrDefaultAsync(x => x.Game.Id == request.Id);
             if (replayData != null)
             {
                 var storageUrl = String.Empty;
 
-                var setting = _dbContext.Settings.FirstOrDefault();
+                byte[] data = [];
+                var setting = await _dbContext.Settings.FirstOrDefaultAsync();
                 if (setting != null)
                 {
-                    storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
+                    if (replayData.StorageType == Common.StorageType.Local)
+                    {
+                        storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
+                        var client = new System.Net.WebClient();
+                        data = client.DownloadData(storageUrl + replayData.Url);
+                    }
+                    else
+                    {
+                        storageUrl = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", setting.Id.ToString(), replayData.Url);
+                        data = File.ReadAllBytes(storageUrl);
+                    }
                 }
+
                 try
                 {
-                    var client = new System.Net.WebClient();
-                    var data = client.DownloadData(storageUrl + replayData.Url);
-
                     var result = ReplayHandler.ReplayHandler.ParseReplay(data);
 
                     var processedData = ReplayDataHelper.GetReplayCalcData(result);
@@ -51,8 +65,6 @@ namespace hqm_ranked_backend.Services
 
                     var goalsToAdd = new List<ReplayGoal>();
 
-                    var goalTaskList = new List<Task>();
-
                     foreach (var goal in processedData.Goals)
                     {
                         var id = Guid.NewGuid();
@@ -62,7 +74,7 @@ namespace hqm_ranked_backend.Services
                         var json = JsonConvert.SerializeObject(goalTicks);
                         var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
 
-                        goalTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
+                        var gst = await _storageService.UploadTextFile(path, json);
 
                         var player = _dbContext.Players.FirstOrDefault(x => x.Name == goal.GoalBy);
                         if (player != null)
@@ -76,12 +88,11 @@ namespace hqm_ranked_backend.Services
                                 Time = goal.Time,
                                 Player = player,
                                 Url = path,
-                                ReplayData = replayData
+                                ReplayData = replayData,
+                                StorageType = gst,
                             });
                         }
                     }
-                    var t = Task.WhenAll(goalTaskList);
-                    t.Wait();
 
                     var highlightsToAdd = new List<ReplayHighlight>();
 
@@ -125,7 +136,6 @@ namespace hqm_ranked_backend.Services
 
                     replayData.ReplayFragments = new List<ReplayFragment>();
 
-                    var fragmentsTaskList = new List<Task>();
                     var fragmentsToAdd = new List<ReplayFragment>();
 
                     for (int i = 0; i < count; i++)
@@ -135,7 +145,7 @@ namespace hqm_ranked_backend.Services
                         var json = JsonConvert.SerializeObject(fragment);
                         var path = "replayFragments/" + request.Id.ToString() + i.ToString() + ".json";
 
-                        fragmentsTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
+                        var fst = await _storageService.UploadTextFile(path, json);
 
                         fragmentsToAdd.Add(new ReplayFragment
                         {
@@ -143,12 +153,10 @@ namespace hqm_ranked_backend.Services
                             Index = i,
                             Min = fragment.Min(x => x.PacketNumber),
                             Max = fragment.Max(x => x.PacketNumber),
-                            ReplayData = replayData
+                            ReplayData = replayData,
+                            StorageType = fst
                         });
                     }
-
-                    var t2 = Task.WhenAll(fragmentsTaskList);
-                    t2.Wait();
 
                     var wasAdded = false;
                     var replayDataItem = _dbContext.ReplayData.Include(x => x.Game).Include(x => x.ReplayFragments).FirstOrDefault(x => x.Game.Id == request.Id);

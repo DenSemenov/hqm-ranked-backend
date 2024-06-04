@@ -4,6 +4,6 @@ namespace hqm_ranked_backend.Services.Interfaces
 {
     public interface IReplayCalcService
     {
-        void ParseReplay(ReplayRequest request);
+        Task ParseReplay(ReplayRequest request);
     }
 }

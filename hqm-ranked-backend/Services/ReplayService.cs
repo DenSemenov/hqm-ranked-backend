@@ -1,17 +1,13 @@
 ﻿using Hangfire;
-using Hangfire.Storage;
-using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Xml.Linq;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace hqm_ranked_backend.Services
 {
@@ -20,11 +16,13 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private IStorageService _storageService;
         private IReplayCalcService _replayCalcService;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         public ReplayService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IStorageService storageService, IReplayCalcService replayCalcService)
         {
             _dbContext = dbContext;
             _storageService = storageService;
             _replayCalcService = replayCalcService;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public async Task PushReplay(Guid gameId, IFormFile file, string token)
@@ -37,21 +35,21 @@ namespace hqm_ranked_backend.Services
                 {
                     var name = "replays/" + game.Id + ".hrp";
 
-                    if (await _storageService.UploadFile(name, file))
+                    var type = await _storageService.UploadFile(name, file);
+
+                    var entity = _dbContext.ReplayData.Add(new ReplayData
                     {
+                        Game = game,
+                        StorageType = type,
+                        Url = name
+                    });
 
-                        var entity = _dbContext.ReplayData.Add(new ReplayData
-                        {
-                            Game = game,
-                            Url = name
-                        });
+                    await _dbContext.SaveChangesAsync();
 
-                        await _dbContext.SaveChangesAsync();
-
-                        BackgroundJob.Enqueue(() => _replayCalcService.ParseReplay(new ReplayRequest { 
-                            Id = game.Id
-                        }));
-                    }
+                    BackgroundJob.Enqueue(() => _replayCalcService.ParseReplay(new ReplayRequest
+                    {
+                        Id = game.Id
+                    }));
                 }
             }
         }
@@ -61,17 +59,57 @@ namespace hqm_ranked_backend.Services
             var settings = _dbContext.Settings.FirstOrDefault();
             if (settings != null)
             {
-                var replaysToRemove = _dbContext.ReplayData.Include(x => x.ReplayFragments).Where(x => x.CreatedOn.AddDays(settings.ReplayStoreDays) < DateTime.UtcNow).ToList();
-                foreach (var replay in replaysToRemove)
+                var dateToCheck = DateTime.UtcNow.AddDays(-settings.ReplayStoreDays);
+                try
                 {
-                    foreach (var replayFragment in replay.ReplayFragments)
+                    var replaysToRemove = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.ReplayGoals).Where(x => x.CreatedOn < dateToCheck).ToList();
+                    foreach (var replay in replaysToRemove)
                     {
-                        File.Delete(replayFragment.Data);
-                    }
+                        foreach (var replayFragment in replay.ReplayFragments)
+                        {
+                            if (replayFragment.StorageType == Common.StorageType.Local)
+                            {
+                                var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", settings.Id.ToString(), replayFragment.Data);
+                                File.Delete(localPath);
+                            }
+                            else
+                            {
+                                _storageService.RemoveFile(replayFragment.Data).Wait();
+                            }
 
-                    _dbContext.ReplayData.Remove(replay);
+                        }
+
+                        foreach (var replayGoal in replay.ReplayGoals)
+                        {
+                            if (replayGoal.StorageType == Common.StorageType.Local)
+                            {
+                                var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", settings.Id.ToString(), replayGoal.Url);
+                                File.Delete(localPath);
+                            }
+                            else
+                            {
+                                _storageService.RemoveFile(replayGoal.Url).Wait();
+                            }
+                        }
+
+                        if (replay.StorageType == Common.StorageType.Local)
+                        {
+                            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", settings.Id.ToString(), replay.Url);
+                            File.Delete(localPath);
+                        }
+                        else
+                        {
+                            _storageService.RemoveFile(replay.Url).Wait();
+                        }
+
+                        _dbContext.ReplayData.Remove(replay);
+                    }
+                    _dbContext.SaveChanges();
                 }
-                _dbContext.SaveChanges();
+                catch (Exception ex)
+                {
+
+                }
             }
         }
         public void ParseAllReplays()
