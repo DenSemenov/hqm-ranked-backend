@@ -101,5 +101,15 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpPost("GetPatrol")]
+        public async Task<IActionResult> GetPatrol()
+        {
+            var userId = UserHelper.GetUserId(User);
+            var result = await _seasonService.GetPatrol(userId);
+
+            return Ok(result);
+        }
     }
 }

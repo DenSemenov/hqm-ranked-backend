@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
+using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
 {
@@ -393,7 +394,37 @@ namespace hqm_ranked_backend.Services
 
         public async Task<List<PartolViewModel>> GetPatrol(int userId)
         {
-            var patrols = new List<PartolViewModel>();
+            var weekBefore = DateTime.UtcNow.AddDays(-7);
+
+            var userPatrolDecisions = await _dbContext.PatrolDecisions.Where(x => x.From.Id == userId).Select(x => x.Report.Id).ToListAsync();
+            var gamesCount = await _dbContext.GamePlayers.Where(x => x.PlayerId == userId).CountAsync();
+            if (gamesCount < 20)
+            {
+                return new List<PartolViewModel>();
+            }
+
+            var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).SingleOrDefaultAsync(x => x.Id == userId);
+            if (player != null)
+            {
+                var lastBan = player.Bans.Where(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow).OrderByDescending(x => x.CreatedOn).FirstOrDefault();
+                if (lastBan != null)
+                {
+                    return new List<PartolViewModel>();
+                }
+            }
+
+            var patrols = await _dbContext.Reports
+                .Include(x => x.From)
+                .Include(x => x.To)
+                .Include(x => x.Reason)
+                .Where(x => x.From.Id != userId && x.To.Id != userId && !userPatrolDecisions.Contains(x.Id) && x.CreatedOn > weekBefore)
+                .Select(x => new PartolViewModel
+                {
+                    ReportId = x.Id,
+                    Reason = x.Reason.Title,
+                    Date = x.CreatedOn
+                })
+                .ToListAsync();
 
             return patrols;
         }

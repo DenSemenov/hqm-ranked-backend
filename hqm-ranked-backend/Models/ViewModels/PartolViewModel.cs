@@ -3,5 +3,7 @@
     public class PartolViewModel
     {
         public Guid ReportId { get; set; }
+        public string Reason { get; set; }
+        public DateTime Date { get; set; }
     }
 }
