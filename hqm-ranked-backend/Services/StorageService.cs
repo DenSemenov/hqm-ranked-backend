@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Helpers;
-using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace hqm_ranked_backend.Services
 {
@@ -18,9 +17,9 @@ namespace hqm_ranked_backend.Services
         private AmazonS3Client? _client;
         private string _S3Domain;
         private string _S3Bucket;
-        private Guid _S3Id; 
-        private readonly IHostingEnvironment _hostingEnvironment;
-        public StorageService(RankedDb dbContext, IHostingEnvironment hostingEnvironment)
+        private Guid _S3Id;
+        private readonly IWebHostEnvironment _hostingEnvironment;
+        public StorageService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment)
         {
             _dbContext = dbContext;
             _hostingEnvironment = hostingEnvironment;

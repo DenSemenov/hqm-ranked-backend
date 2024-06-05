@@ -6,16 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Drawing.Imaging;
 using System.Xml.Linq;
-using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace hqm_ranked_backend.Services
 {
     public class ReplayCalcService: IReplayCalcService
     {
         private RankedDb _dbContext;
-        private IStorageService _storageService; 
-        private readonly IHostingEnvironment _hostingEnvironment;
-        public ReplayCalcService(RankedDb dbContext, IStorageService storageService,  IHostingEnvironment hostingEnvironment)
+        private IStorageService _storageService;
+        private readonly IWebHostEnvironment _hostingEnvironment;
+        public ReplayCalcService(RankedDb dbContext, IStorageService storageService, IWebHostEnvironment hostingEnvironment)
         {
             _dbContext = dbContext;
             _storageService = storageService;

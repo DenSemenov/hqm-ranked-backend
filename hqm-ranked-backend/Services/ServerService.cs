@@ -6,15 +6,9 @@ using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
-using MassTransit;
-using MathNet.Numerics;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.IdentityModel.Tokens;
-using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
 {

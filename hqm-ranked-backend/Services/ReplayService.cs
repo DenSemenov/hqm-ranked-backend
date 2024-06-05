@@ -6,8 +6,6 @@ using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
-using System.Xml.Linq;
-using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace hqm_ranked_backend.Services
 {
