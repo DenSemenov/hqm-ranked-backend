@@ -27,17 +27,6 @@ namespace hqm_ranked_backend.Controllers
             }
         }
 
-        [HttpPost("Test")]
-        public async Task Test([FromForm] IFormFile replay)
-        {
-
-            Log.Information(LogHelper.GetInfoLog("Replay lenght " + replay.Length));
-            if (replay.Length > 0)
-            {
-                await _replayService.Test(replay);
-            }
-        }
-
         [HttpPost("GetReplayViewer")]
         public async Task<IActionResult> GetReplayViewer(ReplayViewerRequest request)
         {

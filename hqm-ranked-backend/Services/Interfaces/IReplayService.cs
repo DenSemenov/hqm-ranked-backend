@@ -8,7 +8,6 @@ namespace hqm_ranked_backend.Services.Interfaces
     public interface IReplayService
     {
         Task PushReplay(Guid gameId, IFormFile file, string token);
-        Task Test(IFormFile file);
         void RemoveOldReplays();
         public void ParseAllReplays();
         Task<ReplayViewerViewModel> GetReplayViewer(ReplayViewerRequest request);

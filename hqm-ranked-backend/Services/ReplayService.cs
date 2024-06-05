@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
@@ -6,6 +7,7 @@ using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
+using Serilog;
 
 namespace hqm_ranked_backend.Services
 {
@@ -25,38 +27,42 @@ namespace hqm_ranked_backend.Services
 
         public async Task PushReplay(Guid gameId, IFormFile file, string token)
         {
-            var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == token);
-            if (server != null)
+            try
             {
-                var game = await _dbContext.Games.FirstOrDefaultAsync(x=>x.Id == gameId);
-                if (game != null)
+                var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == token);
+                if (server != null)
                 {
-                    var name = "replays/" + game.Id + ".hrp";
-
-                    var type = await _storageService.UploadFile(name, file);
-
-                    var entity = _dbContext.ReplayData.Add(new ReplayData
+                    var game = await _dbContext.Games.FirstOrDefaultAsync(x => x.Id == gameId);
+                    if (game != null)
                     {
-                        Game = game,
-                        StorageType = type,
-                        Url = name
-                    });
+                        var name = "replays/" + game.Id + ".hrp";
 
-                    await _dbContext.SaveChangesAsync();
+                        var type = await _storageService.UploadFile(name, file);
 
-                    BackgroundJob.Enqueue(() => _replayCalcService.ParseReplay(new ReplayRequest
+                        var entity = _dbContext.ReplayData.Add(new ReplayData
+                        {
+                            Game = game,
+                            StorageType = type,
+                            Url = name
+                        });
+
+                        await _dbContext.SaveChangesAsync();
+
+                        BackgroundJob.Enqueue(() => _replayCalcService.ParseReplay(new ReplayRequest
+                        {
+                            Id = game.Id
+                        }));
+                    }
+                    else
                     {
-                        Id = game.Id
-                    }));
+                        Log.Error(LogHelper.GetInfoLog("Game not found: " + gameId));
+                    }
                 }
             }
-        }
-
-        public async Task Test(IFormFile file)
-        {
-            var name = "replays/test.hrp";
-
-            await _storageService.UploadFileLocal(name, file);
+            catch (Exception ex)
+            {
+                Log.Error(LogHelper.GetErrorLog(ex.Message, ex.StackTrace));
+            }
         }
 
         public void RemoveOldReplays()
