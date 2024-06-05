@@ -376,7 +376,7 @@ namespace hqm_ranked_backend.Services
                     var reason = await _dbContext.Rules.FirstOrDefaultAsync(x => x.Id == reasonId);
                     var game = await _dbContext.Games.FirstOrDefaultAsync(x => x.Id == gameId);
 
-                    _dbContext.Reports.Add(new Reports
+                    var report = _dbContext.Reports.Add(new Reports
                     {
                         From = from,
                         To = to,
@@ -385,11 +385,33 @@ namespace hqm_ranked_backend.Services
                         Game = game
                     });
 
+                    _dbContext.PatrolDecisions.Add(new PatrolDecision
+                    {
+                        From = from,
+                        IsReported = true,
+                        Report = report.Entity,
+                    });
+
                     await _dbContext.SaveChangesAsync();
                 }
             }
 
             return result;
+        }
+
+        public async Task ReportCancelDecision(Guid id, int userId)
+        {
+            var from = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
+            var report = await _dbContext.Reports.FirstOrDefaultAsync(x => x.Id == id);
+
+            _dbContext.PatrolDecisions.Add(new PatrolDecision
+            {
+                From = from,
+                IsReported = true,
+                Report = report,
+            });
+
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<List<PartolViewModel>> GetPatrol(int userId)

@@ -111,5 +111,15 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpPost("ReportCancelDecision")]
+        public async Task<IActionResult> ReportCancelDecision(ReportCancelRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _seasonService.ReportCancelDecision(request.Id, userId);
+
+            return Ok();
+        }
     }
 }

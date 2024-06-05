@@ -74,6 +74,14 @@ namespace hqm_ranked_backend.Controllers
             return Ok(result);
         }
 
+        [HttpPost("GetReportViewer")]
+        public async Task<IActionResult> GetReportViewer(ReportViewerRequest request)
+        {
+            var result = await _replayService.GetReportViewer(request);
+
+            return Ok(result);
+        }
+
         [Authorize]
         [HttpPost("LikeStory")]
         public async Task<IActionResult> LikeStory(StoryLikeRequest request)

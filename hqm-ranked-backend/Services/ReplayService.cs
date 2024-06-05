@@ -247,7 +247,7 @@ namespace hqm_ranked_backend.Services
         {
             var result = new ReplayViewerViewModel();
 
-            var goal = await _dbContext.ReplayGoals.FirstOrDefaultAsync(x=>x.Id == request.Id);
+            var goal = await _dbContext.ReplayGoals.FirstOrDefaultAsync(x => x.Id == request.Id);
 
             if (goal != null)
             {
@@ -289,6 +289,58 @@ namespace hqm_ranked_backend.Services
 
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task<ReplayViewerViewModel> GetReportViewer(ReportViewerRequest request)
+        {
+            var result = new ReplayViewerViewModel();
+
+            var report = await _dbContext.Reports.Include(x=>x.To).Include(x=>x.Game).ThenInclude(x=>x.ReplayDatas).ThenInclude(x=>x.ReplayFragments).FirstOrDefaultAsync(x => x.Id == request.Id);
+
+            if (report != null)
+            {
+                result.Index = 0;
+
+                var rd = report.Game.ReplayDatas.FirstOrDefault();
+                var min = Math.Clamp(report.Tick - 500, rd.Min, rd.Max);
+                var max  = Math.Clamp(report.Tick + 500, rd.Min, rd.Max);
+
+                var fragmentsToLoad = rd.ReplayFragments.Where(x => (x.Min <= min && x.Max >= min) || (x.Min <= max && x.Max >= max)).ToList();
+
+                var data = new List<ReplayTick>();
+
+                foreach (var fragment in fragmentsToLoad)
+                {
+                    var path = fragment.Data;
+                    var json = await _storageService.LoadTextFile(path);
+                    var fragmentData = JsonConvert.DeserializeObject<ReplayTick[]>(json);
+                    data.AddRange(fragmentData);
+                }
+
+                data = data.Where(x => x.PacketNumber >= min && x.PacketNumber <= max).ToList();
+
+                foreach (var tick in data)
+                {
+                    tick.PlayersInList = tick.PlayersInList.Select(x => new PlayerInList
+                    {
+                        Index = x.Index,
+                        ListIndex = x.ListIndex,
+                        Team = x.Team,
+                        Name = report.To.Name == x.Name ? "Reported" : String.Empty
+                    }).ToList();
+                }
+
+                result.Data = data.ToArray();
+                result.Fragments = new List<ReplayViewerFragmentViewModel> {
+                   new ReplayViewerFragmentViewModel{
+                    Index = 0,
+                     Min = (uint)min,
+                     Max = (uint)max
+                   }
+                };
+            }
+
+            return result;
         }
     }
 }
