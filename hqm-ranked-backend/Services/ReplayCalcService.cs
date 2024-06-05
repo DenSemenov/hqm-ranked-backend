@@ -31,7 +31,7 @@ namespace hqm_ranked_backend.Services
                 var setting = await _dbContext.Settings.FirstOrDefaultAsync();
                 if (setting != null)
                 {
-                    if (replayData.StorageType == Common.StorageType.Local)
+                    if (replayData.StorageType == Common.StorageType.S3)
                     {
                         storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
                         var client = new System.Net.WebClient();
