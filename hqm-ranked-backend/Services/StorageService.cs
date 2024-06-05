@@ -104,24 +104,36 @@ namespace hqm_ranked_backend.Services
 
         public async Task UploadFileLocal(string name, IFormFile file)
         {
-            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath,"StaticFiles",_S3Id.ToString(), name);
-            var localPathWithoutName = Path.GetDirectoryName(localPath);
-            if (!Directory.Exists(localPathWithoutName))
+            try
             {
-                Directory.CreateDirectory(localPathWithoutName);
-            }
+                var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", _S3Id.ToString(), name);
 
-            using (Stream fileToUpload = file.OpenReadStream())
-            {
-                using (Stream f = File.Create(localPath))
+                Log.Information(LogHelper.GetInfoLog(localPath));
+
+                var localPathWithoutName = Path.GetDirectoryName(localPath);
+                Log.Information(LogHelper.GetInfoLog(localPathWithoutName));
+                if (!Directory.Exists(localPathWithoutName))
                 {
-                    byte[] buffer = new byte[8 * 1024];
-                    int len;
-                    while ((len = fileToUpload.Read(buffer, 0, buffer.Length)) > 0)
+                    Directory.CreateDirectory(localPathWithoutName);
+                    Log.Information(LogHelper.GetInfoLog("Creating dir " + localPathWithoutName));
+                }
+
+                using (Stream fileToUpload = file.OpenReadStream())
+                {
+                    using (Stream f = File.Create(localPath))
                     {
-                        f.Write(buffer, 0, len);
+                        byte[] buffer = new byte[8 * 1024];
+                        int len;
+                        while ((len = fileToUpload.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            f.Write(buffer, 0, len);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(LogHelper.GetErrorLog(ex.Message, ex.StackTrace));
             }
         }
 
