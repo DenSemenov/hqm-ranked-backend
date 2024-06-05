@@ -19,6 +19,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<AdminStoryViewModel>> GetMainStories();
         Task<string> Report(Guid gameId, int toId, Guid reasonId, int tick, int fromId);
         Task<List<PartolViewModel>> GetPatrol(int userId);
-        Task ReportCancelDecision(Guid id, int userId);
+        Task ReportDecision(Guid id, int userId, bool isReported);
     }
 }

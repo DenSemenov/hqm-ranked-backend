@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing;
 using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
@@ -399,15 +400,32 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
-        public async Task ReportCancelDecision(Guid id, int userId)
+        public async Task ReportDecision(Guid id, int userId, bool isReported)
         {
             var from = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
             var report = await _dbContext.Reports.FirstOrDefaultAsync(x => x.Id == id);
 
+            if (isReported)
+            {
+                var weekBefore = DateTime.UtcNow.AddDays(-7);
+                var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == from.Id && x.To.Id == report.To.Id && x.CreatedOn > weekBefore).ToListAsync();
+                if (!reportedBefore.Any())
+                {
+                    _dbContext.Reports.Add(new Reports
+                    {
+                        From = from,
+                        To = report.To,
+                        Reason = report.Reason,
+                        Tick = report.Tick,
+                        Game = report.Game
+                    });
+                }
+            }
+
             _dbContext.PatrolDecisions.Add(new PatrolDecision
             {
                 From = from,
-                IsReported = true,
+                IsReported = isReported,
                 Report = report,
             });
 
