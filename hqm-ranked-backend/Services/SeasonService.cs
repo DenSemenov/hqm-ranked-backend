@@ -349,5 +349,12 @@ namespace hqm_ranked_backend.Services
             }).ToListAsync();
             return result;
         }
+
+        public async Task<List<PartolViewModel>> GetPatrol(int userId)
+        {
+            var patrols = new List<PartolViewModel>();
+
+            return patrols;
+        }
     }
 }

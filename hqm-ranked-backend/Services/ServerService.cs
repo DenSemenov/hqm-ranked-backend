@@ -111,13 +111,17 @@ namespace hqm_ranked_backend.Services
                         var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
                         if (player != null)
                         {
-                            if (player.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow))
+                            var lastBan = player.Bans.Where(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow).OrderByDescending(x=>x.CreatedOn).FirstOrDefault();
+                            if (lastBan !=null)
                             {
+                                var banUntil = lastBan.CreatedOn.AddDays(lastBan.Days);
+                                var banUntilString = banUntil.ToString("g");
+
                                 return new ServerLoginViewModel
                                 {
                                     Id = 0,
                                     Success = false,
-                                    ErrorMessage = "[Server] You are banned"
+                                    ErrorMessage = "[Server] You are banned until " + banUntilString+" (UTC)"
                                 };
                             }
                             else
