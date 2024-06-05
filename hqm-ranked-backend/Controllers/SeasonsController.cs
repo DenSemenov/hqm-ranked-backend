@@ -1,5 +1,8 @@
-﻿using hqm_ranked_backend.Models.InputModels;
+﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Models.InputModels;
+using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace hqm_ranked_backend.Controllers
@@ -87,6 +90,16 @@ namespace hqm_ranked_backend.Controllers
             var result = await _seasonService.GetMainStories();
 
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("Report")]
+        public async Task<IActionResult> Report(PlayerReportRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _seasonService.Report(request.Id, request.ReasonId, request.Tick, userId);
+
+            return Ok();
         }
     }
 }

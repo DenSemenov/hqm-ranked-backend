@@ -350,6 +350,23 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
+        public async Task Report(int toId, Guid reasonId, int tick, int fromId)
+        {
+            var from = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == fromId);
+            var to = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == toId);
+            var reason = await _dbContext.Rules.FirstOrDefaultAsync(x => x.Id == reasonId);
+
+            _dbContext.Reports.Add(new Reports
+            {
+                From = from,
+                To = to,
+                Reason = reason,
+                Tick = tick
+            });
+
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task<List<PartolViewModel>> GetPatrol(int userId)
         {
             var patrols = new List<PartolViewModel>();

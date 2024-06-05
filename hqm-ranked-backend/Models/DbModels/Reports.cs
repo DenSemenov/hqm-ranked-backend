@@ -7,5 +7,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public Player From { get; set; }  
         public Player To { get; set; }
         public Rule Reason { get; set; }
+        public int Tick { get; set; }
     }
 }
