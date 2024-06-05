@@ -52,6 +52,13 @@ namespace hqm_ranked_backend.Services
             }
         }
 
+        public async Task Test(IFormFile file)
+        {
+            var name = "replays/test.hrp";
+
+            await _storageService.UploadFileLocal(name, file);
+        }
+
         public void RemoveOldReplays()
         {
             var settings = _dbContext.Settings.FirstOrDefault();
