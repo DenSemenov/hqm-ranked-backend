@@ -518,7 +518,7 @@ namespace hqm_ranked_backend.Services
                     else
                     {
                         var reasons = await _dbContext.Rules.OrderBy(x => x.CreatedOn).ToListAsync();
-                        var reason = reasons[request.ReasonIndex];
+                        var reason = reasons[request.ReasonIndex - 1];
                         if (reason != null)
                         {
                             var fromPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.FromId);
