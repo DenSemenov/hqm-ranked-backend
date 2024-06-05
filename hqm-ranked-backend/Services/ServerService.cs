@@ -115,7 +115,7 @@ namespace hqm_ranked_backend.Services
                             if (lastBan !=null)
                             {
                                 var banUntil = lastBan.CreatedOn.AddDays(lastBan.Days);
-                                var banUntilString = banUntil.ToString("g");
+                                var banUntilString = banUntil.ToString("d MMMM hh:mm");
 
                                 return new ServerLoginViewModel
                                 {
