@@ -403,7 +403,7 @@ namespace hqm_ranked_backend.Services
         public async Task ReportDecision(Guid id, int userId, bool isReported)
         {
             var from = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
-            var report = await _dbContext.Reports.FirstOrDefaultAsync(x => x.Id == id);
+            var report = await _dbContext.Reports.Include(x=>x.To).Include(x=>x.Reason).Include(x=>x.Game).FirstOrDefaultAsync(x => x.Id == id);
 
             if (isReported)
             {
