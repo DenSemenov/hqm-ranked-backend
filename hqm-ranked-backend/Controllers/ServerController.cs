@@ -97,5 +97,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok();
         }
+
+        [HttpPost("GetReasons")]
+        public async Task<IActionResult> GetReasons()
+        {
+            var result = await _serverService.GetReasons();
+
+            return Ok(result);
+        }
     }
 }

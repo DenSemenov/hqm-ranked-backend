@@ -186,8 +186,6 @@ namespace hqm_ranked_backend.Services
                     }
                 }
             }
-
-            
         }
 
         public async Task<StartGameViewModel> StartGame(StartGameRequest request)
@@ -511,25 +509,35 @@ namespace hqm_ranked_backend.Services
                 }
                 else
                 {
-                    var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == request.FromId && x.To.Id == request.ToId).ToListAsync();
+                    var weekBefore = DateTime.UtcNow.AddDays(-7);
+                    var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == request.FromId && x.To.Id == request.ToId && x.CreatedOn > weekBefore).ToListAsync();
                     if (reportedBefore.Any())
                     {
-                        result.Message = "[Server] You can report this player once per month";
+                        result.Message = "[Server] You can report this player once per week";
                     }
                     else
                     {
-                        var fromPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.FromId);
-                        var toPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.ToId);
-
-                        _dbContext.Reports.Add(new Reports
+                        var reasons = await _dbContext.Rules.OrderBy(x => x.CreatedOn).ToListAsync();
+                        var reason = reasons[request.ReasonIndex];
+                        if (reason != null)
                         {
-                            From = fromPlayer,
-                            To = toPlayer,
-                        });
-                        await _dbContext.SaveChangesAsync();
+                            var fromPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.FromId);
+                            var toPlayer = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == request.ToId);
 
-                        result.Message = String.Format("[Server] {0} reported {1}", fromPlayer.Name, toPlayer.Name);
-                        result.Success = true;
+                            _dbContext.Reports.Add(new Reports
+                            {
+                                From = fromPlayer,
+                                To = toPlayer,
+                            });
+                            await _dbContext.SaveChangesAsync();
+
+                            result.Message = String.Format("[Server] Somebody reported {0}, reason: {1}", toPlayer.Name, reason.Title);
+                            result.Success = true;
+                        }
+                        else
+                        {
+                            result.Message = "[Server] Please specify the correct reason";
+                        }
                     }
                 }
             }
@@ -571,6 +579,13 @@ namespace hqm_ranked_backend.Services
                     await _dbContext.SaveChangesAsync();
                 }
             }
+        }
+
+        public async Task<List<string>> GetReasons()
+        {
+            var reasons = await _dbContext.Rules.OrderBy(x => x.CreatedOn).Select(x=>x.Title).ToListAsync();
+
+            return reasons;
         }
     }
 }
