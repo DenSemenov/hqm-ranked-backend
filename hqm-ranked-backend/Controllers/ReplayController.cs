@@ -1,8 +1,10 @@
 ﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace hqm_ranked_backend.Controllers
 {
@@ -28,6 +30,8 @@ namespace hqm_ranked_backend.Controllers
         [HttpPost("Test")]
         public async Task Test([FromForm] IFormFile replay)
         {
+
+            Log.Information(LogHelper.GetInfoLog("Replay lenght " + replay.Length));
             if (replay.Length > 0)
             {
                 await _replayService.Test(replay);
