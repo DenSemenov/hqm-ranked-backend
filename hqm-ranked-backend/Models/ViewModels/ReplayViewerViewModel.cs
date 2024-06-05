@@ -5,6 +5,7 @@ namespace hqm_ranked_backend.Models.ViewModels
     public class ReplayViewerViewModel
     {
         public int Index { get; set; }
+        public Guid GameId { get; set; }
         public List<ReplayViewerFragmentViewModel> Fragments { get; set; }
         public ReplayTick[] Data { get; set; }
     }

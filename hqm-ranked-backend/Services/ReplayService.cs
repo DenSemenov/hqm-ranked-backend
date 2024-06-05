@@ -162,6 +162,7 @@ namespace hqm_ranked_backend.Services
                 result.Index = query.Index;
                 result.Data = data;
                 result.Fragments = query.Fragments.ToList();
+                result.GameId = _dbContext.ReplayData.FirstOrDefault(x => x.Id == request.Id).Game.Id;
             }
 
             return result;
