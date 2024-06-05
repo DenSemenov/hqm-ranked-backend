@@ -351,23 +351,44 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
-        public async Task Report(Guid gameId, int toId, Guid reasonId, int tick, int fromId)
+        public async Task<string> Report(Guid gameId, int toId, Guid reasonId, int tick, int fromId)
         {
-            var from = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == fromId);
-            var to = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == toId);
-            var reason = await _dbContext.Rules.FirstOrDefaultAsync(x => x.Id == reasonId);
-            var game = await _dbContext.Games.FirstOrDefaultAsync(x => x.Id == gameId);
+            var result = String.Empty;
 
-            _dbContext.Reports.Add(new Reports
+            var gamesCount = await _dbContext.GamePlayers.Where(x => x.PlayerId == fromId).CountAsync();
+            if (gamesCount < 20)
             {
-                From = from,
-                To = to,
-                Reason = reason,
-                Tick = tick,
-                Game = game
-            });
+                result = "You can't submit a report until you have played 20 games";
+            }
+            else
+            {
+                var weekBefore = DateTime.UtcNow.AddDays(-7);
+                var reportedBefore = await _dbContext.Reports.Include(x => x.From).Include(x => x.To).Where(x => x.From.Id == fromId && x.To.Id == toId && x.CreatedOn > weekBefore).ToListAsync();
+                if (reportedBefore.Any())
+                {
+                    result = "You can report this player once per week";
+                }
+                else
+                {
+                    var from = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == fromId);
+                    var to = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == toId);
+                    var reason = await _dbContext.Rules.FirstOrDefaultAsync(x => x.Id == reasonId);
+                    var game = await _dbContext.Games.FirstOrDefaultAsync(x => x.Id == gameId);
 
-            await _dbContext.SaveChangesAsync();
+                    _dbContext.Reports.Add(new Reports
+                    {
+                        From = from,
+                        To = to,
+                        Reason = reason,
+                        Tick = tick,
+                        Game = game
+                    });
+
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
+
+            return result;
         }
 
         public async Task<List<PartolViewModel>> GetPatrol(int userId)

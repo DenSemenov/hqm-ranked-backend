@@ -97,9 +97,9 @@ namespace hqm_ranked_backend.Controllers
         public async Task<IActionResult> Report(PlayerReportRequest request)
         {
             var userId = UserHelper.GetUserId(User);
-            await _seasonService.Report(request.GameId, request.Id, request.ReasonId, request.Tick, userId);
+            var result = await _seasonService.Report(request.GameId, request.Id, request.ReasonId, request.Tick, userId);
 
-            return Ok();
+            return Ok(result);
         }
     }
 }
