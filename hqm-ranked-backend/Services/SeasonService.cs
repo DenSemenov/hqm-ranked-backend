@@ -283,6 +283,7 @@ namespace hqm_ranked_backend.Services
                 rules.Text = setting.Rules;
                 rules.Rules = await _dbContext.Rules.Select(x => new RulesItemViewModel
                 {
+                    Id = x.Id,
                     Title = x.Title,
                     Description = x.Description,
                 }).ToListAsync();
