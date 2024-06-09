@@ -163,9 +163,6 @@ namespace hqm_ranked_backend
             var replayService = scope.ServiceProvider.GetRequiredService<IReplayService>() as ReplayService;
             RecurringJob.AddOrUpdate("RemoveOldReplays", () => replayService.RemoveOldReplays(), Cron.Daily);
             RecurringJob.AddOrUpdate("ParseReplays", () => replayService.ParseAllReplays(), Cron.Daily);
-
-            var ss = scope.ServiceProvider.GetRequiredService<ISpotifyService>() as SpotifyService;
-            ss.GetSoundAsync().Wait();
         }
     }
 }
