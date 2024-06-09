@@ -21,6 +21,7 @@ namespace hqm_ranked_backend.Controllers
         [HttpPost("ProcessHrp")]
         public async Task ProcessHrpAsync([FromForm] Guid gameId, [FromForm] string token, [FromForm] IFormFile replay)
         {
+            Log.Information(LogHelper.GetInfoLog("Replay gameId: " + gameId));
             if (replay.Length > 0)
             {
                 await _replayService.PushReplay(gameId, replay, token);
