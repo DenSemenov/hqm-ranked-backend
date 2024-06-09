@@ -350,6 +350,9 @@ namespace hqm_ranked_backend.Services
                         game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
                     }
 
+                    game.RedScore = request.RedScore;
+                    game.BlueScore = request.BlueScore;
+
                     var winTeam = game.RedScore > game.BlueScore ? 0 : 1;
 
                     var players = new List<EloCalcPlayerModel>();

@@ -27,9 +27,10 @@ namespace hqm_ranked_backend.Services
                 var token = await GetToken(settings.SpotifyClientId, settings.SpotifySecret);
                 var spotify = new SpotifyClient(token);
 
+
                 var conf = new PlaylistGetItemsRequest
                 {
-                    Market = "ES",
+                    Market = "TR",
                 };
                 var pl = await spotify.Playlists.GetItems(settings.SpotifyPlaylist, conf);
 
