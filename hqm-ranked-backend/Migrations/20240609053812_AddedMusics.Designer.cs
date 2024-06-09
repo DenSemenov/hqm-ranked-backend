@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
@@ -11,9 +12,11 @@ using hqm_ranked_backend.Models.DbModels;
 namespace hqm_ranked_backend.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240609053812_AddedMusics")]
+    partial class AddedMusics
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -364,10 +367,6 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -641,9 +640,6 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("MusicId")
-                        .HasColumnType("uuid");
-
                     b.Property<long>("Packet")
                         .HasColumnType("bigint");
 
@@ -667,8 +663,6 @@ namespace hqm_ranked_backend.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MusicId");
 
                     b.HasIndex("PlayerId");
 
@@ -1208,10 +1202,6 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.ReplayGoal", b =>
                 {
-                    b.HasOne("hqm_ranked_backend.Models.DbModels.Music", "Music")
-                        .WithMany()
-                        .HasForeignKey("MusicId");
-
                     b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "Player")
                         .WithMany()
                         .HasForeignKey("PlayerId")
@@ -1223,8 +1213,6 @@ namespace hqm_ranked_backend.Migrations
                         .HasForeignKey("ReplayDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Music");
 
                     b.Navigation("Player");
 

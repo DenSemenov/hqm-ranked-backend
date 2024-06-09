@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Models.DbModels;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class StoryViewModel
     {
@@ -14,6 +16,7 @@
         public Guid ReplayId { get; set; }  
         public uint Packet {  get; set; }
         public List<StoryLikeViewModel> Likes { get; set; }
+        public Music? Music { get; set; }
 
     }
 

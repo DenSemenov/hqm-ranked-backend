@@ -1,57 +1,81 @@
 ﻿using hqm_ranked_backend.Services.Interfaces;
 using System.Text.Json;
-using SpotifyAPI.Web;
 using hqm_ranked_backend.Models.DbModels;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
-using hqm_ranked_backend.Helpers;
+using SpotifyAPI.Web;
 
 namespace hqm_ranked_backend.Services
 {
     public class SpotifyService: ISpotifyService
     {
         private RankedDb _dbContext;
+
         public SpotifyService(RankedDb dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task<string> GetSoundAsync()
+        public async Task<Music?> GetSoundAsync()
         {
-            var result = String.Empty;
+            Music? result = null;
 
-            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
-            if (!String.IsNullOrEmpty(settings.SpotifyPlaylist) && !String.IsNullOrEmpty(settings.SpotifyClientId) && !String.IsNullOrEmpty(settings.SpotifySecret))
+            if (await _dbContext.Music.AnyAsync())
             {
-
-                var token = await GetToken(settings.SpotifyClientId, settings.SpotifySecret);
-                var spotify = new SpotifyClient(token);
-
-
-                var conf = new PlaylistGetItemsRequest
-                {
-                    Market = "TR",
-                };
-                var pl = await spotify.Playlists.GetItems(settings.SpotifyPlaylist, conf);
-
-                var tracks = pl.Items.Where(x => ((dynamic)x.Track).PreviewUrl != null).Select(x => ((dynamic)x.Track)).ToList();
-
-                var random = new Random();
-                var randomTrack = tracks[random.Next(0, tracks.Count - 1)];
-                var previewUrl = randomTrack.PreviewUrl;
-
-                var artists = new List<string>();
-
-                foreach (var artist in randomTrack.Artists)
-                {
-                    artists.Add(artist.Name);
-                }
-
-                Log.Information(LogHelper.GetInfoLog(previewUrl));
+                result = _dbContext.Music.ToList().OrderBy(r => Guid.NewGuid()).FirstOrDefault();
             }
 
             return result;
         }
+
+        public async Task GetPlaylist()
+        {
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+            if (!String.IsNullOrEmpty(settings.SpotifyPlaylist) && !String.IsNullOrEmpty(settings.SpotifyClientId) && !String.IsNullOrEmpty(settings.SpotifySecret))
+            {
+                try
+                {
+                    var token = await GetToken(settings.SpotifyClientId, settings.SpotifySecret);
+                    var spotify = new SpotifyClient(token);
+
+                    var conf = new PlaylistGetItemsRequest
+                    {
+                        Market = "TR",
+                    };
+                    var pl = await spotify.Playlists.GetItems(settings.SpotifyPlaylist, conf);
+
+                    var tracks = pl.Items.Where(x => ((dynamic)x.Track).PreviewUrl != null).Select(x => ((dynamic)x.Track)).ToList();
+
+                    foreach (var track in tracks)
+                    {
+                        var artists = new List<string>();
+                        foreach (var artist in track.Artists)
+                        {
+                            artists.Add(artist.Name);
+                        }
+
+                        var name = track.Name as string;
+                        var artistsName = String.Join(", ", artists) as string;
+                        var imagesCount = track.Album.Images.Count;
+                        var imageUrl = imagesCount != 0 ? track.Album.Images[imagesCount - 1].Url : String.Empty;
+                        var previewUrl = track.PreviewUrl;
+
+                        if (!_dbContext.Music.Any(x => x.Name == name && x.Title == artistsName))
+                        {
+                            _dbContext.Music.Add(new Music
+                            {
+                                Name = name,
+                                Title = artistsName,
+                                ImageUrl = imageUrl,
+                                Url = previewUrl,
+                            });
+                        }
+                    }
+                    await _dbContext.SaveChangesAsync();
+                }
+                catch { }
+            }
+        }
+
         private async Task<string> GetToken(string clientId, string clientSecret)
         {
             var client = new HttpClient();

@@ -16,5 +16,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public StorageType StorageType { get; set; } = StorageType.S3;
         public ReplayData ReplayData { get; set; }
         public List<Player> Likes { get; set; } = new List<Player>();
+        public Music? Music { get; set; }
     }
 }

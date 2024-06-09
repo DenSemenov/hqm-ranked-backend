@@ -1,7 +1,10 @@
-﻿namespace hqm_ranked_backend.Services.Interfaces
+﻿using hqm_ranked_backend.Models.DbModels;
+
+namespace hqm_ranked_backend.Services.Interfaces
 {
     public interface ISpotifyService
     {
-        Task<string> GetSoundAsync();
+        Task<Music?> GetSoundAsync();
+        Task GetPlaylist();
     }
 }

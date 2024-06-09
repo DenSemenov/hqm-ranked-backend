@@ -212,7 +212,7 @@ namespace hqm_ranked_backend.Services
             var result = new List<StoryViewModel>();
 
             var checkDate = DateTime.UtcNow.Date.AddDays(-1);
-            var games = await _dbContext.ReplayData.Where(x => x.CreatedOn >= checkDate).Include(x => x.ReplayGoals).ThenInclude(x => x.Player).Include(x => x.ReplayGoals).ThenInclude(x => x.ReplayData).Include(x => x.ReplayGoals).ThenInclude(x => x.Likes).OrderByDescending(x => x.CreatedOn).ToListAsync();
+            var games = await _dbContext.ReplayData.Where(x => x.CreatedOn >= checkDate).Include(x => x.ReplayGoals).ThenInclude(x => x.Music).Include(x => x.ReplayGoals).ThenInclude(x => x.Player).Include(x => x.ReplayGoals).ThenInclude(x => x.ReplayData).Include(x => x.ReplayGoals).ThenInclude(x => x.Likes).OrderByDescending(x => x.CreatedOn).ToListAsync();
 
             var players = games.SelectMany(x => x.ReplayGoals.Select(x => x.Player)).Distinct().ToList();
             var goals = games.SelectMany(x => x.ReplayGoals).ToList();
@@ -225,6 +225,7 @@ namespace hqm_ranked_backend.Services
                     Date = x.ReplayData.CreatedOn,
                     Packet = x.Packet,
                     ReplayId = x.ReplayData.Id,
+                    Music = x.Music,
                     Likes = x.Likes.Select(l => new StoryLikeViewModel
                     {
                         Id = l.Id,

@@ -13,12 +13,14 @@ namespace hqm_ranked_backend.Services
     {
         private RankedDb _dbContext;
         private IStorageService _storageService;
+        private ISpotifyService _spotifyService;
         private readonly IWebHostEnvironment _hostingEnvironment;
-        public ReplayCalcService(RankedDb dbContext, IStorageService storageService, IWebHostEnvironment hostingEnvironment)
+        public ReplayCalcService(RankedDb dbContext, IStorageService storageService, IWebHostEnvironment hostingEnvironment, ISpotifyService spotifyService)
         {
             _dbContext = dbContext;
             _storageService = storageService;
             _hostingEnvironment = hostingEnvironment;
+            _spotifyService = spotifyService;
         }
         public async Task ParseReplay(ReplayRequest request)
         {
@@ -75,6 +77,8 @@ namespace hqm_ranked_backend.Services
 
                         var gst = await _storageService.UploadTextFile(path, json);
 
+                        var sound = await _spotifyService.GetSoundAsync();
+
                         var player = _dbContext.Players.FirstOrDefault(x => x.Name == goal.GoalBy);
                         if (player != null)
                         {
@@ -89,6 +93,7 @@ namespace hqm_ranked_backend.Services
                                 Url = path,
                                 ReplayData = replayData,
                                 StorageType = gst,
+                                Music = sound,
                             });
                         }
                     }
