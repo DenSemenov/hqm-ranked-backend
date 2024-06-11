@@ -123,13 +123,13 @@ namespace hqm_ranked_backend.Services
                 }
             }
         }
-        public void ParseAllReplays()
+        public async Task ParseAllReplays()
         {
             var replayIds = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).ToList();
 
             foreach (var replayId in replayIds)
             {
-                _replayCalcService.ParseReplay(new ReplayRequest
+                await _replayCalcService.ParseReplay(new ReplayRequest
                 {
                     Id = replayId
                 });
