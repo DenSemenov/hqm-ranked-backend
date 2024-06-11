@@ -37,13 +37,25 @@ namespace hqm_ranked_backend.Services
                     var token = await GetToken(settings.SpotifyClientId, settings.SpotifySecret);
                     var spotify = new SpotifyClient(token);
 
-                    var conf = new PlaylistGetItemsRequest
-                    {
-                        Market = "TR",
-                    };
-                    var pl = await spotify.Playlists.GetItems(settings.SpotifyPlaylist, conf);
+                    var tracks = new List<dynamic>();
 
-                    var tracks = pl.Items.Where(x => ((dynamic)x.Track).PreviewUrl != null).Select(x => ((dynamic)x.Track)).ToList();
+                    var offset = 0;
+                    var total = 0;
+                   
+                    while (total > offset || total == 0)
+                    {
+                        var conf = new PlaylistGetItemsRequest
+                        {
+                            Market = "TR",
+                            Limit = 100,
+                            Offset = offset,
+                        };
+                        var pl = await spotify.Playlists.GetItems(settings.SpotifyPlaylist, conf);
+                        tracks.AddRange(pl.Items.Where(x => ((dynamic)x.Track).PreviewUrl != null).Select(x => ((dynamic)x.Track)).ToList());
+
+                        total = (int)pl.Total;
+                        offset += 100;
+                    }
 
                     foreach (var track in tracks)
                     {
