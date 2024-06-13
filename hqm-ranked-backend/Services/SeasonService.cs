@@ -141,7 +141,7 @@ namespace hqm_ranked_backend.Services
 
             result.Id = request.Id;
 
-            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x => x.NicknameChanges).Select(x =>
+            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x => x.NicknameChanges).Include(x=>x.Cost).Select(x =>
             new {
                 Id = x.Id,
                 Name = x.Name,
@@ -149,7 +149,8 @@ namespace hqm_ranked_backend.Services
                 Goals = x.GamePlayers.Sum(x => x.Goals),
                 Assists = x.GamePlayers.Sum(x => x.Assists),
                 LastGames = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3),
-                NicknameChanges = x.NicknameChanges
+                NicknameChanges = x.NicknameChanges,
+                Cost = x.Cost !=null? x.Cost.Cost: 0,
             }).SingleOrDefaultAsync(x => x.Id == request.Id);
 
             result.Name = player.Name;
@@ -157,6 +158,7 @@ namespace hqm_ranked_backend.Services
             result.Goals = player.Goals;
             result.Assists = player.Assists;
             result.Points = result.Goals + result.Assists;
+            result.Cost = result.Cost;
 
             var currentSeasonStats = await GetSeasons();
             var lastSeason = currentSeasonStats.FirstOrDefault();

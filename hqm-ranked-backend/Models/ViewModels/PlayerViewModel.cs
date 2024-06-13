@@ -8,6 +8,7 @@
         public int Goals { get; set; }
         public int Assists { get; set; }
         public int Points { get; set; }
+        public int Cost { get; set; }
         public PlayerLastSeasonViewModel CurrentSeasonData { get; set; }
         public List<PlayerLastGamesViewModel> LastGames {  get; set; }
         public List<PlayerSeasonsViewModel> LastSeasons { get; set; } = new List<PlayerSeasonsViewModel>();

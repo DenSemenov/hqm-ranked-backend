@@ -63,6 +63,7 @@ namespace hqm_ranked_backend
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IStorageService, StorageService>();
             services.AddScoped<ISpotifyService, SpotifyService>();
+            services.AddScoped<ICostService, CostService>();
 
             services.AddScoped<ExceptionMiddleware>();
 
@@ -165,6 +166,8 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("ParseReplays", () => replayService.ParseAllReplays(), Cron.Daily);
             var spotifyService = scope.ServiceProvider.GetRequiredService<ISpotifyService>() as SpotifyService;
             RecurringJob.AddOrUpdate("GetPlaylist", () => spotifyService.GetPlaylist(), Cron.Daily);
+            var costService = scope.ServiceProvider.GetRequiredService<ICostService>() as CostService;
+            RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
         }
     }
 }
