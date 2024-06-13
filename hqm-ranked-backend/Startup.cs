@@ -168,6 +168,8 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("GetPlaylist", () => spotifyService.GetPlaylist(), Cron.Daily);
             var costService = scope.ServiceProvider.GetRequiredService<ICostService>() as CostService;
             RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
+
+            costService.CalcCosts().Wait();
         }
     }
 }
