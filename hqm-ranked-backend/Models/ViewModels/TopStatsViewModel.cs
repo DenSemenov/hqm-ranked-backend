@@ -12,6 +12,7 @@
         public double GoalsPerGame { get; set; }
         public double AssistsPerGame { get; set; }
         public double Winrate { get; set; }
+        public int Cost { get; set; }
         public int Elo { get; set; }
     }
 }

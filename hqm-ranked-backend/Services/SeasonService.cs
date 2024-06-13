@@ -317,6 +317,7 @@ namespace hqm_ranked_backend.Services
             var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
 
             result = await _dbContext.Players
+                .Include(x=>x.Cost)
                 .Include(x => x.GamePlayers)
                 .ThenInclude(x => x.Game)
                 .Where(x => x.GamePlayers.Count > 50)
@@ -333,6 +334,7 @@ namespace hqm_ranked_backend.Services
                     AssistsPerGame = Math.Round(x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Sum(gp => gp.Assists) / (double)x.GamePlayers.Count, 2),
                     Winrate = Math.Round(x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Count(gp => (gp.Team == 0 && gp.Game.RedScore > gp.Game.BlueScore) || (gp.Team == 1 && gp.Game.RedScore < gp.Game.BlueScore)) / (double)x.GamePlayers.Count * 100, 2),
                     Elo = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Sum(gp=>gp.Score),
+                    Cost = x.Cost!=null? x.Cost.Cost: 0
                 })
                 .OrderByDescending(x=>x.Elo)
                 .ToListAsync();
