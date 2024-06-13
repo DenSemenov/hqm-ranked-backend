@@ -31,6 +31,12 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<PatrolDecision> PatrolDecisions { get; set; }
         public DbSet<Music> Music { get; set; }
         public DbSet<PlayerCost> Costs { get; set; }
+        public DbSet<Team> Teams { get; set; }
+        public DbSet<PlayerInvite> PlayerInvites { get; set; }
+        public DbSet<TeamPlayer> TeamPlayers { get; set; }
+        public DbSet<Budget> Budgets { get; set; }
+        public DbSet<GameInvites> GameInvites { get; set; }
+        public DbSet<GameInviteVote> GameInviteVotes { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)

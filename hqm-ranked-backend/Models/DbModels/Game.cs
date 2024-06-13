@@ -19,5 +19,9 @@ namespace hqm_ranked_backend.Models.DbModels
         public Player Mvp { get; set; }
         public int MvpId { get; set; }
         public InstanceType InstanceType { get; set; } = InstanceType.Ranked;
+        public Team? RedTeam { get; set; }
+        public Team? BlueTeam { get; set; }
+        public int? RedPoints { get; set; }
+        public int? BluePoints { get; set; }
     }
 }

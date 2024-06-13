@@ -64,6 +64,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IStorageService, StorageService>();
             services.AddScoped<ISpotifyService, SpotifyService>();
             services.AddScoped<ICostService, CostService>();
+            services.AddScoped<ITeamsService, TeamsService>();
 
             services.AddScoped<ExceptionMiddleware>();
 
