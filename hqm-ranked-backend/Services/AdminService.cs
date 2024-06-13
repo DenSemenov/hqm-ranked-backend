@@ -33,6 +33,7 @@ namespace hqm_ranked_backend.Services
             {
                 Name = request.Name,
                 Token = Guid.NewGuid().ToString(),
+                InstanceType = request.InstanceType
             });
             await _dbContext.SaveChangesAsync();
         }
