@@ -176,31 +176,6 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
-            try
-            {
-                var existsFiles = await _storageService.GetAllFileNames();
-                var settings = await _dbContext.Settings.FirstOrDefaultAsync();
-
-                var userIds = await _dbContext.Players.Select(x => x.Id).ToListAsync();
-                foreach (var userId in userIds)
-                {
-                    var path = String.Format("images/{0}.png", userId);
-
-                    if (!existsFiles.Contains(settings.Id + "/" + path))
-                    {
-                        var file = _imageGeneratorService.GenerateImage();
-                        var strm = new MemoryStream();
-                        file.SaveAsPng(strm);
-
-                        await _storageService.UploadFileStream(path, strm);
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-
-            }
-
             if (!await _dbContext.Rules.AnyAsync())
             {
                 _dbContext.Rules.Add(new Rule
