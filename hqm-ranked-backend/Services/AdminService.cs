@@ -21,6 +21,7 @@ namespace hqm_ranked_backend.Services
                 Id = x.Id,
                 Name = x.Name,
                 Token = x.Token,
+                InstanceType = x.InstanceType
             }).ToListAsync();
 
             return result;

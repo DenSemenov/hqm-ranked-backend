@@ -44,6 +44,7 @@ namespace hqm_ranked_backend.Services
                     Period = x.Period,
                     RedScore = x.RedScore,
                     BlueScore = x.BlueScore,
+                    InstanceType =x.InstanceType
                 })
                 .ToListAsync();
 
