@@ -482,6 +482,7 @@ namespace hqm_ranked_backend.Services
                     State = server.State,
                     TeamMax = server.TeamMax,
                     Time = server.Time,
+                    InstanceType = server.InstanceType
                 });
 
                 if (isLoggedChanged && server.State == 0)
