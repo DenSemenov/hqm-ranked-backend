@@ -158,7 +158,7 @@ namespace hqm_ranked_backend.Services
             result.Goals = player.Goals;
             result.Assists = player.Assists;
             result.Points = result.Goals + result.Assists;
-            result.Cost = result.Cost;
+            result.Cost = player.Cost;
 
             var currentSeasonStats = await GetSeasons();
             var lastSeason = currentSeasonStats.FirstOrDefault();
