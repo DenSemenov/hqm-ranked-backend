@@ -18,5 +18,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public ICollection<ReplayData> ReplayDatas { get; set; }
         public Player Mvp { get; set; }
         public int MvpId { get; set; }
+        public InstanceType InstanceType { get; set; } = InstanceType.Ranked;
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Common;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class HeartbeatSignalrViewModel
     {
@@ -11,5 +13,6 @@
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public int State { get; set; }
+        public InstanceType InstanceType { get; set; }
     }
 }

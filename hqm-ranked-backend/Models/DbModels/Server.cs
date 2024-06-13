@@ -14,5 +14,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public int RedScore { get; set; }
         public int BlueScore { get; set; }
         public int State { get; set; }
+        public InstanceType InstanceType { get; set; } = InstanceType.Ranked;
     }
 }
