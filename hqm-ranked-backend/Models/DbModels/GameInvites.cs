@@ -7,5 +7,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public Team InvitedTeam { get; set; }
         public DateTime Date {  get; set; }
         public Game? Game { get; set; }
+        public ICollection<GameInviteVote> GameInviteVotes { get; set; }
     }
 }

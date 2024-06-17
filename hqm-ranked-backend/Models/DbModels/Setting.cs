@@ -21,5 +21,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public string SpotifyClientId { get; set; } = String.Empty;
         public string SpotifySecret { get; set; } = String.Empty;
         public string SpotifyPlaylist { get; set; } = String.Empty;
+        public int TeamsMaxPlayer { get; set; } = 4;
     }
 }

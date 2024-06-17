@@ -14,6 +14,8 @@ namespace hqm_ranked_backend.Models.DbModels
     {
         Start,
         Invite,
-        Game
+        Game,
+        Leave,
+        Sell
     }
 }

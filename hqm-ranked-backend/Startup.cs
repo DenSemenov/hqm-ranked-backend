@@ -169,6 +169,8 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("GetPlaylist", () => spotifyService.GetPlaylist(), Cron.Daily);
             var costService = scope.ServiceProvider.GetRequiredService<ICostService>() as CostService;
             RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
+            var teamsService = scope.ServiceProvider.GetRequiredService<ITeamsService>() as TeamsService;
+            RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
         }
     }
 }
