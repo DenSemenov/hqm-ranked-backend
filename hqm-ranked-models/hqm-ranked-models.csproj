@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>hqm_ranked_models</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\hqm-ranked-database\hqm-ranked-database.csproj" />
+    <ProjectReference Include="..\hqm-ranked-helpers\hqm-ranked-helpers.csproj" />
+    <ProjectReference Include="..\ReplayHandler\ReplayHandler.csproj" />
+  </ItemGroup>
+
+</Project>

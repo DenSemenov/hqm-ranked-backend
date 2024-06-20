@@ -1,7 +1,7 @@
-﻿using Hangfire;
-using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
+using Microsoft.AspNetCore.Http;
 
 namespace hqm_ranked_backend.Services.Interfaces
 {

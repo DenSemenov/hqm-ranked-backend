@@ -2,10 +2,8 @@
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
-using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
 using System.Drawing;
-using static MassTransit.ValidationResultExtensions;
 
 namespace hqm_ranked_backend.Services
 {

@@ -2,6 +2,7 @@
 using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
 using System.ComponentModel;

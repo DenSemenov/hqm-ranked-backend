@@ -1,6 +1,4 @@
-﻿using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
-using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;

@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.308" />
     <PackageReference Include="CSharpDiscordWebhook.NET" Version="2.7.1" />
     <PackageReference Include="FirebaseAdmin" Version="3.0.0" />
-    <PackageReference Include="Hangfire" Version="1.8.12" />
+    <PackageReference Include="Hangfire" Version="1.8.14" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.14" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.20.8" />
     <PackageReference Include="MassTransit" Version="8.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.13" />
@@ -22,9 +22,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.IdentityModel" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
     <PackageReference Include="RestSharp" Version="111.2.0" />
     <PackageReference Include="Serilog" Version="4.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
@@ -36,13 +34,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
     <Folder Include="StaticFiles\" />
     <Folder Include="StaticFiles\logs\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\hqm-ranked-services\hqm-ranked-services.csproj" />
     <ProjectReference Include="..\ReplayHandler\ReplayHandler.csproj" />
   </ItemGroup>
 

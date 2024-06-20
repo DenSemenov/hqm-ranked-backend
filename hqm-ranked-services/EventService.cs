@@ -1,7 +1,6 @@
 ﻿using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services

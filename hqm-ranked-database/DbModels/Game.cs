@@ -1,5 +1,4 @@
 ﻿using hqm_ranked_backend.Common;
-using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace hqm_ranked_backend.Models.DbModels

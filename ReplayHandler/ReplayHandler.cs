@@ -62,6 +62,8 @@ namespace ReplayHandler
                     prevMessagesPacket = messagesInThisPacket;
                 }
                 j++;
+
+                Thread.Sleep(10);
             }
 
             return replayTicks;

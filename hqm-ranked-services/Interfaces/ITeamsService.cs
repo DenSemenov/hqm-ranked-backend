@@ -1,4 +1,5 @@
 ﻿using hqm_ranked_backend.Models.ViewModels;
+using Microsoft.AspNetCore.Http;
 
 namespace hqm_ranked_backend.Services.Interfaces
 {

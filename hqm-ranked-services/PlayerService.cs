@@ -14,7 +14,7 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private IImageGeneratorService _imageGeneratorService;
         private IStorageService _storageService;
-        public PlayerService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IImageGeneratorService imageGeneratorService, IStorageService storageService)
+        public PlayerService(RankedDb dbContext, IImageGeneratorService imageGeneratorService, IStorageService storageService)
         {
             _dbContext = dbContext;
             _imageGeneratorService = imageGeneratorService;

@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
@@ -16,13 +17,11 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private IStorageService _storageService;
         private IReplayCalcService _replayCalcService;
-        private readonly IWebHostEnvironment _hostingEnvironment;
-        public ReplayService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment, IStorageService storageService, IReplayCalcService replayCalcService)
+        public ReplayService(RankedDb dbContext, IStorageService storageService, IReplayCalcService replayCalcService)
         {
             _dbContext = dbContext;
             _storageService = storageService;
             _replayCalcService = replayCalcService;
-            _hostingEnvironment = hostingEnvironment;
         }
 
         public async Task PushReplay(Guid gameId, IFormFile file, string token)
@@ -78,40 +77,16 @@ namespace hqm_ranked_backend.Services
                     {
                         foreach (var replayFragment in replay.ReplayFragments)
                         {
-                            if (replayFragment.StorageType == Common.StorageType.Local)
-                            {
-                                var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", settings.Id.ToString(), replayFragment.Data);
-                                File.Delete(localPath);
-                            }
-                            else
-                            {
-                                _storageService.RemoveFile(replayFragment.Data).Wait();
-                            }
+                            _storageService.RemoveFile(replayFragment.Data).Wait();
 
                         }
 
                         foreach (var replayGoal in replay.ReplayGoals)
                         {
-                            if (replayGoal.StorageType == Common.StorageType.Local)
-                            {
-                                var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", settings.Id.ToString(), replayGoal.Url);
-                                File.Delete(localPath);
-                            }
-                            else
-                            {
-                                _storageService.RemoveFile(replayGoal.Url).Wait();
-                            }
+                            _storageService.RemoveFile(replayGoal.Url).Wait();
                         }
 
-                        if (replay.StorageType == Common.StorageType.Local)
-                        {
-                            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", settings.Id.ToString(), replay.Url);
-                            File.Delete(localPath);
-                        }
-                        else
-                        {
-                            _storageService.RemoveFile(replay.Url).Wait();
-                        }
+                        _storageService.RemoveFile(replay.Url).Wait();
 
                         _dbContext.ReplayData.Remove(replay);
                     }

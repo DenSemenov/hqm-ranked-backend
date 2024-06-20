@@ -1,7 +1,4 @@
-﻿using Amazon.Runtime;
-using Amazon.S3;
-using Amazon.S3.Model;
-using Hangfire;
+﻿using Hangfire;
 using Hangfire.PostgreSql;
 using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Helpers;
@@ -10,10 +7,6 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.FileProviders;
@@ -171,6 +164,10 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
             var teamsService = scope.ServiceProvider.GetRequiredService<ITeamsService>() as TeamsService;
             RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
+
+
+            var ss = scope.ServiceProvider.GetRequiredService<IStorageService>() as StorageService;
+            ss.UploadTextFile("test.txt", "test").Wait();
         }
     }
 }

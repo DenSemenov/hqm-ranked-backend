@@ -2,10 +2,8 @@
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
-using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Services

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Helpers;
+using Microsoft.AspNetCore.Http;
 
 namespace hqm_ranked_backend.Services
 {
@@ -18,11 +19,9 @@ namespace hqm_ranked_backend.Services
         private string _S3Domain;
         private string _S3Bucket;
         private Guid _S3Id;
-        private readonly IWebHostEnvironment _hostingEnvironment;
-        public StorageService(RankedDb dbContext, IWebHostEnvironment hostingEnvironment)
+        public StorageService(RankedDb dbContext)
         {
             _dbContext = dbContext;
-            _hostingEnvironment = hostingEnvironment;
 
             var settings = _dbContext.Settings.FirstOrDefault();
             if (!String.IsNullOrEmpty(settings.S3Domain) && !String.IsNullOrEmpty(settings.S3Bucket) && !String.IsNullOrEmpty(settings.S3User) && !String.IsNullOrEmpty(settings.S3Key))
@@ -88,53 +87,10 @@ namespace hqm_ranked_backend.Services
                 {
                     var log = LogHelper.GetErrorLog(ex.Message, ex.StackTrace);
                     Log.Error(log);
-
-                    await UploadFileLocal(name, file);
-                    result = StorageType.Local;
                 }
-            }
-            else
-            {
-                await UploadFileLocal(name, file);
-                result = StorageType.Local;
             }
 
             return result;
-        }
-
-        public async Task UploadFileLocal(string name, IFormFile file)
-        {
-            try
-            {
-                var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", _S3Id.ToString(), name);
-
-                Log.Information(LogHelper.GetInfoLog(localPath));
-
-                var localPathWithoutName = Path.GetDirectoryName(localPath);
-                Log.Information(LogHelper.GetInfoLog(localPathWithoutName));
-                if (!Directory.Exists(localPathWithoutName))
-                {
-                    Directory.CreateDirectory(localPathWithoutName);
-                    Log.Information(LogHelper.GetInfoLog("Creating dir " + localPathWithoutName));
-                }
-
-                using (Stream fileToUpload = file.OpenReadStream())
-                {
-                    using (Stream f = File.Create(localPath))
-                    {
-                        byte[] buffer = new byte[8 * 1024];
-                        int len;
-                        while ((len = fileToUpload.Read(buffer, 0, buffer.Length)) > 0)
-                        {
-                            f.Write(buffer, 0, len);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(LogHelper.GetErrorLog(ex.Message, ex.StackTrace));
-            }
         }
 
         public async Task<StorageType> UploadFileStream(string name, Stream file)
@@ -155,39 +111,11 @@ namespace hqm_ranked_backend.Services
                 {
                     var log = LogHelper.GetErrorLog(ex.Message, ex.StackTrace);
                     Log.Error(log);
-
-                    await UploadFileStreamLocal(name, file);
-                    result = StorageType.Local;
                 }
 
-            }
-            else
-            {
-                await UploadFileStreamLocal(name, file);
-                result = StorageType.Local;
             }
 
             return result;
-        }
-
-        public async Task UploadFileStreamLocal(string name, Stream file)
-        {
-            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", _S3Id.ToString(), name);
-            var localPathWithoutName = Path.GetDirectoryName(localPath);
-            if (!Directory.Exists(localPathWithoutName))
-            {
-                Directory.CreateDirectory(localPathWithoutName);
-            }
-
-            using (Stream f = File.Create(localPath))
-            {
-                byte[] buffer = new byte[8 * 1024];
-                int len;
-                while ((len = file.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    f.Write(buffer, 0, len);
-                }
-            }
         }
 
         public async Task<StorageType> UploadTextFile(string name, string text)
@@ -197,56 +125,35 @@ namespace hqm_ranked_backend.Services
             {
                 try
                 {
-                        using (Stream fileToUpload = GenerateStreamFromString(text))
-                        {
-                            var putObjectRequest = new PutObjectRequest();
-                            putObjectRequest.BucketName = _S3Bucket;
-                            putObjectRequest.Key = _S3Id.ToString() + "/" + name;
-                            putObjectRequest.InputStream = fileToUpload;
+                    using (Stream fileToUpload = GenerateStreamFromString(text))
+                    {
+                        var putObjectRequest = new PutObjectRequest();
+                        putObjectRequest.BucketName = _S3Bucket;
+                        putObjectRequest.Key = _S3Id.ToString() + "/" + name;
+                        putObjectRequest.InputStream = fileToUpload;
 
-                            await _client.PutObjectAsync(putObjectRequest);
-                        }
+                        var grant = new S3Grant
+                        {
+                            Grantee = new S3Grantee
+                            {
+                                CanonicalUser = "Everyone"
+                            },
+                            Permission = S3Permission.READ
+                        };
+                        putObjectRequest.Grants.Add(grant);
+
+                        await _client.PutObjectAsync(putObjectRequest);
+                    }
                 }
                 catch (Exception ex)
                 {
                     var log = LogHelper.GetErrorLog(ex.Message, ex.StackTrace);
                     Log.Error(log);
-
-                    await UploadTextFileLocal(name, text);
-                    result = StorageType.Local;
                 }
 
-            }
-            else
-            {
-                await UploadTextFileLocal(name, text);
-                result = StorageType.Local;
             }
 
             return result;
-        }
-
-        public async Task UploadTextFileLocal(string name, string text)
-        {
-            var localPath = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", _S3Id.ToString(), name);
-            var localPathWithoutName = Path.GetDirectoryName(localPath);
-            if (!Directory.Exists(localPathWithoutName))
-            {
-                Directory.CreateDirectory(localPathWithoutName);
-            }
-
-            using (Stream fileToUpload = GenerateStreamFromString(text))
-            {
-                using (Stream f = File.Create(localPath))
-                {
-                    byte[] buffer = new byte[8 * 1024];
-                    int len;
-                    while ((len = fileToUpload.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        f.Write(buffer, 0, len);
-                    }
-                }
-            }
         }
 
         public async Task<string> LoadTextFile(string name)

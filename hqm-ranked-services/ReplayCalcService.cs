@@ -14,12 +14,10 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private IStorageService _storageService;
         private ISpotifyService _spotifyService;
-        private readonly IWebHostEnvironment _hostingEnvironment;
-        public ReplayCalcService(RankedDb dbContext, IStorageService storageService, IWebHostEnvironment hostingEnvironment, ISpotifyService spotifyService)
+        public ReplayCalcService(RankedDb dbContext, IStorageService storageService, ISpotifyService spotifyService)
         {
             _dbContext = dbContext;
             _storageService = storageService;
-            _hostingEnvironment = hostingEnvironment;
             _spotifyService = spotifyService;
         }
         public async Task ParseReplay(ReplayRequest request)
@@ -38,11 +36,6 @@ namespace hqm_ranked_backend.Services
                         storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
                         var client = new System.Net.WebClient();
                         data = client.DownloadData(storageUrl + replayData.Url);
-                    }
-                    else
-                    {
-                        storageUrl = Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", setting.Id.ToString(), replayData.Url);
-                        data = File.ReadAllBytes(storageUrl);
                     }
                 }
 

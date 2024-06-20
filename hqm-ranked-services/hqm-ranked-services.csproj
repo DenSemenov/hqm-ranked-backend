@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>hqm_ranked_services</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.309.5" />
+    <PackageReference Include="CSharpDiscordWebhook.NET" Version="2.7.1" />
+    <PackageReference Include="FirebaseAdmin" Version="3.0.0" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.1.0" />
+    <PackageReference Include="Serilog" Version="4.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.4" />
+    <PackageReference Include="SpotifyAPI.Web" Version="7.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\hqm-ranked-database\hqm-ranked-database.csproj" />
+    <ProjectReference Include="..\hqm-ranked-helpers\hqm-ranked-helpers.csproj" />
+    <ProjectReference Include="..\hqm-ranked-models\hqm-ranked-models.csproj" />
+  </ItemGroup>
+
+</Project>
