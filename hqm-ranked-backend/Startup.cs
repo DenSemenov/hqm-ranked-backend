@@ -164,10 +164,6 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
             var teamsService = scope.ServiceProvider.GetRequiredService<ITeamsService>() as TeamsService;
             RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
-
-
-            var ss = scope.ServiceProvider.GetRequiredService<IStorageService>() as StorageService;
-            ss.UploadTextFile("test.txt", "test").Wait();
         }
     }
 }
