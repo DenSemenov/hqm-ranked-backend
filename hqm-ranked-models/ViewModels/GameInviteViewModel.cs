@@ -6,6 +6,7 @@
         public bool IsCurrentTeam { get; set; }
         public DateTime Date { get; set; }
         public List<GameInviteVoteViewModel> Votes { get; set; }
+        public int VotesCount { get; set; }
     }
 
     public class GameInviteVoteViewModel

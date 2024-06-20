@@ -24,5 +24,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public Guid? BlueTeamId { get; set; }
         public int? RedPoints { get; set; }
         public int? BluePoints { get; set; }
+        public ICollection<GameInvites> GameInvites {  get; set; }
     }
 }

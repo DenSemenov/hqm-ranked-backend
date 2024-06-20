@@ -176,6 +176,16 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
+            if (!await _dbContext.States.AnyAsync(x => x.Name == "Scheduled"))
+            {
+                _dbContext.States.Add(new States
+                {
+                    Name = "Scheduled"
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
+
             if (!await _dbContext.Rules.AnyAsync())
             {
                 _dbContext.Rules.Add(new Rule

@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Drawing;
+using System.Xml.Linq;
 
 namespace hqm_ranked_backend.Services
 {
@@ -106,6 +107,9 @@ namespace hqm_ranked_backend.Services
                 .Include(x => x.State)
                 .Include(x => x.GamePlayers)
                 .ThenInclude(x => x.Player)
+                .Include(x => x.RedTeam)
+                .Include(x => x.BlueTeam)
+                .Include(x=>x.GameInvites)
                 .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayFragments)
                 .Where(x => x.Season == season)
@@ -113,12 +117,17 @@ namespace hqm_ranked_backend.Services
                 .Select(x => new SeasonGameViewModel
                 {
                     GameId = x.Id,
-                    Date = x.LastModifiedOn ?? x.CreatedOn,
+                    Date = x.GameInvites.Any() ? x.GameInvites.FirstOrDefault().Date :(x.LastModifiedOn ?? x.CreatedOn),
                     RedScore = x.RedScore,
                     BlueScore = x.BlueScore,
                     Status = x.State.Name,
                     ReplayId = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().Id : null,
                     HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
+                    InstanceType = x.InstanceType,
+                    RedTeamId = x.RedTeamId,
+                    BlueTeamId = x.BlueTeamId,
+                    RedTeamName = x.RedTeam !=null? x.RedTeam.Name: String.Empty,
+                    BlueTeamName = x.BlueTeam != null ? x.BlueTeam.Name : String.Empty,
                     Players = x.GamePlayers.Select(x => new GamePlayerItem
                     {
                         Id = x.PlayerId,

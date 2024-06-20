@@ -6,7 +6,7 @@
 
     public abstract class AuditableEntity<T> : BaseEntity<T>, IAuditableEntity, ISoftDelete
     {
-        public DateTime CreatedOn { get; private set; }
+        public DateTime CreatedOn { get; set; }
         public DateTime? LastModifiedOn { get; set; }
         public DateTime? DeletedOn { get; set; }
 

@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Common;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class SeasonGameViewModel
     {
@@ -9,6 +11,11 @@
         public string Status { get; set; }
         public Guid? ReplayId { get; set; }
         public bool HasReplayFragments { get; set; }
+        public InstanceType InstanceType { get; set; }
+        public Guid? RedTeamId { get; set; }
+        public Guid? BlueTeamId { get; set; }
+        public string RedTeamName { get; set; }
+        public string BlueTeamName { get; set; }
         public List<GamePlayerItem> Players { get; set; }
     }
 

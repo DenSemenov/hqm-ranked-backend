@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using Google.Apis.Auth.OAuth2;
+using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
@@ -526,21 +527,27 @@ namespace hqm_ranked_backend.Services
 
                 result = await _dbContext.GameInvites
                     .Include(x => x.InvitedTeam)
+                    .ThenInclude(x=>x.TeamPlayers)
                     .Include(x => x.GameInviteVotes)
                     .ThenInclude(x => x.Player)
+                    .Include(x=>x.Game)
+                    .Where(x=>x.Game == null)
                     .Select(x => new GameInviteViewModel
                 {
                     Id = x.Id,
                     Date = x.Date,
                     IsCurrentTeam = x.InvitedTeam.Id == state.Team.Id,
+                    VotesCount = x.GameInviteVotes.Where(y=>x.InvitedTeam.TeamPlayers.Any(k=>k.Player ==y.Player)).Count(),
                     Votes = x.GameInviteVotes.Where(x=> teamPlayersIds.Contains(x.Player.Id)).Select(x => new GameInviteVoteViewModel
                     {
                         Id = x.Player.Id
                     }).ToList()
                 })
-                    .Where(x=>x.Date> dateHourAfter && (x.IsCurrentTeam || (!x.IsCurrentTeam && x.Votes.Count >= state.TeamsMaxPlayers)))
+                    .Where(x=>x.Date> dateHourAfter)
                     .OrderBy(x=>x.Date)
                     .ToListAsync();
+
+                result = result.Where(x =>x.IsCurrentTeam || (!x.IsCurrentTeam && x.VotesCount >= state.TeamsMaxPlayers)).ToList();
             }
 
             return result;
@@ -551,7 +558,7 @@ namespace hqm_ranked_backend.Services
             var state = await GetTeamsState(userId);
             if (state.Team != null)
             {
-                var invite = await _dbContext.GameInvites.Include(x => x.GameInviteVotes).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x => x.Id == inviteId);
+                var invite = await _dbContext.GameInvites.Include(x => x.GameInviteVotes).ThenInclude(x=>x.Player).Include(x=>x.InvitedTeam).ThenInclude(x=>x.TeamPlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x => x.Id == inviteId);
                 var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
                 if (invite != null && player !=null)
                 {
@@ -566,6 +573,33 @@ namespace hqm_ranked_backend.Services
                         {
                              Player = player
                         });
+
+                        var invitedVotesCount = invite.GameInviteVotes.Where(y => invite.InvitedTeam.TeamPlayers.Any(k => k.Player == y.Player)).Count();
+
+                        if (invitedVotesCount >= state.TeamsMaxPlayers)
+                        {
+                            var otherTeamVotes = invite.GameInviteVotes.Where(x=> state.Team.Players.Any(y=>y.Id == x.Player.Id)).Count();
+                            if (otherTeamVotes >= state.TeamsMaxPlayers)
+                            {
+                                var blueTeam = await  _dbContext.Teams.FirstOrDefaultAsync(x => x.Id == state.Team.Id);
+
+                                var gamePlayers = new List<GamePlayer>();
+
+                                invite.Game = new Game
+                                {
+                                    InstanceType = Common.InstanceType.Teams,
+                                    Mvp = player,
+                                    RedTeam = invite.InvitedTeam,
+                                    BlueTeam = blueTeam,
+                                    Season = await _seasonService.GetCurrentSeason(),
+                                    State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Scheduled"),
+                                    CreatedOn = invite.Date,
+                                };
+                                await _dbContext.SaveChangesAsync();
+
+                                invite.CreatedOn = invite.Date;
+                            }
+                        }
                     }
 
                     await _dbContext.SaveChangesAsync();
