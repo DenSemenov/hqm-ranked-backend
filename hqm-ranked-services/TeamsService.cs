@@ -524,7 +524,11 @@ namespace hqm_ranked_backend.Services
 
                 var teamPlayersIds = state.Team.Players.Select(x=>x.Id).ToList();
 
-                result = await _dbContext.GameInvites.Include(x => x.InvitedTeam).Include(x => x.GameInviteVotes).ThenInclude(x => x.Player).Select(x => new GameInviteViewModel
+                result = await _dbContext.GameInvites
+                    .Include(x => x.InvitedTeam)
+                    .Include(x => x.GameInviteVotes)
+                    .ThenInclude(x => x.Player)
+                    .Select(x => new GameInviteViewModel
                 {
                     Id = x.Id,
                     Date = x.Date,
@@ -534,7 +538,7 @@ namespace hqm_ranked_backend.Services
                         Id = x.Player.Id
                     }).ToList()
                 })
-                    .Where(x=>x.Date> dateHourAfter)
+                    .Where(x=>x.Date> dateHourAfter && (x.IsCurrentTeam || (!x.IsCurrentTeam && x.Votes.Count >= state.TeamsMaxPlayers)))
                     .OrderBy(x=>x.Date)
                     .ToListAsync();
             }
