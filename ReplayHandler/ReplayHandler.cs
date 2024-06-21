@@ -63,7 +63,7 @@ namespace ReplayHandler
                 }
                 j++;
 
-                Thread.Sleep(10);
+                Thread.Sleep(2);
             }
 
             return replayTicks;

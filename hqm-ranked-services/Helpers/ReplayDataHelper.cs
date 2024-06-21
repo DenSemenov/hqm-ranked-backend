@@ -124,7 +124,7 @@ namespace hqm_ranked_backend.Helpers
 
                 prevTick = tick;
 
-                Thread.Sleep(10);
+                Thread.Sleep(2);
             }
 
             foreach (var pause in result.Pauses)
@@ -406,7 +406,7 @@ namespace hqm_ranked_backend.Helpers
 
                 index += 1;
 
-                Thread.Sleep(10);
+                Thread.Sleep(2);
             }
 
             return result;

@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace hqm_ranked_backend.Services
 {
-    public class ReplayCalcService: IReplayCalcService
+    public class ReplayCalcService : IReplayCalcService
     {
         private RankedDb _dbContext;
         private IStorageService _storageService;
@@ -25,22 +25,22 @@ namespace hqm_ranked_backend.Services
             var replayData = await _dbContext.ReplayData.Include(x => x.Game).FirstOrDefaultAsync(x => x.Game.Id == request.Id);
             if (replayData != null)
             {
-                var storageUrl = String.Empty;
-
-                byte[] data = [];
-                var setting = await _dbContext.Settings.FirstOrDefaultAsync();
-                if (setting != null)
-                {
-                    if (replayData.StorageType == Common.StorageType.S3)
-                    {
-                        storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
-                        var client = new System.Net.WebClient();
-                        data = client.DownloadData(storageUrl + replayData.Url);
-                    }
-                }
 
                 try
                 {
+                    var storageUrl = String.Empty;
+
+                    byte[] data = [];
+                    var setting = await _dbContext.Settings.FirstOrDefaultAsync();
+                    if (setting != null)
+                    {
+                        if (replayData.StorageType == Common.StorageType.S3)
+                        {
+                            storageUrl = String.Format("https://{0}/{1}/{2}/", setting.S3Domain, setting.S3Bucket, setting.Id);
+                            var client = new System.Net.WebClient();
+                            data = client.DownloadData(storageUrl + replayData.Url);
+                        }
+                    }
                     var result = ReplayHandler.ReplayHandler.ParseReplay(data);
 
                     var processedData = ReplayDataHelper.GetReplayCalcData(result);
