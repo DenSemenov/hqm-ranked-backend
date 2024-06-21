@@ -46,11 +46,6 @@ namespace hqm_ranked_backend.Services
                         });
 
                         await _dbContext.SaveChangesAsync();
-
-                        BackgroundJob.Enqueue(() => _replayCalcService.ParseReplay(new ReplayRequest
-                        {
-                            Id = game.Id
-                        }));
                     }
                     else
                     {

@@ -7,13 +7,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hqm-ranked-backend", "hqm-r
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReplayHandler", "ReplayHandler\ReplayHandler.csproj", "{C86500B9-E320-4205-B7BC-D12D86E171AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hqm-ranked-database", "hqm-ranked-database\hqm-ranked-database.csproj", "{4257C8D6-4812-4029-8074-BCB9DDD78EE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hqm-ranked-database", "hqm-ranked-database\hqm-ranked-database.csproj", "{4257C8D6-4812-4029-8074-BCB9DDD78EE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hqm-ranked-services", "hqm-ranked-services\hqm-ranked-services.csproj", "{DE04E8B2-728D-4689-8D9D-D1F43F617483}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hqm-ranked-services", "hqm-ranked-services\hqm-ranked-services.csproj", "{DE04E8B2-728D-4689-8D9D-D1F43F617483}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hqm-ranked-models", "hqm-ranked-models\hqm-ranked-models.csproj", "{12DE6575-CEDA-49B2-887A-26C451E98C36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hqm-ranked-models", "hqm-ranked-models\hqm-ranked-models.csproj", "{12DE6575-CEDA-49B2-887A-26C451E98C36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hqm-ranked-helpers", "hqm-ranked-helpers\hqm-ranked-helpers.csproj", "{6BC6BBAE-40EF-477E-8FBB-24CEE5A234E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hqm-ranked-helpers", "hqm-ranked-helpers\hqm-ranked-helpers.csproj", "{6BC6BBAE-40EF-477E-8FBB-24CEE5A234E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hqm-replay-handler", "hqm-replay-handler\hqm-replay-handler.csproj", "{BA5B9AA8-01EC-40E6-A135-623FC12D911F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{6BC6BBAE-40EF-477E-8FBB-24CEE5A234E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BC6BBAE-40EF-477E-8FBB-24CEE5A234E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BC6BBAE-40EF-477E-8FBB-24CEE5A234E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA5B9AA8-01EC-40E6-A135-623FC12D911F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA5B9AA8-01EC-40E6-A135-623FC12D911F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA5B9AA8-01EC-40E6-A135-623FC12D911F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA5B9AA8-01EC-40E6-A135-623FC12D911F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
