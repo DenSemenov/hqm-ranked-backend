@@ -3,8 +3,6 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Drawing;
-using System.Xml.Linq;
 
 namespace hqm_ranked_backend.Services
 {
@@ -33,7 +31,52 @@ namespace hqm_ranked_backend.Services
         {
             var result = await _dbContext.Seasons.FirstOrDefaultAsync(x => x.DateStart <= DateTime.UtcNow && x.DateEnd > DateTime.UtcNow);
 
+            if (result == null)
+            {
+                result = await CreateNewSeason();
+            }
+
             return result;
+        }
+
+        public async Task<Season> CreateNewSeason()
+        {
+            var currentDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, 0, 0, 0, 0);
+            var newSeason = new Season
+            {
+                DateStart = currentDate,
+                DateEnd = currentDate.AddMonths(3),
+                Name = "Season " + (_dbContext.Seasons.Count() + 1),
+            };
+
+            var prevSeason = await _dbContext.Seasons.Where(x => x.DateEnd > DateTime.UtcNow).OrderByDescending(x => x.DateEnd).FirstOrDefaultAsync();
+
+            if (prevSeason != null)
+            {
+                var prevSeasonData = await GetSeasonStats(new CurrentSeasonStatsRequest
+                {
+                    Offset = 0,
+                    SeasonId = prevSeason.Id
+                });
+
+                var startElo = _dbContext.Settings.FirstOrDefault().StartingElo;
+
+                foreach (var playerPrevSeason in prevSeasonData)
+                {
+                    var newElo = (int)(startElo + (playerPrevSeason.Rating - startElo) * 0.5);
+                    var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == playerPrevSeason.PlayerId);
+                    _dbContext.Elos.Add(new Elo
+                    {
+                        Season = newSeason,
+                        Player = player,
+                        Value = newElo
+                    });
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return newSeason;
         }
 
         public async Task<List<SeasonStatsViewModel>> GetSeasonStats(CurrentSeasonStatsRequest request)
