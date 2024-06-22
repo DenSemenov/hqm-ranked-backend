@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
@@ -20,7 +21,8 @@ namespace hqm_ranked_backend.Services
         private INotificationService _notificationService;
         private readonly IHubContext<ActionHub> _hubContext;
         private IMemoryCache _cache;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache)
+        private ITeamsService _teamsService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
@@ -28,6 +30,7 @@ namespace hqm_ranked_backend.Services
             _hubContext = hubContext;
             _notificationService = notificationService;
             _cache = memoryCache;
+            _teamsService = teamsService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -147,12 +150,78 @@ namespace hqm_ranked_backend.Services
                                     {
                                         oldNickname = oldNicknameItem.OldNickname;
                                     }
-                                    return new ServerLoginViewModel
+
+                                    var instanceType = await GetServerType(request.ServerToken);
+
+                                    if (instanceType == InstanceType.Ranked)
                                     {
-                                        Id = player.Id,
-                                        Success = true,
-                                        OldNickname = oldNickname,
-                                    };
+                                        return new ServerLoginViewModel
+                                        {
+                                            Id = player.Id,
+                                            Success = true,
+                                            OldNickname = oldNickname,
+                                        };
+                                    } 
+                                    else if (instanceType == InstanceType.Teams)
+                                    {
+                                        var teamsState = await _teamsService.GetTeamsState(player.Id);
+
+                                        if (teamsState.Team != null)
+                                        {
+                                            var currentDate = DateTime.UtcNow;
+                                            var incomingGame = await _dbContext.Games
+                                                .Include(x => x.GamePlayers)
+                                                .ThenInclude(x => x.Player)
+                                                .Include(x => x.GameInvites)
+                                                .Where(x =>
+                                                    x.InstanceType == InstanceType.Teams &&
+                                                    x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
+                                                    x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate
+                                                   )
+                                                .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
+                                                .FirstOrDefaultAsync();
+
+                                            if (incomingGame != null)
+                                            {
+                                                var team = incomingGame.RedTeamId == teamsState.Team.Id ? 0 : 1;
+                                                return new ServerLoginViewModel
+                                                {
+                                                    Id = player.Id,
+                                                    Success = true,
+                                                    OldNickname = oldNickname,
+                                                    Team = team
+                                                };
+                                            }
+                                            else
+                                            {
+                                                return new ServerLoginViewModel
+                                                {
+                                                    Id = 0,
+                                                    Success = false,
+                                                    ErrorMessage = "[Server] You will not have any games for the next 30 minutes"
+                                                };
+                                            }
+                                        }
+                                        else
+                                        {
+                                            return new ServerLoginViewModel
+                                            {
+                                                Id = 0,
+                                                Success = false,
+                                                ErrorMessage = "[Server] You are not in team"
+                                            };
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return new ServerLoginViewModel
+                                        {
+                                            Id = 0,
+                                            Success = false,
+                                            ErrorMessage = "[Server] Server instance type not supported"
+                                        };
+                                    }
+
                                 }
                                 else
                                 {
@@ -591,6 +660,12 @@ namespace hqm_ranked_backend.Services
             var reasons = await _dbContext.Rules.OrderBy(x => x.CreatedOn).Select(x=>x.Title).ToListAsync();
 
             return reasons;
+        }
+
+        public async Task<InstanceType> GetServerType(string token)
+        {
+            var server = await _dbContext.Servers.FirstOrDefaultAsync(x => x.Token == token);
+            return server != null ? server.InstanceType : InstanceType.Ranked;
         }
     }
 }

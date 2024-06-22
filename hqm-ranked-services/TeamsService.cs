@@ -576,7 +576,7 @@ namespace hqm_ranked_backend.Services
 
                         var invitedVotesCount = invite.GameInviteVotes.Where(y => invite.InvitedTeam.TeamPlayers.Any(k => k.Player == y.Player)).Count();
 
-                        if (invitedVotesCount >= state.TeamsMaxPlayers)
+                        if (invitedVotesCount >= state.TeamsMaxPlayers && !invite.InvitedTeam.TeamPlayers.Any(k => k.Player == player))
                         {
                             var otherTeamVotes = invite.GameInviteVotes.Where(x=> state.Team.Players.Any(y=>y.Id == x.Player.Id)).Count();
                             if (otherTeamVotes >= state.TeamsMaxPlayers)

@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 
@@ -17,5 +18,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task Reset(ResetRequest request);
         Task Resign(ResignRequest request);
         Task<List<string>> GetReasons();
+        Task<InstanceType> GetServerType(string token);
     }
 }

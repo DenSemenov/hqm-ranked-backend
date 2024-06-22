@@ -7,5 +7,6 @@
         public string ErrorMessage { get; set; } = String.Empty;
         public string OldNickname { get; set; } = String.Empty;
         public bool SendToAll { get; set; } = false;
+        public int Team { get; set; } = 0;
     }
 }
