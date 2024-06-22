@@ -91,7 +91,7 @@ namespace hqm_ranked_backend.Services
             var games = _dbContext.GamePlayers
                 .Include(x => x.Game)
                 .Include(x => x.Player)
-                .Where(x => x.Game.Season == season && (x.Game.State == ended || x.Game.State == resigned))
+                .Where(x => x.Game.Season == season && (x.Game.State == ended || x.Game.State == resigned) && x.Game.InstanceType == Common.InstanceType.Ranked)
                 .Select(x => new 
                 {
                     PlayerId = x.Player.Id,
