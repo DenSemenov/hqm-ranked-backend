@@ -313,7 +313,7 @@ namespace hqm_ranked_backend.Services
                     RedTeamName = game.RedTeam != null ? game.RedTeam.Name : String.Empty,
                     BlueTeamName = game.BlueTeam != null ? game.BlueTeam.Name : String.Empty,
                     RedPoints = game.RedPoints ?? 0,
-                    BluePoints = game.RedPoints ?? 0,
+                    BluePoints = game.BluePoints ?? 0,
                     Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                     {
                         Id = x.PlayerId,
