@@ -1,4 +1,6 @@
-﻿using hqm_ranked_backend.Models.ViewModels;
+﻿using hqm_ranked_backend.Models.InputModels;
+using hqm_ranked_backend.Models.ViewModels;
+using hqm_ranked_models.ViewModels;
 using Microsoft.AspNetCore.Http;
 
 namespace hqm_ranked_backend.Services.Interfaces
@@ -25,5 +27,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task RemoveGameInvite(int userId, Guid inviteId);
         Task<List<GameInviteViewModel>> GetGameInvites(int userId);
         Task VoteGameInvite(int userId, Guid inviteId);
+        Task<List<TeamsStatsViewModel>> GetTeamsStats(CurrentSeasonStatsRequest request);
     }
 }

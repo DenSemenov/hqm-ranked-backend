@@ -191,6 +191,13 @@ namespace hqm_ranked_backend.Controllers
             return Ok();
         }
 
+        [HttpPost("GetTeamsStats")]
+        public async Task<IActionResult> GetTeamsStats(CurrentSeasonStatsRequest request)
+        {
+            var result = await _teamsService.GetTeamsStats(request);
+            return Ok(result);
+        }
+
         [Authorize]
         [HttpPost("UploadAvatar")]
         public async Task<IActionResult> UploadAvatar(IFormFile file)

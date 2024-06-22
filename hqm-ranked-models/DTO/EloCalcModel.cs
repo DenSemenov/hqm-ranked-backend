@@ -4,6 +4,8 @@
     {
         public int RedScore { get;set; }
         public int BlueScore { get; set; }
+        public int RedPoints { get; set; }
+        public int BluePoints { get; set; }
         public List<EloCalcPlayerModel> Players { get; set; } = new List<EloCalcPlayerModel>();
 
     }

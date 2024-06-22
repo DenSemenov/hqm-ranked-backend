@@ -526,6 +526,14 @@ namespace hqm_ranked_backend.Services
 
                     var mvp = game.GamePlayers.Where(x => x.Team == winTeam).OrderByDescending(x=>x.Goals + x.Assists).FirstOrDefault();
                     game.Mvp = mvp.Player;
+
+                    if (game.InstanceType == InstanceType.Teams)
+                    {
+                        game.RedPoints = calculatedElo.RedPoints;
+                        game.BluePoints = calculatedElo.BluePoints;
+                    }
+
+
                     result.Mvp = mvp.Player.Name;
 
                     var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;

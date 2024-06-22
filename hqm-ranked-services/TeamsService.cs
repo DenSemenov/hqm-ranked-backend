@@ -1,8 +1,10 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.DTO;
+using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
@@ -605,6 +607,50 @@ namespace hqm_ranked_backend.Services
                     await _dbContext.SaveChangesAsync();
                 }
             }
+        }
+
+        public async Task<List<TeamsStatsViewModel>> GetTeamsStats(CurrentSeasonStatsRequest request)
+        {
+            var result = new List<TeamsStatsViewModel>();
+
+            var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+            var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+
+            var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
+
+            var teams = await _dbContext.Teams.Where(x=>x.Season == season).ToListAsync();
+
+            foreach(var team in teams)
+            {
+                var teamGames = await _dbContext.Games.Include(x => x.RedTeam).Include(x => x.BlueTeam).Where(x => (x.RedTeam == team || x.BlueTeam == team) && (x.State == ended || x.State == resigned)).ToListAsync();
+                if (teamGames.Any())
+                {
+                    var redGames = teamGames.Where(x => x.RedTeam == team).ToList();
+                    var blueGames = teamGames.Where(x => x.BlueTeam == team).ToList();
+
+                    var teamStats = new TeamsStatsViewModel
+                    {
+                        Id = team.Id,
+                        Name = team.Name,
+                        Goals = redGames.Sum(x => x.RedScore) + blueGames.Sum(x => x.BlueScore),
+                        GoalsConceded = redGames.Sum(x => x.BlueScore) + blueGames.Sum(x => x.RedScore),
+                        Win = redGames.Count(x => x.RedScore > x.BlueScore) + blueGames.Count(x => x.RedScore < x.BlueScore),
+                        Lose = redGames.Count(x => x.RedScore < x.BlueScore) + blueGames.Count(x => x.RedScore > x.BlueScore),
+                        Place = 0,
+                        Rating = redGames.Sum(x => (int)x.RedPoints) + blueGames.Sum(x => (int)x.BluePoints)
+                    };
+
+                    result.Add(teamStats);
+                }
+            }
+            int i = 1;
+            foreach(var team in result.OrderByDescending(x=>x.Rating))
+            {
+                team.Place = i;
+                i++;
+            }
+
+            return result;
         }
     }
 }

@@ -62,10 +62,12 @@ namespace hqm_ranked_backend.Helpers
                 if (player.Team == RED_TEAM)
                 {
                     player.RawScore = (int)(player.Team == winnerTeam ? Math.Round(50 * winProbBlue) : Math.Round(-50 * winProbRed));
+                    game.RedPoints = player.RawScore;
                 }
                 if (player.Team == BLUE_TEAM)
                 {
                     player.RawScore = (int)(player.Team == winnerTeam ? Math.Round(50 * winProbRed) : Math.Round(-50 * winProbBlue));
+                    game.BluePoints = player.RawScore;
                 }
 
                 player.Elo = player.Performance + player.RawScore;
