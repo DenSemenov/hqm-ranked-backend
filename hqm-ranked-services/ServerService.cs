@@ -339,6 +339,8 @@ namespace hqm_ranked_backend.Services
                         .Include(x => x.GamePlayers)
                         .ThenInclude(x => x.Player)
                         .Include(x => x.GameInvites)
+                        .Include(x=>x.RedTeam)
+                        .Include(x => x.BlueTeam)
                         .Where(x =>
                             x.InstanceType == InstanceType.Teams &&
                             x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
@@ -354,14 +356,14 @@ namespace hqm_ranked_backend.Services
 
                         var gamePlayers = new List<GamePlayer>();
 
-                        var redTeamPlayers = incomingGame.RedTeam.TeamPlayers.Select(x=>x.Player.Id).ToList();
+                        var redTeamPlayers = incomingGame.RedTeam.TeamPlayers.Select(x => x.Player.Id).ToList();
 
                         foreach (var teamPlayer in teamsPlayers)
                         {
                             gamePlayers.Add(new GamePlayer
                             {
                                 PlayerId = teamPlayer.Player.Id,
-                                Team = redTeamPlayers.Contains(teamPlayer.Player.Id)? 0: 1,
+                                Team = redTeamPlayers.Contains(teamPlayer.Player.Id) ? 0 : 1,
                                 Score = 0,
                                 Ping = 0,
                                 Ip = String.Empty,
@@ -385,6 +387,7 @@ namespace hqm_ranked_backend.Services
                             });
                         }
                         result.GameId = incomingGame.Id;
+                        result.Title = String.Format("{0} vs {1}", incomingGame.RedTeam.Name, incomingGame.BlueTeam.Name);
                     }
                 }
 
