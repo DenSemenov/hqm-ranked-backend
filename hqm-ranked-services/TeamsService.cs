@@ -219,26 +219,6 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<List<SeasonTeamsStatsViewModel>> GetTeamsStats()
-        {
-            var result = new List<SeasonTeamsStatsViewModel>();
-
-            var currentSeason = await _seasonService.GetCurrentSeason();
-            var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
-            var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
-
-            var games = _dbContext.Games
-                .Where(x => x.Season == currentSeason && (x.State == ended || x.State == resigned) && x.InstanceType == Common.InstanceType.Teams)
-                .Select(x => new
-                {
-                    RedTeam = x.RedTeam,
-                    BlueTeam = x.BlueTeam,
-                })
-                .ToList();
-
-            return result;
-        }
-
         public async Task<List<FreeAgentViewModel>> GetFreeAgents(int? userId)
         {
             var currentSeason = await _seasonService.GetCurrentSeason();

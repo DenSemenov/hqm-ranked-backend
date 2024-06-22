@@ -24,6 +24,8 @@ namespace hqm_ranked_backend.Services
                 DateEnd = x.DateEnd
             }).OrderByDescending(x=>x.DateStart).ToListAsync();
 
+            await GetCurrentSeason();
+
             return result;
         }
 
