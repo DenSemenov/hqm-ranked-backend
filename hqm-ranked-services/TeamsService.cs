@@ -644,7 +644,7 @@ namespace hqm_ranked_backend.Services
                 }
             }
             int i = 1;
-            foreach(var team in result.OrderByDescending(x=>x.Rating))
+            foreach(var team in result.OrderBy(x=>x.Rating))
             {
                 team.Place = i;
                 i++;
