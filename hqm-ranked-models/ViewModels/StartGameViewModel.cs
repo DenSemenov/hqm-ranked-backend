@@ -6,7 +6,7 @@
         public List<StartGamePlayerViewModel> Players { get; set; } = new List<StartGamePlayerViewModel>();
         public int CaptainRed { get; set; }
         public int CaptainBlue { get; set; }
-        public string Title { get; set; }
+        public string Title { get; set; } = String.Empty;
     }
 
     public class StartGamePlayerViewModel
