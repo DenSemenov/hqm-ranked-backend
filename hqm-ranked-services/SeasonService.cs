@@ -252,6 +252,7 @@ namespace hqm_ranked_backend.Services
                 Score = x.Score,
                 RedScore = x.Game.RedScore,
                 BlueScore = x.Game.BlueScore,
+                InstanceType = x.Game.InstanceType,
                 Players = x.Game.GamePlayers.Select(x => new GameDataPlayerViewModel
                 {
                     Id = x.PlayerId,
@@ -296,6 +297,7 @@ namespace hqm_ranked_backend.Services
                     ChatMessages = new List<ReplayChat>(),
                     Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals.OrderBy(x => x.Packet).ToList() : new List<ReplayGoal>(),
                     ReplayUrl = storageUrl + "replays/" + game.Id.ToString() + ".hrp",
+                    InstanceType = game.InstanceType,
                     Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                     {
                         Id = x.PlayerId,
@@ -322,7 +324,7 @@ namespace hqm_ranked_backend.Services
             var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
             var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
 
-            var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason && (x.Game.State == ended || x.Game.State == resigned)).Sum(x => x.Score);
+            var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason && x.Game.InstanceType == Common.InstanceType.Ranked && (x.Game.State == ended || x.Game.State == resigned)).Sum(x => x.Score);
             var eloOnSeasonStart = await _dbContext.Elos.Include(x=>x.Player).FirstOrDefaultAsync(x=>x.Player.Id == id && x.Season == currentSeason);
             return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : startingElo);
         }

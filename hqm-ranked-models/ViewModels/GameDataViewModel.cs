@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Models.DbModels;
 
 namespace hqm_ranked_backend.Models.ViewModels
 {
@@ -15,6 +16,7 @@ namespace hqm_ranked_backend.Models.ViewModels
         public Guid? ReplayId { get; set; }
         public bool HasReplayFragments { get; set; }
         public string? ReplayUrl { get; set; }
+        public InstanceType InstanceType { get; set; }
     }
 
     public class GameDataPlayerViewModel

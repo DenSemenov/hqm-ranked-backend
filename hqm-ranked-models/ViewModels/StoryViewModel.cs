@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Models.DbModels;
+﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Models.DbModels;
 
 namespace hqm_ranked_backend.Models.ViewModels
 {
@@ -17,6 +18,7 @@ namespace hqm_ranked_backend.Models.ViewModels
         public uint Packet {  get; set; }
         public List<StoryLikeViewModel> Likes { get; set; }
         public Music? Music { get; set; }
+        public InstanceType InstanceType { get; set; }
 
     }
 

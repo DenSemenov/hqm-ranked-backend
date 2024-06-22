@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Common;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class PlayerViewModel
     {
@@ -49,6 +51,7 @@
         public DateTime Date { get; set; }
         public int Goals { get; set; }
         public int Assists { get; set; }
+        public InstanceType InstanceType { get; set; }
         public List<GameDataPlayerViewModel> Players { get; set; }
     }
 
