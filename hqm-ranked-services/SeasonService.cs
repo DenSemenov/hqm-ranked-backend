@@ -43,7 +43,7 @@ namespace hqm_ranked_backend.Services
 
         public async Task<Season> CreateNewSeason()
         {
-            var currentDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, 0, 0, 0, 0);
+            var currentDate = DateTime.UtcNow;
             var newSeason = new Season
             {
                 DateStart = currentDate,
@@ -51,7 +51,9 @@ namespace hqm_ranked_backend.Services
                 Name = "Season " + (_dbContext.Seasons.Count() + 1),
             };
 
-            var prevSeason = await _dbContext.Seasons.Where(x => x.DateEnd > DateTime.UtcNow).OrderByDescending(x => x.DateEnd).FirstOrDefaultAsync();
+            var entity= _dbContext.Seasons.Add(newSeason);
+
+            var prevSeason = await _dbContext.Seasons.Where(x => x.DateEnd < DateTime.UtcNow).OrderByDescending(x => x.DateEnd).FirstOrDefaultAsync();
 
             if (prevSeason != null)
             {
@@ -69,14 +71,21 @@ namespace hqm_ranked_backend.Services
                     var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == playerPrevSeason.PlayerId);
                     _dbContext.Elos.Add(new Elo
                     {
-                        Season = newSeason,
+                        Season = entity.Entity,
                         Player = player,
                         Value = newElo
                     });
                 }
             }
 
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch(Exception ex)
+            {
+
+            }
 
             return newSeason;
         }

@@ -9,7 +9,6 @@ namespace hqm_ranked_backend.Services.Interfaces
     {
         Task<TeamsStateViewModel> GetTeamsState(int? userId);
         Task CreateTeam(string name, int userId);
-        Task<List<SeasonTeamsStatsViewModel>> GetTeamsStats();
         Task<List<FreeAgentViewModel>> GetFreeAgents(int? userId);
         Task LeaveTeam(int userId);
         Task InvitePlayer(int userId, int invitedId);
