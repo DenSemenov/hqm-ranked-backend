@@ -17,6 +17,10 @@ namespace hqm_ranked_backend.Models.ViewModels
         public bool HasReplayFragments { get; set; }
         public string? ReplayUrl { get; set; }
         public InstanceType InstanceType { get; set; }
+        public Guid? RedTeamId { get; set; }
+        public Guid? BlueTeamId { get; set; }
+        public string RedTeamName { get; set; }
+        public string BlueTeamName { get; set; }
     }
 
     public class GameDataPlayerViewModel

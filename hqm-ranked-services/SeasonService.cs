@@ -253,6 +253,10 @@ namespace hqm_ranked_backend.Services
                 RedScore = x.Game.RedScore,
                 BlueScore = x.Game.BlueScore,
                 InstanceType = x.Game.InstanceType,
+                RedTeamId = x.Game.RedTeamId,
+                BlueTeamId = x.Game.BlueTeamId,
+                RedTeamName = x.Game.RedTeam != null ? x.Game.RedTeam.Name : String.Empty,
+                BlueTeamName = x.Game.BlueTeam != null ? x.Game.BlueTeam.Name : String.Empty,
                 Players = x.Game.GamePlayers.Select(x => new GameDataPlayerViewModel
                 {
                     Id = x.PlayerId,
@@ -298,6 +302,10 @@ namespace hqm_ranked_backend.Services
                     Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals.OrderBy(x => x.Packet).ToList() : new List<ReplayGoal>(),
                     ReplayUrl = storageUrl + "replays/" + game.Id.ToString() + ".hrp",
                     InstanceType = game.InstanceType,
+                    RedTeamId = game.RedTeamId,
+                    BlueTeamId = game.BlueTeamId,
+                    RedTeamName = game.RedTeam != null ? game.RedTeam.Name : String.Empty,
+                    BlueTeamName = game.BlueTeam != null ? game.BlueTeam.Name : String.Empty,
                     Players = game.GamePlayers.Select(x => new GameDataPlayerViewModel
                     {
                         Id = x.PlayerId,

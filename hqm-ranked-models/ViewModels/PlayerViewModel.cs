@@ -52,6 +52,10 @@ namespace hqm_ranked_backend.Models.ViewModels
         public int Goals { get; set; }
         public int Assists { get; set; }
         public InstanceType InstanceType { get; set; }
+        public Guid? RedTeamId { get; set; }
+        public Guid? BlueTeamId { get; set; }
+        public string RedTeamName { get; set; }
+        public string BlueTeamName { get; set; }
         public List<GameDataPlayerViewModel> Players { get; set; }
     }
 
