@@ -293,6 +293,8 @@ namespace hqm_ranked_backend.Services
                 .ThenInclude(x => x.ReplayChats)
                 .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayGoals)
+                .Include(x => x.RedTeam)
+                .Include(x => x.BlueTeam)
                 .Select(game => new GameDataViewModel
                 {
                     Id = game.Id,
