@@ -191,7 +191,11 @@ namespace hqm_ranked_backend.Services
 
             result.Id = request.Id;
 
-            var player = await _dbContext.Players.Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player).Include(x => x.NicknameChanges).Include(x=>x.Cost).Select(x =>
+            var player = await _dbContext.Players
+                .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x=>x.RedTeam)
+                .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.BlueTeam)
+                .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player)
+                .Include(x => x.NicknameChanges).Include(x=>x.Cost).Select(x =>
             new {
                 Id = x.Id,
                 Name = x.Name,
