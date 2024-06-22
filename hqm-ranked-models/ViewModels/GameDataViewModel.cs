@@ -21,6 +21,8 @@ namespace hqm_ranked_backend.Models.ViewModels
         public Guid? BlueTeamId { get; set; }
         public string RedTeamName { get; set; }
         public string BlueTeamName { get; set; }
+        public int RedPoints { get; set; }
+        public int BluePoints { get; set; }
     }
 
     public class GameDataPlayerViewModel
