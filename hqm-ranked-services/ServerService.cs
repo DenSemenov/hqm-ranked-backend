@@ -176,7 +176,8 @@ namespace hqm_ranked_backend.Services
                                                 .Where(x =>
                                                     x.InstanceType == InstanceType.Teams &&
                                                     x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
-                                                    x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate
+                                                    x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate  &&
+                                                    (x.RedTeamId == teamsState.Team.Id || x.BlueTeamId == teamsState.Team.Id)
                                                    )
                                                 .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
                                                 .FirstOrDefaultAsync();
@@ -266,63 +267,126 @@ namespace hqm_ranked_backend.Services
             if (server != null)
             {
                 server.TeamMax = request.MaxCount;
-
-                var nextGameCheckGames = _dbContext.Settings.FirstOrDefault().NextGameCheckGames;
-                var shadowBanReportsCount = _dbContext.Settings.FirstOrDefault().ShadowBanReportsCount;
-
-                var lastGames = await _dbContext.Games.Include(x => x.GamePlayers).OrderByDescending(x => x.CreatedOn).Take(nextGameCheckGames).SelectMany(x=>x.GamePlayers).ToListAsync();
-
-                var count = request.MaxCount * 2;
-
-                var date = DateTime.UtcNow;
-
-                foreach (var player in request.PlayerIds)
+                var instanceType = await GetServerType(request.Token);
+                if (instanceType == InstanceType.Ranked)
                 {
-                    var reportsCount = await _dbContext.Reports.Include(x => x.To).Where(x => x.CreatedOn.AddMonths(1) > date && x.To.Id == player).CountAsync();
-                    if (reportsCount < 3)
+                    var nextGameCheckGames = _dbContext.Settings.FirstOrDefault().NextGameCheckGames;
+                    var shadowBanReportsCount = _dbContext.Settings.FirstOrDefault().ShadowBanReportsCount;
+
+                    var lastGames = await _dbContext.Games.Include(x => x.GamePlayers).OrderByDescending(x => x.CreatedOn).Take(nextGameCheckGames).SelectMany(x => x.GamePlayers).ToListAsync();
+
+                    var count = request.MaxCount * 2;
+
+                    var date = DateTime.UtcNow;
+
+                    foreach (var player in request.PlayerIds)
                     {
-                        reportsCount = 0;
+                        var reportsCount = await _dbContext.Reports.Include(x => x.To).Where(x => x.CreatedOn.AddMonths(1) > date && x.To.Id == player).CountAsync();
+                        if (reportsCount < 3)
+                        {
+                            reportsCount = 0;
+                        }
+
+                        result.Players.Add(new StartGamePlayerViewModel
+                        {
+                            Id = player,
+                            Score = await _seasonService.GetPlayerElo(player),
+                            Count = lastGames.Where(x => x.PlayerId == player).Count(),
+                            Reports = reportsCount
+                        });
                     }
 
-                    result.Players.Add(new StartGamePlayerViewModel
+                    result.Players = result.Players.OrderBy(x => x.Reports).ThenBy(x => x.Count).Take(count).ToList();
+
+                    result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
+                    result.CaptainRed = result.Players[1].Id;
+                    result.CaptainBlue = result.Players[0].Id;
+
+                    var newId = Guid.NewGuid();
+                    await _dbContext.Games.AddAsync(new Game
                     {
-                        Id = player,
-                        Score = await _seasonService.GetPlayerElo(player),
-                        Count = lastGames.Where(x=>x.PlayerId == player).Count(),
-                        Reports = reportsCount
+                        Id = newId,
+                        RedScore = 0,
+                        BlueScore = 0,
+                        Season = await _seasonService.GetCurrentSeason(),
+                        State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Pick"),
+                        MvpId = result.CaptainRed,
+                        GamePlayers = result.Players.Select(x => new GamePlayer
+                        {
+                            PlayerId = x.Id,
+                            Team = result.CaptainRed == x.Id ? 0 : (result.CaptainBlue == x.Id ? 1 : -1),
+                            Score = 0,
+                            Ping = 0,
+                            Ip = String.Empty,
+                            Goals = 0,
+                            Assists = 0,
+                            IsCaptain = result.CaptainRed == x.Id || result.CaptainBlue == x.Id
+                        }).ToList()
                     });
+                    await _dbContext.SaveChangesAsync();
+
+                    result.GameId = newId;
                 }
-
-                result.Players = result.Players.OrderBy(x=>x.Reports).ThenBy(x=>x.Count).Take(count).ToList();
-
-                result.Players = result.Players.OrderByDescending(x => x.Score).ToList();
-                result.CaptainRed = result.Players[1].Id;
-                result.CaptainBlue = result.Players[0].Id;
-
-                var newId = Guid.NewGuid();
-                await _dbContext.Games.AddAsync(new Game
+                else if (instanceType == InstanceType.Teams)
                 {
-                    Id = newId,
-                    RedScore = 0,
-                    BlueScore = 0,
-                    Season = await _seasonService.GetCurrentSeason(),
-                    State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Pick"),
-                    MvpId = result.CaptainRed,
-                    GamePlayers = result.Players.Select(x => new GamePlayer
-                    {
-                        PlayerId = x.Id,
-                        Team = result.CaptainRed == x.Id ? 0: (result.CaptainBlue == x.Id ? 1: -1),
-                        Score = 0,
-                        Ping = 0,
-                        Ip = String.Empty,
-                        Goals = 0,
-                        Assists = 0,
-                        IsCaptain = result.CaptainRed == x.Id || result.CaptainBlue == x.Id
-                    }).ToList()
-                });
-                await _dbContext.SaveChangesAsync();
+                    var currentDate = DateTime.UtcNow;
 
-                result.GameId= newId;
+                    var season = await _seasonService.GetCurrentSeason();
+                    var teamsPlayers = await _dbContext.TeamPlayers.Include(x=>x.Team).Include(x => x.Player).Where(x => request.PlayerIds.Contains(x.Player.Id) && x.Team.Season == season).ToListAsync();
+                    var teamIds = teamsPlayers.Select(x => x.Team.Id as Guid?).Distinct().ToList();
+
+                    var incomingGame = await _dbContext.Games
+                        .Include(x => x.GamePlayers)
+                        .ThenInclude(x => x.Player)
+                        .Include(x => x.GameInvites)
+                        .Where(x =>
+                            x.InstanceType == InstanceType.Teams &&
+                            x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
+                            x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate &&
+                            (teamIds.Contains(x.RedTeamId) && teamIds.Contains(x.BlueTeamId))
+                           )
+                        .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
+                        .FirstOrDefaultAsync();
+
+                    if (incomingGame != null)
+                    {
+                        incomingGame.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Live");
+
+                        var gamePlayers = new List<GamePlayer>();
+
+                        var redTeamPlayers = incomingGame.RedTeam.TeamPlayers.Select(x=>x.Player.Id).ToList();
+
+                        foreach (var teamPlayer in teamsPlayers)
+                        {
+                            gamePlayers.Add(new GamePlayer
+                            {
+                                PlayerId = teamPlayer.Player.Id,
+                                Team = redTeamPlayers.Contains(teamPlayer.Player.Id)? 0: 1,
+                                Score = 0,
+                                Ping = 0,
+                                Ip = String.Empty,
+                                Goals = 0,
+                                Assists = 0,
+                                IsCaptain = false
+                            });
+                        }
+
+                        incomingGame.GamePlayers = gamePlayers;
+                        await _dbContext.SaveChangesAsync();
+
+                        foreach (var player in request.PlayerIds)
+                        {
+                            result.Players.Add(new StartGamePlayerViewModel
+                            {
+                                Id = player,
+                                Score = await _seasonService.GetPlayerElo(player),
+                                Count = 0,
+                                Reports = 0
+                            });
+                        }
+                        result.GameId = incomingGame.Id;
+                    }
+                }
 
                 await _notificationService.SendDiscordStartGameNotification(server.Name);
 
