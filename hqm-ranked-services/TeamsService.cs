@@ -523,30 +523,30 @@ namespace hqm_ranked_backend.Services
             var state = await GetTeamsState(userId);
             if (state.Team != null)
             {
-                var dateHourAfter = DateTime.UtcNow.AddHours(1);
+                var dateNow = DateTime.UtcNow;
 
                 var teamPlayersIds = state.Team.Players.Select(x=>x.Id).ToList();
 
                 result = await _dbContext.GameInvites
                     .Include(x => x.InvitedTeam)
-                    .ThenInclude(x=>x.TeamPlayers)
+                    .ThenInclude(x => x.TeamPlayers)
                     .Include(x => x.GameInviteVotes)
                     .ThenInclude(x => x.Player)
-                    .Include(x=>x.Game)
-                    .Where(x=>x.Game == null)
+                    .Include(x => x.Game)
+                    .Where(x => x.Game == null)
                     .Select(x => new GameInviteViewModel
-                {
-                    Id = x.Id,
-                    Date = x.Date,
-                    IsCurrentTeam = x.InvitedTeam.Id == state.Team.Id,
-                    VotesCount = x.GameInviteVotes.Where(y=>x.InvitedTeam.TeamPlayers.Any(k=>k.Player ==y.Player)).Count(),
-                    Votes = x.GameInviteVotes.Where(x=> teamPlayersIds.Contains(x.Player.Id)).Select(x => new GameInviteVoteViewModel
                     {
-                        Id = x.Player.Id
-                    }).ToList()
-                })
-                    .Where(x=>x.Date> dateHourAfter)
-                    .OrderBy(x=>x.Date)
+                        Id = x.Id,
+                        Date = x.Date,
+                        IsCurrentTeam = x.InvitedTeam.Id == state.Team.Id,
+                        VotesCount = x.GameInviteVotes.Where(y => x.InvitedTeam.TeamPlayers.Any(k => k.Player == y.Player)).Count(),
+                        Votes = x.GameInviteVotes.Where(x => teamPlayersIds.Contains(x.Player.Id)).Select(x => new GameInviteVoteViewModel
+                        {
+                            Id = x.Player.Id
+                        }).ToList()
+                    })
+                    .Where(x => x.Date > dateNow)
+                    .OrderBy(x => x.Date)
                     .ToListAsync();
 
                 result = result.Where(x =>x.IsCurrentTeam || (!x.IsCurrentTeam && x.VotesCount >= state.TeamsMaxPlayers)).ToList();
