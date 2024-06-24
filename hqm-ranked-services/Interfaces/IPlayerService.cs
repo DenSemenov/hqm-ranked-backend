@@ -1,5 +1,7 @@
 ﻿using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
+using hqm_ranked_models.InputModels;
+using hqm_ranked_models.ViewModels;
 
 namespace hqm_ranked_backend.Services.Interfaces
 {
@@ -15,5 +17,9 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<PlayerNotificationsViewModel> GetPlayerNotifications(int userId);
         Task SavePlayerNotifications(int userId, PlayerNotificationsViewModel request);
         Task AcceptRules(int userId);
+        Task<WebsiteSettingsViewModel> GetWebsiteSettings();
+        Task SetDiscordByToken(int userId, string token);
+        Task RemoveDiscord(int userId);
+        Task<LoginResult?> LoginWithDiscord(DiscordAuthRequest request);
     }
 }

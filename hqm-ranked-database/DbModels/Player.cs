@@ -21,6 +21,8 @@ namespace hqm_ranked_backend.Models.DbModels
         [Required]
         public bool IsAcceptedRules { get; set; } = false;
         public PlayerCost? Cost { get; set; }
+        public string DiscordId { get; set; } = string.Empty;
+        public string DiscordNickname { get; set; } = string.Empty;
 
     }
 }

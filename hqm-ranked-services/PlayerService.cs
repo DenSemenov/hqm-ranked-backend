@@ -4,7 +4,11 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.DTO;
+using hqm_ranked_models.InputModels;
+using hqm_ranked_models.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 
 namespace hqm_ranked_backend.Services
@@ -38,6 +42,42 @@ namespace hqm_ranked_backend.Services
             }
             else
             {
+                return null;
+            }
+        }
+
+        public async Task<LoginResult?> LoginWithDiscord(DiscordAuthRequest request)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var url = "https://discordapp.com/api/users/@me";
+                    client.DefaultRequestHeaders.Add("Authorization", "Bearer " + request.Token);
+                    var res = await client.GetStringAsync(url);
+
+                    var discordResult = JsonConvert.DeserializeObject<DiscordResult>(res);
+
+                    var player = await _dbContext.Players.Include(x => x.Role).SingleOrDefaultAsync(x => x.DiscordId == discordResult.id);
+                    if (player != null)
+                    {
+                        var token = Encryption.GetToken(player.Id, player.Role.Name == "admin");
+
+                        return new LoginResult
+                        {
+                            Id = player.Id,
+                            Success = true,
+                            Token = token
+                        };
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                }
+            }
+            catch {
                 return null;
             }
         }
@@ -116,6 +156,7 @@ namespace hqm_ranked_backend.Services
                 result.Email = user.Email;
                 result.Role = user.Role.Name;
                 result.IsAcceptedRules = user.IsAcceptedRules;
+                result.DiscordLogin = user.DiscordNickname;
 
                 var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
 
@@ -246,6 +287,55 @@ namespace hqm_ranked_backend.Services
             {
                 player.IsAcceptedRules = true;
 
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<WebsiteSettingsViewModel> GetWebsiteSettings()
+        {
+            var result = new WebsiteSettingsViewModel();
+
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                result.DiscordAppClientId = settings.DiscordAppClientId.ToString();
+            }
+
+            return result;
+        }
+
+        public async Task SetDiscordByToken(int userId, string token)
+        {
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                try
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var url = "https://discordapp.com/api/users/@me";
+                        client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
+                        var res = await client.GetStringAsync(url);
+
+                        var discordResult = JsonConvert.DeserializeObject<DiscordResult>(res);
+
+                        user.DiscordId = discordResult.id;
+                        user.DiscordNickname = discordResult.username;
+
+                        await _dbContext.SaveChangesAsync();
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public async Task RemoveDiscord(int userId)
+        {
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                user.DiscordId = String.Empty;
+                user.DiscordNickname = String.Empty;
                 await _dbContext.SaveChangesAsync();
             }
         }

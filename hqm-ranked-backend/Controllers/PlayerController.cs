@@ -2,6 +2,7 @@
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.InputModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,21 @@ namespace hqm_ranked_backend.Controllers
             if (result == null)
             {
                 return BadRequest(new { errorText = "Invalid username or password." });
+            }
+            else
+            {
+                return Ok(result);
+            }
+        }
+
+        [HttpPost("LoginWithDiscord")]
+        public async Task<IActionResult> LoginWithDiscord(DiscordAuthRequest request)
+        {
+            var result = await _playerService.LoginWithDiscord(request);
+
+            if (result == null)
+            {
+                return BadRequest(new { errorText = "User with this discord not found" });
             }
             else
             {
@@ -135,6 +151,31 @@ namespace hqm_ranked_backend.Controllers
         {
             var userId = UserHelper.GetUserId(User);
             await _playerService.AcceptRules(userId);
+            return Ok();
+        }
+
+        [HttpPost("GetWebsiteSettings")]
+        public async Task<IActionResult> GetWebsiteSettings()
+        {
+            var result = await _playerService.GetWebsiteSettings();
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("SetDiscordByToken")]
+        public async Task<IActionResult> SetDiscordByToken(DiscordAuthRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.SetDiscordByToken(userId, request.Token);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("RemoveDiscord")]
+        public async Task<IActionResult> RemoveDiscord()
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.RemoveDiscord(userId);
             return Ok();
         }
     }

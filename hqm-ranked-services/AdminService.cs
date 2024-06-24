@@ -129,6 +129,11 @@ namespace hqm_ranked_backend.Services
                 settings.S3Bucket = request.S3Bucket;
                 settings.S3User = request.S3User;
                 settings.S3Key = request.S3Key;
+                settings.TeamsMaxPlayer = request.TeamsMaxPlayer;
+                settings.SpotifyPlaylist = request.SpotifyPlaylist;
+                settings.SpotifyClientId = request.SpotifyClientId;
+                settings.SpotifySecret= request.SpotifySecret;
+                settings.DiscordAppClientId = request.DiscordAppClientId;
 
                 await _dbContext.SaveChangesAsync();
             }

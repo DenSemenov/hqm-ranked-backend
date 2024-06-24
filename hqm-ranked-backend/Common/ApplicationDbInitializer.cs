@@ -11,13 +11,9 @@ namespace hqm_ranked_backend.Common
     internal class ApplicationDbInitializer
     {
         private readonly RankedDb _dbContext;
-        private IImageGeneratorService _imageGeneratorService;
-        private IStorageService _storageService;
-        public ApplicationDbInitializer(RankedDb dbContext, IImageGeneratorService imageGeneratorService, IStorageService storageService)
+        public ApplicationDbInitializer(RankedDb dbContext)
         {
             _dbContext = dbContext;
-            _imageGeneratorService = imageGeneratorService;
-            _storageService = storageService;
         }
 
         public async Task Initialize()

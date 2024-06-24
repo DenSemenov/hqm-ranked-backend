@@ -9,5 +9,7 @@
         public bool IsBanned { get; set; }
         public bool IsApproved { get; set; }
         public bool IsAcceptedRules { get; set; }
+        public bool IsDiscordConnected { get; set; } = false;
+        public string DiscordLogin { get; set; } = string.Empty;
     }
 }
