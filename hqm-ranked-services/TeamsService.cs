@@ -598,13 +598,13 @@ namespace hqm_ranked_backend.Services
 
             var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
 
-            var teams = await _dbContext.Teams.Where(x=>x.Season == season).ToListAsync();
+            var teams = await _dbContext.Teams.Include(x=>x.TeamPlayers).Where(x=>x.Season == season).ToListAsync();
 
             foreach(var team in teams)
             {
-                var teamGames = await _dbContext.Games.Include(x => x.RedTeam).Include(x => x.BlueTeam).Where(x => (x.RedTeam == team || x.BlueTeam == team) && (x.State == ended || x.State == resigned)).ToListAsync();
-                if (teamGames.Any())
+                if (team.TeamPlayers.Count > 0)
                 {
+                    var teamGames = await _dbContext.Games.Include(x => x.RedTeam).Include(x => x.BlueTeam).Where(x => (x.RedTeam == team || x.BlueTeam == team) && (x.State == ended || x.State == resigned)).ToListAsync();
                     var redGames = teamGames.Where(x => x.RedTeam == team).ToList();
                     var blueGames = teamGames.Where(x => x.BlueTeam == team).ToList();
 
