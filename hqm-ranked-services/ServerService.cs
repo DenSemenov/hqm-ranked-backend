@@ -479,7 +479,7 @@ namespace hqm_ranked_backend.Services
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
-                var game = await _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x => x.Id == request.GameId);
+                var game = await _dbContext.Games.Include(x=>x.RedTeam).ThenInclude(x=>x.Budgets).Include(x => x.BlueTeam).ThenInclude(x => x.Budgets).Include(x => x.GamePlayers).ThenInclude(x=>x.Player).FirstOrDefaultAsync(x => x.Id == request.GameId);
                 if (game != null)
                 {
                     if (game.State != await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned"))
@@ -533,7 +533,6 @@ namespace hqm_ranked_backend.Services
                         game.BluePoints = calculatedElo.BluePoints;
                     }
 
-
                     result.Mvp = mvp.Player.Name;
 
                     var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
@@ -548,6 +547,20 @@ namespace hqm_ranked_backend.Services
                                 Value = startingElo
                             });
                         }
+                    }
+
+                    if (server.InstanceType == InstanceType.Teams)
+                    {
+                        game.RedTeam.Budgets.Add(new Budget
+                        {
+                            Type = BudgetType.Game,
+                            Change = 30000,
+                        });
+                        game.BlueTeam.Budgets.Add(new Budget
+                        {
+                            Type = BudgetType.Game,
+                            Change = 30000,
+                        });
                     }
 
                     await _dbContext.SaveChangesAsync();
