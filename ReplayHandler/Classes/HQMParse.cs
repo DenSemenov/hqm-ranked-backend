@@ -1,99 +1,70 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using System.Numerics;
-using DLA = MathNet.Numerics.LinearAlgebra.Double;
+﻿using LinearAlgebra;
 
 namespace ReplayHandler.Classes
 {
-    internal class HQMParse
+    public class HQMParse
     {
-        static readonly DLA.Vector UXP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 1.0, 0.0, 0.0 });
-        static readonly DLA.Vector UXN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { -1.0, 0.0, 0.0 });
-        static readonly DLA.Vector UYP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 1.0, 0.0 });
-        static readonly DLA.Vector UYN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, -1.0, 0.0 });
-        static readonly DLA.Vector UZP = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 0.0, 1.0 });
-        static readonly DLA.Vector UZN = (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { 0.0, 0.0, -1.0 });
+        static readonly Vector3D UXP = new Vector3D(1.0, 0.0, 0.0);
+        static readonly Vector3D UXN = new Vector3D(-1.0, 0.0, 0.0);
+        static readonly Vector3D UYP = new Vector3D(0.0, 1.0, 0.0);
+        static readonly Vector3D UYN = new Vector3D(0.0, -1.0, 0.0);
+        static readonly Vector3D UZP = new Vector3D(0.0, 0.0, 1.0);
+        static readonly Vector3D UZN = new Vector3D(0.0, 0.0, -1.0);
+        static readonly Vector3D[][] TABLE = new Vector3D[][]
+       {
+            new Vector3D[] { UYP, UXP, UZP },
+            new Vector3D[] { UYP, UZP, UXN },
+            new Vector3D[] { UYP, UZN, UXP },
+            new Vector3D[] { UYP, UXN, UZN },
+            new Vector3D[] { UZP, UXP, UYN },
+            new Vector3D[] { UXN, UZP, UYN },
+            new Vector3D[] { UXP, UZN, UYN },
+            new Vector3D[] { UZN, UXN, UYN },
+       };
 
-        static readonly DLA.Vector[][] TABLE = new DLA.Vector[][]
+        public static Vector3D Cross(Vector3D left, Vector3D right)
         {
-            new DLA.Vector[] { UYP, UXP, UZP },
-            new DLA.Vector[] { UYP, UZP, UXN },
-            new DLA.Vector[] { UYP, UZN, UXP },
-            new DLA.Vector[] { UYP, UXN, UZN },
-            new DLA.Vector[] { UZP, UXP, UYN },
-            new DLA.Vector[] { UXN, UZP, UYN },
-            new DLA.Vector[] { UXP, UZN, UYN },
-            new DLA.Vector[] { UZN, UXN, UYN },
-        };
-
-        public static DLA.Vector Cross(DLA.Vector left, DLA.Vector right)
-        {
-            if (left.Count != 3 || right.Count != 3)
-            {
-                throw new ArgumentException("Vectors must have a length of 3.");
-            }
-
-            return (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[]
-            {
-                left[1] * right[2] - left[2] * right[1],
-                left[2] * right[0] - left[0] * right[2],
-                left[0] * right[1] - left[1] * right[0]
-            });
-        }
-
-        public static (float x, float y, float z) ConvertMatrixFromNetwork(byte b, uint v1, uint v2)
-        {
-            DLA.Vector r1 = ConvertRotColumnFromNetwork(b, v1);
-            DLA.Vector r2 = ConvertRotColumnFromNetwork(b, v2);
-            DLA.Vector r0 = Cross(r1, r2);
-            var m = Matrix<double>.Build.DenseOfColumnVectors(r0, r1, r2);
-
-            var matrix4x4 = new Matrix4x4(
-                (float)m[0, 0], (float)m[0, 1], (float)m[0, 2], 0.0f,
-                (float)m[1, 0], (float)m[1, 1], (float)m[1, 2], 0.0f,
-                (float)m[2, 0], (float)m[2, 1], (float)m[2, 2], 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f
+            return new Vector3D
+            (
+                left.Y * right.Z - left.Z * right.Y,
+                left.Z * right.X - left.Y * right.Z,
+                left.X * right.Y - left.Y * right.X
             );
-
-            var r = ConvertMatrixToEulerAngles(matrix4x4);
-            return (r.X, r.Y, r.Z);
         }
 
-        public static Vector3 ConvertMatrixToEulerAngles(Matrix4x4 rotationMatrix)
+        public static Vector3D ConvertMatrixFromNetwork(byte b, uint v1, uint v2)
         {
-            double sy = Math.Sqrt(rotationMatrix.M11 * rotationMatrix.M11 + rotationMatrix.M21 * rotationMatrix.M21);
+            var r1 = ConvertRotColumnFromNetwork(b, v1);
+            var r2 = ConvertRotColumnFromNetwork(b, v2);
+            var r0 = Cross(r1, r2);
 
-            bool singular = sy < 1e-6;
+            var m2 = new Matrix4();
+            m2[0, 0] = r0.X;
+            m2[1, 0] = r0.Y;
+            m2[2, 0] = r0.Z;
+            m2[0, 1] = r1.X;
+            m2[1, 1] = r1.Y;
+            m2[2, 1] = r1.Z;
+            m2[0, 2] = r2.X;
+            m2[1, 2] = r2.Y;
+            m2[2, 2] = r2.Z;
 
-            double x, y, z;
-            if (!singular)
-            {
-                x = Math.Atan2(rotationMatrix.M32, rotationMatrix.M33);
-                y = Math.Atan2(-rotationMatrix.M31, sy);
-                z = Math.Atan2(rotationMatrix.M21, rotationMatrix.M11);
-            }
-            else
-            {
-                x = Math.Atan2(-rotationMatrix.M23, rotationMatrix.M22);
-                y = Math.Atan2(-rotationMatrix.M31, sy);
-                z = 0;
-            }
-
-            return new Vector3((float)x, (float)y, (float)z);
+            return m2.ToVector();
         }
 
-        public static DLA.Vector ConvertRotColumnFromNetwork(byte b, uint v)
+        public static Vector3D ConvertRotColumnFromNetwork(byte b, uint v)
         {
             int start = (int)(v & 7);
-            DLA.Vector temp1 = TABLE[start][0];
-            DLA.Vector temp2 = TABLE[start][1];
-            DLA.Vector temp3 = TABLE[start][2];
+            var temp1 = TABLE[start][0];
+            var temp2 = TABLE[start][1];
+            var temp3 = TABLE[start][2];
             int pos = 3;
             while (pos < b)
             {
                 int step = (int)((v >> pos) & 3);
-                DLA.Vector c1 = NormalizeVector((DLA.Vector)temp1.Add(temp2));
-                DLA.Vector c2 = NormalizeVector((DLA.Vector)temp2.Add(temp3));
-                DLA.Vector c3 = NormalizeVector((DLA.Vector)temp1.Add(temp3));
+                var c1 = (temp1 + temp2).Normalized();
+                var c2 = (temp2 + temp3).Normalized();
+                var c3 = (temp1 + temp3).Normalized();
                 switch (step)
                 {
                     case 0:
@@ -116,15 +87,7 @@ namespace ReplayHandler.Classes
                 }
                 pos += 2;
             }
-            return NormalizeVector((DLA.Vector)temp1.Add(temp2).Add(temp3));
-        }
-
-        public static DLA.Vector NormalizeVector(DLA.Vector v)
-        {
-            var vector = new Vector3((float)v[0], (float)v[1], (float)v[2]);
-            var normalizedVector = Vector3.Normalize(vector);
-
-            return (DLA.Vector)DLA.Vector.Build.DenseOfArray(new double[] { normalizedVector.X, normalizedVector.Y, normalizedVector.Z });
+            return (temp1 + temp2 + temp3).Normalized();
         }
     }
 }

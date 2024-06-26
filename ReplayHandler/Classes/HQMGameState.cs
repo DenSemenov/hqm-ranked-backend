@@ -37,11 +37,11 @@ namespace ReplayHandler.Classes
         [JsonProperty("pz")]
         public float pos_z { get; set; }
         [JsonProperty("rx")]
-        public float rot_x { get; set; }
+        public double rot_x { get; set; }
         [JsonProperty("ry")]
-        public float rot_y { get; set; }
+        public double rot_y { get; set; }
         [JsonProperty("rz")]
-        public float rot_z { get; set; }
+        public double rot_z { get; set; }
     }
     public class HQMSkater: HQMObject
     {
@@ -52,11 +52,11 @@ namespace ReplayHandler.Classes
         [JsonProperty("spz")]
         public float stick_pos_z { get; set; }
         [JsonProperty("srx")]
-        public float stick_rot_x { get; set; }
+        public double stick_rot_x { get; set; }
         [JsonProperty("sry")]
-        public float stick_rot_y { get; set; }
+        public double stick_rot_y { get; set; }
         [JsonProperty("srz")]
-        public float stick_rot_z { get; set; }
+        public double stick_rot_z { get; set; }
         [JsonProperty("bt")]
         public float body_turn { get; set; }
         [JsonProperty("bl")]
