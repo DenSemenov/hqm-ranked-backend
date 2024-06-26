@@ -33,7 +33,7 @@ namespace hqm_ranked_backend.Helpers
             int prevTime = ticks.FirstOrDefault().Time;
             int prevPeriod = ticks.FirstOrDefault().Period;
             uint? pauseStartPacket = null;
-
+            var j = 0;
             foreach (var tick in ticks)
             {
                 var packet = new ReplayTickWithVectors();
@@ -124,7 +124,11 @@ namespace hqm_ranked_backend.Helpers
 
                 prevTick = tick;
 
-                Thread.Sleep(2);
+                if (j % 10 == 0)
+                {
+                    Thread.Sleep(1);
+                }
+                j++;
             }
 
             foreach (var pause in result.Pauses)
@@ -232,6 +236,7 @@ namespace hqm_ranked_backend.Helpers
             ReplayTeam? shotDetected = null;
 
             var index = 0;
+            j = 0;
             foreach (var tick in withVectors)
             {
                 var isPaused = result.Pauses.Any(x => x.StartPacket < tick.Packet && x.EndPacket > tick.Packet);
@@ -406,7 +411,11 @@ namespace hqm_ranked_backend.Helpers
 
                 index += 1;
 
-                Thread.Sleep(2);
+                if (j % 10 == 0)
+                {
+                    Thread.Sleep(1);
+                }
+                j++;
             }
 
             return result;

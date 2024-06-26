@@ -4,6 +4,7 @@ using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -164,6 +165,7 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
             var teamsService = scope.ServiceProvider.GetRequiredService<ITeamsService>() as TeamsService;
             RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
+          
         }
     }
 }

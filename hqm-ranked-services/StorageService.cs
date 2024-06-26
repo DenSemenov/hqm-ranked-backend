@@ -132,16 +132,6 @@ namespace hqm_ranked_backend.Services
                         putObjectRequest.Key = _S3Id.ToString() + "/" + name;
                         putObjectRequest.InputStream = fileToUpload;
 
-                        var grant = new S3Grant
-                        {
-                            Grantee = new S3Grantee
-                            {
-                                CanonicalUser = "Everyone"
-                            },
-                            Permission = S3Permission.READ
-                        };
-                        putObjectRequest.Grants.Add(grant);
-
                         await _client.PutObjectAsync(putObjectRequest);
                     }
                 }
