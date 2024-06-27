@@ -24,7 +24,10 @@ await Main();
 
 async Task Main()
 {
-   
+    await _replayCalcService.ParseReplay(new ReplayRequest
+    {
+        Id = Guid.Parse("9c955c03-51f7-4b48-8a9e-730b44a6291f")
+    });
     while (true)
     {
         await ParseLastReplay();

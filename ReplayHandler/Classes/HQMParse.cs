@@ -27,7 +27,7 @@ namespace ReplayHandler.Classes
             return new Vector3D
             (
                 left.Y * right.Z - left.Z * right.Y,
-                left.Z * right.X - left.Y * right.Z,
+                left.Z * right.X - left.X * right.Z,
                 left.X * right.Y - left.Y * right.X
             );
         }
