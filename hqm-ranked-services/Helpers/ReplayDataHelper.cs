@@ -124,10 +124,10 @@ namespace hqm_ranked_backend.Helpers
 
                 prevTick = tick;
 
-                if (j % 10 == 0)
-                {
-                    Thread.Sleep(1);
-                }
+                //if (j % 10 == 0)
+                //{
+                //    Thread.Sleep(1);
+                //}
                 j++;
             }
 
@@ -411,10 +411,10 @@ namespace hqm_ranked_backend.Helpers
 
                 index += 1;
 
-                if (j % 10 == 0)
-                {
-                    Thread.Sleep(1);
-                }
+                //if (j % 10 == 0)
+                //{
+                //    Thread.Sleep(1);
+                //}
                 j++;
             }
 

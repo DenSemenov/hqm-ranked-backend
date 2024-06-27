@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using ReplayHandler.Classes;
 using System.Drawing.Imaging;
 using System.Xml.Linq;
 
@@ -59,16 +60,17 @@ namespace hqm_ranked_backend.Services
 
                     var goalsToAdd = new List<ReplayGoal>();
 
+                    var goalTaskList = new List<Task>();
+
                     foreach (var goal in processedData.Goals)
                     {
                         var id = Guid.NewGuid();
 
                         var goalTicks = result.Skip((int)(goal.Packet - 250)).Take(300).ToList();
-
                         var json = JsonConvert.SerializeObject(goalTicks);
                         var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
-
-                        var gst = await _storageService.UploadTextFile(path, json);
+                        File.WriteAllText("D://test.json", json);
+                        goalTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
 
                         var sound = await _spotifyService.GetSoundAsync();
 
@@ -85,11 +87,14 @@ namespace hqm_ranked_backend.Services
                                 Player = player,
                                 Url = path,
                                 ReplayData = replayData,
-                                StorageType = gst,
+                                StorageType = Common.StorageType.S3,
                                 Music = sound,
                             });
                         }
                     }
+
+                    var t = Task.WhenAll(goalTaskList);
+                    t.Wait();
 
                     var highlightsToAdd = new List<ReplayHighlight>();
 
@@ -135,6 +140,8 @@ namespace hqm_ranked_backend.Services
 
                     var fragmentsToAdd = new List<ReplayFragment>();
 
+                    var fragmentsTaskList = new List<Task>();
+
                     for (int i = 0; i < count; i++)
                     {
                         var fragment = result.Skip(i * fragmentLenght).Take(fragmentLenght).ToArray();
@@ -142,7 +149,7 @@ namespace hqm_ranked_backend.Services
                         var json = JsonConvert.SerializeObject(fragment);
                         var path = "replayFragments/" + request.Id.ToString() + i.ToString() + ".json";
 
-                        var fst = await _storageService.UploadTextFile(path, json);
+                        fragmentsTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
 
                         fragmentsToAdd.Add(new ReplayFragment
                         {
@@ -151,9 +158,12 @@ namespace hqm_ranked_backend.Services
                             Min = fragment.Min(x => x.PacketNumber),
                             Max = fragment.Max(x => x.PacketNumber),
                             ReplayData = replayData,
-                            StorageType = fst
+                            StorageType = Common.StorageType.S3
                         });
                     }
+
+                    var t2 = Task.WhenAll(fragmentsTaskList);
+                    t2.Wait();
 
                     var wasAdded = false;
                     var replayDataItem = _dbContext.ReplayData.Include(x => x.Game).Include(x => x.ReplayFragments).FirstOrDefault(x => x.Game.Id == request.Id);
