@@ -237,18 +237,19 @@ namespace hqm_ranked_backend.Services
             {
                 var path = goal.Url;
 
-                var json = await _storageService.LoadTextFile(path);
-                var data = JsonConvert.DeserializeObject<ReplayTick[]>(json);
+                //var json = await _storageService.LoadTextFile(path);
+                //var data = JsonConvert.DeserializeObject<ReplayTick[]>(json);
 
                 result.Index = 0;
-                result.Data = data;
-                result.Fragments = new List<ReplayViewerFragmentViewModel> {
-                   new ReplayViewerFragmentViewModel{
-                    Index = 0,
-                     Min = data.FirstOrDefault().PacketNumber,
-                     Max = data.LastOrDefault().PacketNumber
-                   }
-                };
+                result.Data = new ReplayTick[0];
+                result.Url = goal.Url;
+                //result.Fragments = new List<ReplayViewerFragmentViewModel> {
+                //   new ReplayViewerFragmentViewModel{
+                //    Index = 0,
+                //     Min = data.FirstOrDefault().PacketNumber,
+                //     Max = data.LastOrDefault().PacketNumber
+                //   }
+                //};
             }
 
             return result;
