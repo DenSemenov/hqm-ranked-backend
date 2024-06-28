@@ -3,6 +3,7 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace hqm_ranked_backend.Services
 {
@@ -166,7 +167,7 @@ namespace hqm_ranked_backend.Services
                 .Include(x=>x.GameInvites)
                 .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayFragments)
-                .Where(x => x.Season == season)
+                .Where(x => x.Season == season && x.InstanceType == Common.InstanceType.Ranked)
                 .OrderByDescending(x => x.CreatedOn)
                 .Select(x => new SeasonGameViewModel
                 {
@@ -193,6 +194,42 @@ namespace hqm_ranked_backend.Services
                 .Take(30)
                 .ToListAsync();
 
+            var teamsGames = await _dbContext.Games
+               .Include(x => x.State)
+               .Include(x => x.GamePlayers)
+               .ThenInclude(x => x.Player)
+               .Include(x => x.RedTeam)
+               .Include(x => x.BlueTeam)
+               .Include(x => x.GameInvites)
+               .Include(x => x.ReplayDatas)
+               .ThenInclude(x => x.ReplayFragments)
+               .Where(x => x.Season == season && x.InstanceType == Common.InstanceType.Teams)
+               .OrderByDescending(x => x.CreatedOn)
+               .Select(x => new SeasonGameViewModel
+               {
+                   GameId = x.Id,
+                   Date = x.GameInvites.Any() ? x.GameInvites.FirstOrDefault().Date : (x.LastModifiedOn ?? x.CreatedOn),
+                   RedScore = x.RedScore,
+                   BlueScore = x.BlueScore,
+                   Status = x.State.Name,
+                   ReplayId = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().Id : null,
+                   HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
+                   InstanceType = x.InstanceType,
+                   RedTeamId = x.RedTeamId,
+                   BlueTeamId = x.BlueTeamId,
+                   RedTeamName = x.RedTeam != null ? x.RedTeam.Name : String.Empty,
+                   BlueTeamName = x.BlueTeam != null ? x.BlueTeam.Name : String.Empty,
+                   Players = x.GamePlayers.Select(x => new GamePlayerItem
+                   {
+                       Id = x.PlayerId,
+                       Name = x.Player.Name,
+                       Team = x.Team
+                   }).ToList()
+               })
+               .Skip(request.Offset)
+               .Take(30)
+               .ToListAsync();
+            games.AddRange(teamsGames);
             return games;
         }
 
