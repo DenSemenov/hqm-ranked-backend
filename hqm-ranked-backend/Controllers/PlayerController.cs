@@ -178,5 +178,14 @@ namespace hqm_ranked_backend.Controllers
             await _playerService.RemoveDiscord(userId);
             return Ok();
         }
+
+        [Authorize]
+        [HttpPost("GetPlayerWarnings")]
+        public async Task<IActionResult> GetPlayerWarnings()
+        {
+            var userId = UserHelper.GetUserId(User);
+            var result = await _playerService.GetPlayerWarnings(userId);
+            return Ok(result);
+        }
     }
 }

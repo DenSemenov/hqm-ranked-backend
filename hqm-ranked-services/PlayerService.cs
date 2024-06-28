@@ -339,5 +339,25 @@ namespace hqm_ranked_backend.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
+
+        public async Task<List<PlayerWarningViewModel>> GetPlayerWarnings(int userId)
+        {
+            var result = new List<PlayerWarningViewModel>();
+
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                if (String.IsNullOrEmpty(user.DiscordId))
+                {
+                    result.Add(new PlayerWarningViewModel
+                    {
+                        Type = WarningType.DiscordNotConnected,
+                        Message = "Connect your Discord account to avoid losing access to it if you forget your password"
+                    });
+                }
+            }
+
+            return result;
+        }
     }
 }

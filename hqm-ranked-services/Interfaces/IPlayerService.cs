@@ -21,5 +21,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task SetDiscordByToken(int userId, string token);
         Task RemoveDiscord(int userId);
         Task<LoginResult?> LoginWithDiscord(DiscordAuthRequest request);
+        Task<List<PlayerWarningViewModel>> GetPlayerWarnings(int userId);
     }
 }
