@@ -226,6 +226,7 @@ namespace hqm_ranked_backend.Services
                 }
                 catch(Exception ex)
                 {
+                    Console.WriteLine(ex.Message + ex.StackTrace);
                     Log.Error(ex.Message + ex.StackTrace);
                     _dbContext.ReplayData.Remove(replayData);
                     _dbContext.SaveChanges();
