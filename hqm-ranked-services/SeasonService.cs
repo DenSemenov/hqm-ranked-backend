@@ -2,6 +2,7 @@
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.DTO;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
@@ -240,6 +241,7 @@ namespace hqm_ranked_backend.Services
             result.Id = request.Id;
 
             var player = await _dbContext.Players
+                .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.Season)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x=>x.RedTeam)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.BlueTeam)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player)
@@ -251,6 +253,11 @@ namespace hqm_ranked_backend.Services
                 Goals = x.GamePlayers.Sum(x => x.Goals),
                 Assists = x.GamePlayers.Sum(x => x.Assists),
                 LastGames = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3),
+                LastPoints = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(100).Select(x=>new
+                {
+                    SeasonId = x.Game.Season.Id,
+                    Elo = x.Score
+                }),
                 NicknameChanges = x.NicknameChanges,
                 Cost = x.Cost !=null? x.Cost.Cost: 0,
             }).SingleOrDefaultAsync(x => x.Id == request.Id);
@@ -294,6 +301,32 @@ namespace hqm_ranked_backend.Services
                     });
                 }
             }
+
+            var includedSeasons = player.LastPoints.Select(x=>x.SeasonId).Distinct().ToList();
+            var elosPerSeasons = new List<SeasonEloModel>();
+
+            foreach (var season in includedSeasons)
+            {
+                elosPerSeasons.Add(new SeasonEloModel
+                {
+                    SeasonId = season,
+                    Elo = await GetPlayerEloBySeason(player.Id, season)
+                });
+            }
+
+            foreach (var season in elosPerSeasons)
+            {
+                var endElo = season.Elo;
+
+                foreach(var point in player.LastPoints.Where(x=>x.SeasonId == season.SeasonId))
+                {
+                    result.PlayerPoints.Add(endElo);
+
+                    endElo -= point.Elo;
+                }
+            }
+
+            result.PlayerPoints.Reverse();
 
             result.LastGames = player.LastGames.Select(x => new PlayerLastGamesViewModel
             {
@@ -390,6 +423,19 @@ namespace hqm_ranked_backend.Services
 
             var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x=>x.Game).ThenInclude(x=>x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason && x.Game.InstanceType == Common.InstanceType.Ranked && (x.Game.State == ended || x.Game.State == resigned)).Sum(x => x.Score);
             var eloOnSeasonStart = await _dbContext.Elos.Include(x=>x.Player).FirstOrDefaultAsync(x=>x.Player.Id == id && x.Season == currentSeason);
+            return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : startingElo);
+        }
+
+        public async Task<int> GetPlayerEloBySeason(int id, Guid seasonId)
+        {
+            var currentSeason = await _dbContext.Seasons.FirstOrDefaultAsync(x => x.Id == seasonId);
+
+            var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+            var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+            var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
+
+            var sum = _dbContext.GamePlayers.Include(x => x.Player).Include(x => x.Game).ThenInclude(x => x.Season).Where(x => x.Player.Id == id && x.Game.Season == currentSeason && x.Game.InstanceType == Common.InstanceType.Ranked && (x.Game.State == ended || x.Game.State == resigned)).Sum(x => x.Score);
+            var eloOnSeasonStart = await _dbContext.Elos.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == id && x.Season == currentSeason);
             return sum + (eloOnSeasonStart != null ? eloOnSeasonStart.Value : startingElo);
         }
 

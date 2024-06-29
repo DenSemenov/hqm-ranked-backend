@@ -15,14 +15,8 @@ namespace hqm_ranked_backend.Models.ViewModels
         public List<PlayerLastGamesViewModel> LastGames {  get; set; }
         public List<PlayerSeasonsViewModel> LastSeasons { get; set; } = new List<PlayerSeasonsViewModel>();
         public PlayerCalcDataViewModel CalcData { get; set; }
-        public List<PlayerPoint> PlayerPoints { get; set; } = new List<PlayerPoint>();
+        public List<int> PlayerPoints { get; set; } = new List<int>();
         public List<string> OldNicknames { get; set; } = new List<string>();
-    }
-
-    public class PlayerPoint
-    {
-        public Guid GameId { get; set; }
-        public int Score { get; set; }
     }
 
     public class PlayerLastSeasonViewModel
