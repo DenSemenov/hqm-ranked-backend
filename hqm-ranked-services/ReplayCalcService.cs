@@ -5,6 +5,7 @@ using hqm_ranked_backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReplayHandler.Classes;
+using Serilog;
 using System.Drawing.Imaging;
 using System.Xml.Linq;
 
@@ -223,8 +224,9 @@ namespace hqm_ranked_backend.Services
 
                     _dbContext.SaveChanges();
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Log.Error(ex.Message + ex.StackTrace);
                     _dbContext.ReplayData.Remove(replayData);
                     _dbContext.SaveChanges();
                 }
