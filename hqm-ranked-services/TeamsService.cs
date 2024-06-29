@@ -470,7 +470,8 @@ namespace hqm_ranked_backend.Services
                         _dbContext.GameInvites.Add(new GameInvites
                         {
                             Date = date,
-                            InvitedTeam = team
+                            InvitedTeam = team,
+                            GamesCount = count
                         });
 
                         await _dbContext.SaveChangesAsync();
