@@ -335,6 +335,8 @@ namespace hqm_ranked_backend.Services
                     var teamsPlayers = await _dbContext.TeamPlayers.Include(x=>x.Team).Include(x => x.Player).Where(x => request.PlayerIds.Contains(x.Player.Id) && x.Team.Season == season).ToListAsync();
                     var teamIds = teamsPlayers.Select(x => x.Team.Id as Guid?).Distinct().ToList();
 
+                    var scheduled = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Scheduled");
+
                     var incomingGame = await _dbContext.Games
                         .Include(x => x.GamePlayers)
                         .ThenInclude(x => x.Player)
@@ -345,7 +347,8 @@ namespace hqm_ranked_backend.Services
                             x.InstanceType == InstanceType.Teams &&
                             x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
                             x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate &&
-                            (teamIds.Contains(x.RedTeamId) && teamIds.Contains(x.BlueTeamId))
+                            (teamIds.Contains(x.RedTeamId) && teamIds.Contains(x.BlueTeamId)) && 
+                            x.State == scheduled
                            )
                         .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
                         .FirstOrDefaultAsync();

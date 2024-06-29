@@ -157,7 +157,7 @@ namespace hqm_ranked_backend.Controllers
         {
             var userId = UserHelper.GetUserId(User);
 
-            var result = await _teamsService.CreateGameInvite(userId, request.Date);
+            var result = await _teamsService.CreateGameInvite(userId, request.Date, request.CountGames);
             return Ok(result);
         }
 

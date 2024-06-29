@@ -3,5 +3,6 @@
     public class CreateGameInviteRequest
     {
         public DateTime Date { get; set; }
+        public int CountGames { get; set; }
     }
 }

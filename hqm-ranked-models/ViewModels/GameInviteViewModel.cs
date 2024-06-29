@@ -5,6 +5,7 @@
         public Guid Id { get; set; }
         public bool IsCurrentTeam { get; set; }
         public DateTime Date { get; set; }
+        public int GamesCount { get; set; }
         public List<GameInviteVoteViewModel> Votes { get; set; }
         public int VotesCount { get; set; }
     }

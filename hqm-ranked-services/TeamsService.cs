@@ -7,6 +7,7 @@ using hqm_ranked_backend.Services.Interfaces;
 using hqm_ranked_models.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using SixLabors.ImageSharp;
 using System.ComponentModel;
 
@@ -453,7 +454,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<string> CreateGameInvite(int userId, DateTime date)
+        public async Task<string> CreateGameInvite(int userId, DateTime date, int count)
         {
             var result = String.Empty;
 
@@ -512,14 +513,15 @@ namespace hqm_ranked_backend.Services
                     .ThenInclude(x => x.TeamPlayers)
                     .Include(x => x.GameInviteVotes)
                     .ThenInclude(x => x.Player)
-                    .Include(x => x.Game)
-                    .Where(x => x.Game == null)
+                    .Include(x => x.Games)
+                    .Where(x => x.Games.Count == 0)
                     .Select(x => new GameInviteViewModel
                     {
                         Id = x.Id,
                         Date = x.Date,
                         IsCurrentTeam = x.InvitedTeam.Id == state.Team.Id,
                         VotesCount = x.GameInviteVotes.Where(y => x.InvitedTeam.TeamPlayers.Any(k => k.Player == y.Player)).Count(),
+                        GamesCount = x.GamesCount,
                         Votes = x.GameInviteVotes.Where(x => teamPlayersIds.Contains(x.Player.Id)).Select(x => new GameInviteVoteViewModel
                         {
                             Id = x.Player.Id
@@ -567,16 +569,20 @@ namespace hqm_ranked_backend.Services
 
                                 var gamePlayers = new List<GamePlayer>();
 
-                                invite.Game = new Game
+                                for (int i = 0; i< invite.GamesCount; i++)
                                 {
-                                    InstanceType = Common.InstanceType.Teams,
-                                    Mvp = player,
-                                    RedTeam = invite.InvitedTeam,
-                                    BlueTeam = blueTeam,
-                                    Season = await _seasonService.GetCurrentSeason(),
-                                    State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Scheduled"),
-                                    CreatedOn = invite.Date,
-                                };
+                                    invite.Games.Add(new Game
+                                    {
+                                        InstanceType = Common.InstanceType.Teams,
+                                        Mvp = player,
+                                        RedTeam = invite.InvitedTeam,
+                                        BlueTeam = blueTeam,
+                                        Season = await _seasonService.GetCurrentSeason(),
+                                        State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Scheduled"),
+                                        CreatedOn = invite.Date,
+                                    });
+                                }
+                                
                                 await _dbContext.SaveChangesAsync();
 
                                 invite.CreatedOn = invite.Date;

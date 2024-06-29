@@ -22,7 +22,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task UploadAvatar(int userId, IFormFile file);
         Task MakeCaptain(int userId, int playerId);
         Task MakeAssistant(int userId, int playerId);
-        Task<string> CreateGameInvite(int userId, DateTime date);
+        Task<string> CreateGameInvite(int userId, DateTime date, int count);
         Task RemoveGameInvite(int userId, Guid inviteId);
         Task<List<GameInviteViewModel>> GetGameInvites(int userId);
         Task VoteGameInvite(int userId, Guid inviteId);
