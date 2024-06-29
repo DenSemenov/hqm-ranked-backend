@@ -70,7 +70,6 @@ namespace hqm_ranked_backend.Services
                         var goalTicks = result.Skip((int)(goal.Packet - 250)).Take(300).ToList();
                         var json = JsonConvert.SerializeObject(goalTicks);
                         var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
-                        File.WriteAllText("D://test.json", json);
                         goalTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
 
                         var sound = await _spotifyService.GetSoundAsync();
