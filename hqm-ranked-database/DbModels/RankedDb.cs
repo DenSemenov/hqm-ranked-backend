@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using hqm_ranked_database.DbModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Models.DbModels
 {
@@ -37,6 +38,8 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<GameInvites> GameInvites { get; set; }
         public DbSet<GameInviteVote> GameInviteVotes { get; set; }
+        public DbSet<TransferMarket> TransferMarkets { get; set; }
+        public DbSet<TransferMarketResponse> TransferMarketResponses { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)

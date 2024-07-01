@@ -2,6 +2,7 @@
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.InputModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -196,6 +197,39 @@ namespace hqm_ranked_backend.Controllers
         {
             var result = await _teamsService.GetTeamsStats(request);
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("CreateTransferMarket")]
+        public async Task<IActionResult> CreateTransferMarket(TransferMarketRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _teamsService.CreateTransferMarket(userId, request.Positions, request.Budget);
+            return Ok();
+        }
+
+        [HttpPost("GetTransferMarket")]
+        public async Task<IActionResult> GetTransferMarket()
+        {
+            var result = await _teamsService.GetTransferMarket();
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("RemoveTransferMarket")]
+        public async Task<IActionResult> RemoveTransferMarket(RemoveTransferMarketRequest request)
+        {
+            await _teamsService.RemoveTransferMarket(request);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("AskToJoinTeam")]
+        public async Task<IActionResult> AskToJoinTeam(AskToJoinTeamRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _teamsService.AskToJoinTeam(userId, request.Id, request.Positions);
+            return Ok();
         }
 
         [Authorize]

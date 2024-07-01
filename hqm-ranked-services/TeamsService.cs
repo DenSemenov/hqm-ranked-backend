@@ -4,11 +4,14 @@ using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_database.DbModels;
+using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using SixLabors.ImageSharp;
+using SpotifyAPI.Web.Http;
 using System.ComponentModel;
 
 namespace hqm_ranked_backend.Services
@@ -36,6 +39,8 @@ namespace hqm_ranked_backend.Services
                 var player = await _dbContext.Players.Include(x => x.Cost).FirstOrDefaultAsync(x => x.Id == userId);
                 if (player != null)
                 {
+                    result.Cost = player.Cost != null ? player.Cost.Cost : 0;
+
                     var teamPlayer = await _dbContext.TeamPlayers.Include(x => x.Team).ThenInclude(x => x.Budgets).ThenInclude(x => x.InvitedPlayer).Include(x=>x.Team).ThenInclude(x=>x.TeamPlayers).ThenInclude(x=>x.Player).ThenInclude(x=>x.Cost).FirstOrDefaultAsync(x => x.Player == player);
 
                     if (teamPlayer != null)
@@ -45,6 +50,8 @@ namespace hqm_ranked_backend.Services
                         result.CaptainId = teamPlayer.Team.Captain !=null? teamPlayer.Team.Captain.Id: null;
                         result.AssistantId = teamPlayer.Team.Assistant != null ? teamPlayer.Team.Assistant.Id : null;
                         result.TeamsMaxPlayers = _dbContext.Settings.FirstOrDefault().TeamsMaxPlayer;
+                        
+
                         result.Team = new CurrentTeamViewModel
                         {
                             Id = teamPlayer.Team.Id,
@@ -638,6 +645,87 @@ namespace hqm_ranked_backend.Services
             }
 
             return result.OrderByDescending(x => x.Rating).ToList() ;
+        }
+
+        public async Task CreateTransferMarket(int userId, List<Position> positions, int budget)
+        {
+            var state = await GetTeamsState(userId);
+            if (state.Team != null)
+            {
+                if (state.IsCaptain || state.IsAssistant)
+                {
+                    var team = await _dbContext.Teams.FirstOrDefaultAsync(x => x.Id == state.Team.Id);
+
+                    if (team != null)
+                    {
+                        _dbContext.TransferMarkets.Add(new TransferMarket
+                        {
+                            Positions = positions,
+                            Team = team,
+                            Budget = budget
+                        });
+
+                        await _dbContext.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+
+        public async Task<List<TransferMarketViewModel>> GetTransferMarket()
+        {
+            var dateTenDaysBefore = DateTime.UtcNow.AddDays(-10);
+
+            var currentSeason = await _seasonService.GetCurrentSeason();
+
+            var result = await _dbContext.TransferMarkets.Include(x=>x.TransferMarketResponses).ThenInclude(x=>x.Player).Include(x => x.Team).ThenInclude(x => x.Season).Where(x => x.CreatedOn > dateTenDaysBefore).Where(x => x.Team.Season == currentSeason).Select(x => new TransferMarketViewModel
+            {
+                Id = x.Id,
+                Date = x.CreatedOn,
+                Positions = x.Positions,
+                TeamId = x.Team.Id,
+                TeamName = x.Team.Name,
+                Budget = x.Budget,
+                AskedToJoin = x.TransferMarketResponses.Select(p => new TransferMarketAsksViewModel
+                {
+                    Id = p.Player.Id,
+                    Name = p.Player.Name,
+                    Positions = p.Position,
+                    Cost = p.Player.Cost.Cost
+                }).ToList()
+            }).ToListAsync();
+
+            return result;
+        }
+
+        public async Task RemoveTransferMarket(RemoveTransferMarketRequest request)
+        {
+            var transferMarket = await _dbContext.TransferMarkets.FirstOrDefaultAsync(x => x.Id == request.Id);
+            if (transferMarket != null)
+            {
+                _dbContext.TransferMarkets.Remove(transferMarket);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task AskToJoinTeam(int userId, Guid transferMarketId, List<Position> positions)
+        {
+            var state = await GetTeamsState(userId);
+            if (state.Team == null)
+            {
+                var player = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
+
+                var transferMarket = await _dbContext.TransferMarkets.FirstOrDefaultAsync(x => x.Id == transferMarketId);
+                if (transferMarket != null)
+                {
+                    _dbContext.TransferMarketResponses.Add(new TransferMarketResponse
+                    {
+                        Player = player,
+                        Position = positions,
+                        TransferMarket = transferMarket
+                    });
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
         }
     }
 }

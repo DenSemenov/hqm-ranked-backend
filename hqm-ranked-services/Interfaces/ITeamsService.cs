@@ -1,5 +1,7 @@
 ﻿using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
+using hqm_ranked_database.DbModels;
+using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 using Microsoft.AspNetCore.Http;
 
@@ -27,5 +29,9 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<GameInviteViewModel>> GetGameInvites(int userId);
         Task VoteGameInvite(int userId, Guid inviteId);
         Task<List<TeamsStatsViewModel>> GetTeamsStats(CurrentSeasonStatsRequest request);
+        Task CreateTransferMarket(int userId, List<Position> positions, int budget);
+        Task<List<TransferMarketViewModel>> GetTransferMarket();
+        Task RemoveTransferMarket(RemoveTransferMarketRequest request);
+        Task AskToJoinTeam(int userId, Guid transferMarketId, List<Position> positions);
     }
 }

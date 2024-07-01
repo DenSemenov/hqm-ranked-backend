@@ -10,6 +10,7 @@ namespace hqm_ranked_backend.Models.ViewModels
         public int? CaptainId { get; set; }
         public int? AssistantId { get; set; }
         public int TeamsMaxPlayers { get; set; }
+        public int Cost { get; set; } = 0;
         public CurrentTeamViewModel? Team { get; set; }
     }
 
