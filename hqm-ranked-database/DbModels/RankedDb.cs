@@ -40,6 +40,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<GameInviteVote> GameInviteVotes { get; set; }
         public DbSet<TransferMarket> TransferMarkets { get; set; }
         public DbSet<TransferMarketResponse> TransferMarketResponses { get; set; }
+        public DbSet<Award> Awards { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)

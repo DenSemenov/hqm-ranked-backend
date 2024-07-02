@@ -18,11 +18,13 @@ namespace hqm_ranked_backend.Services
         private RankedDb _dbContext;
         private IImageGeneratorService _imageGeneratorService;
         private IStorageService _storageService;
-        public PlayerService(RankedDb dbContext, IImageGeneratorService imageGeneratorService, IStorageService storageService)
+        private INotificationService _notificationService;
+        public PlayerService(RankedDb dbContext, IImageGeneratorService imageGeneratorService, IStorageService storageService, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _imageGeneratorService = imageGeneratorService;
             _storageService = storageService;
+            _notificationService = notificationService;
         }
         public async Task<LoginResult?> Login(LoginRequest request)
         {
@@ -204,6 +206,9 @@ namespace hqm_ranked_backend.Services
                             Player = user,
                             OldNickname = user.Name.Trim()
                         });
+
+                        await _notificationService.SendDiscordNicknameChange(user, user.Name.Trim());
+
                         user.Name = request.Name.Trim();
 
                         result = "Nickname successfully changed";

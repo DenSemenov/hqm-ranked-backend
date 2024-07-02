@@ -1,4 +1,5 @@
 ﻿using hqm_ranked_backend.Common;
+using hqm_ranked_database.DbModels;
 using System.ComponentModel.DataAnnotations;
 
 namespace hqm_ranked_backend.Models.DbModels
@@ -23,6 +24,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public PlayerCost? Cost { get; set; }
         public string DiscordId { get; set; } = string.Empty;
         public string DiscordNickname { get; set; } = string.Empty;
+        public ICollection<Award> Awards { get; set; }
 
     }
 }

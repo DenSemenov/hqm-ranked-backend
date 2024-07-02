@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
 
 #nullable disable
 
-namespace hqm_ranked_backend.Migrations
+namespace hqm_ranked_database.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240702071924_AddedAwards")]
+    partial class AddedAwards
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,9 +414,6 @@ namespace hqm_ranked_backend.Migrations
 
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("NotificationSent")
-                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -1297,9 +1297,6 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<int>("AwardType")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("Count")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -1827,7 +1824,7 @@ namespace hqm_ranked_backend.Migrations
             modelBuilder.Entity("hqm_ranked_database.DbModels.Award", b =>
                 {
                     b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "Player")
-                        .WithMany("Awards")
+                        .WithMany()
                         .HasForeignKey("PlayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1885,8 +1882,6 @@ namespace hqm_ranked_backend.Migrations
 
             modelBuilder.Entity("hqm_ranked_backend.Models.DbModels.Player", b =>
                 {
-                    b.Navigation("Awards");
-
                     b.Navigation("Bans");
 
                     b.Navigation("GamePlayers");

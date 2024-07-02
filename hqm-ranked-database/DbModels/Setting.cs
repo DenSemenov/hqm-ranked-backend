@@ -23,5 +23,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public string SpotifyPlaylist { get; set; } = String.Empty;
         public int TeamsMaxPlayer { get; set; } = 4;
         public string DiscordAppClientId { get; set; }
+        public string DiscordNewsWebhook { get; set; }
     }
 }

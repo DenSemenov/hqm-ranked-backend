@@ -7,6 +7,8 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_services;
+using hqm_ranked_services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -59,6 +61,7 @@ namespace hqm_ranked_backend
             services.AddScoped<ISpotifyService, SpotifyService>();
             services.AddScoped<ICostService, CostService>();
             services.AddScoped<ITeamsService, TeamsService>();
+            services.AddScoped<IAwardsService, AwardsService>();
 
             services.AddScoped<ExceptionMiddleware>();
 
@@ -165,6 +168,17 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
             var teamsService = scope.ServiceProvider.GetRequiredService<ITeamsService>() as TeamsService;
             RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
+            var awardsService = scope.ServiceProvider.GetRequiredService<IAwardsService>() as AwardsService;
+            RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Hourly);
+
+
+            var nn = scope.ServiceProvider.GetRequiredService<INotificationService>() as NotificationService;
+            nn.SendDiscordNicknameChange(new Player
+            {
+                Id = 12,
+                Name = "70n0ff",
+
+            }, "7").Wait();
         }
     }
 }

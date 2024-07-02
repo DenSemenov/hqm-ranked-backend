@@ -1,4 +1,5 @@
 ﻿using hqm_ranked_backend.Common;
+using hqm_ranked_database.DbModels;
 
 namespace hqm_ranked_backend.Models.ViewModels
 {
@@ -17,6 +18,15 @@ namespace hqm_ranked_backend.Models.ViewModels
         public PlayerCalcDataViewModel CalcData { get; set; }
         public List<int> PlayerPoints { get; set; } = new List<int>();
         public List<string> OldNicknames { get; set; } = new List<string>();
+        public List<PlayerAwardViewModel> Awards { get; set; }
+    }
+
+    public class PlayerAwardViewModel
+    {
+        public DateTime Date { get; set; }
+        public AwardType AwardType { get; set; }
+        public int? Count { get; set; }
+        public string? SeasonName { get; set; }
     }
 
     public class PlayerLastSeasonViewModel

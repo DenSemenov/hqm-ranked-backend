@@ -12,7 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using SixLabors.ImageSharp;
 using SpotifyAPI.Web.Http;
+using System;
 using System.ComponentModel;
+using TimeAgo;
 
 namespace hqm_ranked_backend.Services
 {
@@ -22,12 +24,14 @@ namespace hqm_ranked_backend.Services
         private ISeasonService _seasonService;
         private IImageGeneratorService _imageGeneratorService;
         private IStorageService _storageService;
-        public TeamsService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService)
+        private INotificationService _notificationService;
+        public TeamsService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _imageGeneratorService = imageGeneratorService;
             _storageService = storageService;
+            _notificationService = notificationService;
         }
         public async Task<TeamsStateViewModel> GetTeamsState(int? userId)
         {
@@ -568,6 +572,13 @@ namespace hqm_ranked_backend.Services
 
                         var invitedVotesCount = invite.GameInviteVotes.Where(y => invite.InvitedTeam.TeamPlayers.Any(k => k.Player == y.Player)).Count();
 
+                        if (invitedVotesCount >= state.TeamsMaxPlayers && !invite.NotificationSent)
+                        {
+                            await _notificationService.SendDiscordTeamInvite(invite);
+
+                            invite.NotificationSent = true;
+                        }
+
                         if (invitedVotesCount >= state.TeamsMaxPlayers && !invite.InvitedTeam.TeamPlayers.Any(k => k.Player == player))
                         {
                             var otherTeamVotes = invite.GameInviteVotes.Where(x=> state.Team.Players.Any(y=>y.Id == x.Player.Id)).Count();
@@ -593,8 +604,12 @@ namespace hqm_ranked_backend.Services
                                 
                                 await _dbContext.SaveChangesAsync();
 
+                                await _notificationService.SendDiscordTeamsGame(invite, invite.InvitedTeam.Name, blueTeam.Name);
+
                                 invite.CreatedOn = invite.Date;
                             }
+
+
                         }
                     }
 

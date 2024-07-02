@@ -122,6 +122,8 @@ namespace hqm_ranked_backend.Services
                 settings.ReplayStoreDays = request.ReplayStoreDays;
                 settings.NextGameCheckGames = request.NextGameCheckGames;
                 settings.DiscordNotificationWebhook = request.DiscordNotificationWebhook;
+                settings.DiscordAppClientId = request.DiscordAppClientId;
+                settings.DiscordNewsWebhook = request.DiscordNewsWebhook;
                 settings.WebhookCount = request.WebhookCount;
                 settings.ShadowBanReportsCount = request.ShadowBanReportsCount;
                 settings.StartingElo = request.StartingElo;
@@ -133,7 +135,6 @@ namespace hqm_ranked_backend.Services
                 settings.SpotifyPlaylist = request.SpotifyPlaylist;
                 settings.SpotifyClientId = request.SpotifyClientId;
                 settings.SpotifySecret= request.SpotifySecret;
-                settings.DiscordAppClientId = request.DiscordAppClientId;
 
                 await _dbContext.SaveChangesAsync();
             }

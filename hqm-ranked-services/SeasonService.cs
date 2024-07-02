@@ -241,25 +241,34 @@ namespace hqm_ranked_backend.Services
             result.Id = request.Id;
 
             var player = await _dbContext.Players
+                .Include(x => x.Awards).ThenInclude(x => x.Season)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.Season)
-                .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x=>x.RedTeam)
+                .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.RedTeam)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.BlueTeam)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.GamePlayers).ThenInclude(x => x.Player)
-                .Include(x => x.NicknameChanges).Include(x=>x.Cost).Select(x =>
-            new {
+                .Include(x => x.NicknameChanges).Include(x => x.Cost).Select(x =>
+            new
+            {
                 Id = x.Id,
                 Name = x.Name,
                 Count = x.GamePlayers.Count,
                 Goals = x.GamePlayers.Sum(x => x.Goals),
                 Assists = x.GamePlayers.Sum(x => x.Assists),
                 LastGames = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3),
-                LastPoints = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(100).Select(x=>new
+                LastPoints = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(100).Select(x => new
                 {
                     SeasonId = x.Game.Season.Id,
                     Elo = x.Score
                 }),
                 NicknameChanges = x.NicknameChanges,
-                Cost = x.Cost !=null? x.Cost.Cost: 0,
+                Cost = x.Cost != null ? x.Cost.Cost : 0,
+                Awards = x.Awards.Select(y => new PlayerAwardViewModel
+                {
+                    AwardType = y.AwardType,
+                    Date = y.CreatedOn,
+                    Count = y.Count,
+                    SeasonName = y.Season != null ? y.Season.Name : String.Empty
+                }).ToList()
             }).SingleOrDefaultAsync(x => x.Id == request.Id);
 
             result.Name = player.Name;
@@ -268,6 +277,8 @@ namespace hqm_ranked_backend.Services
             result.Assists = player.Assists;
             result.Points = result.Goals + result.Assists;
             result.Cost = player.Cost;
+
+            result.Awards = player.Awards.OrderByDescending(x=>x.SeasonName).ToList();
 
             var currentSeasonStats = await GetSeasons();
             var lastSeason = currentSeasonStats.FirstOrDefault();
