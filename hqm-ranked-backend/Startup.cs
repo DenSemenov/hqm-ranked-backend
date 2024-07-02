@@ -170,15 +170,6 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
             var awardsService = scope.ServiceProvider.GetRequiredService<IAwardsService>() as AwardsService;
             RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Hourly);
-
-
-            var nn = scope.ServiceProvider.GetRequiredService<INotificationService>() as NotificationService;
-            nn.SendDiscordNicknameChange(new Player
-            {
-                Id = 12,
-                Name = "70n0ff",
-
-            }, "7").Wait();
         }
     }
 }
