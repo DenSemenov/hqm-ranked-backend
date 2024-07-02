@@ -588,6 +588,8 @@ namespace hqm_ranked_backend.Services
 
                                 var gamePlayers = new List<GamePlayer>();
 
+                                invite.Games = new List<Game>();
+
                                 for (int i = 0; i< invite.GamesCount; i++)
                                 {
                                     invite.Games.Add(new Game
