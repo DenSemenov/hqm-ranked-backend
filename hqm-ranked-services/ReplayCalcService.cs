@@ -207,7 +207,7 @@ namespace hqm_ranked_backend.Services
                                 foreach (var goal in goalsToAdd)
                                 {
                                     var scorer = game.GamePlayers.FirstOrDefault(x => x.Player == goal.Player);
-                                    if (player.Team != scorer.Team)
+                                    if (scorer !=null && player.Team != scorer.Team)
                                     {
                                         if (goal.Packet > gp.StartPacket && goal.Packet < gp.EndPacket)
                                         {
