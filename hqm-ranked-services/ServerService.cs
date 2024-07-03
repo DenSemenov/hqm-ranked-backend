@@ -404,6 +404,8 @@ namespace hqm_ranked_backend.Services
                         .Select(x => x.Token)
                         .ToListAsync();
                 await _notificationService.SendPush(server.Name, String.Format("Game started"), tokens);
+
+                await _hubContext.Clients.All.SendAsync("onGamesChange");
             }
 
             return result;
@@ -436,6 +438,8 @@ namespace hqm_ranked_backend.Services
 
                         await _dbContext.SaveChangesAsync();
                     }
+
+                    await _hubContext.Clients.All.SendAsync("onGamesChange");
 
                 }
             }
@@ -471,6 +475,8 @@ namespace hqm_ranked_backend.Services
                     }
 
                     await _dbContext.SaveChangesAsync();
+
+                    await _hubContext.Clients.All.SendAsync("onGamesChange");
                 }
             }
         }
@@ -608,6 +614,8 @@ namespace hqm_ranked_backend.Services
                         .ToListAsync();
 
                     await _notificationService.SendPush(server.Name, String.Format("Game ended"), tokens);
+
+                    await _hubContext.Clients.All.SendAsync("onGamesChange");
                 }
             }
 
@@ -720,6 +728,8 @@ namespace hqm_ranked_backend.Services
                 {
                     game.State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Canceled");
                     await _dbContext.SaveChangesAsync();
+
+                    await _hubContext.Clients.All.SendAsync("onGamesChange");
                 }
             }
         }
@@ -742,6 +752,8 @@ namespace hqm_ranked_backend.Services
                         game.RedScore = game.BlueScore + 7;
                     }
                     await _dbContext.SaveChangesAsync();
+
+                    await _hubContext.Clients.All.SendAsync("onGamesChange");
                 }
             }
         }

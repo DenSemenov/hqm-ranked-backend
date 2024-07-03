@@ -24,5 +24,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public int TeamsMaxPlayer { get; set; } = 4;
         public string DiscordAppClientId { get; set; }
         public string DiscordNewsWebhook { get; set; }
+        public string DiscordJoinLink { get; set; }
     }
 }

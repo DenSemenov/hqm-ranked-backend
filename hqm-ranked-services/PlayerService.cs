@@ -303,7 +303,8 @@ namespace hqm_ranked_backend.Services
             var settings = await _dbContext.Settings.FirstOrDefaultAsync();
             if (settings != null)
             {
-                result.DiscordAppClientId = settings.DiscordAppClientId.ToString();
+                result.DiscordAppClientId = settings.DiscordAppClientId;
+                result.DiscordJoinLink = settings.DiscordJoinLink;
             }
 
             return result;

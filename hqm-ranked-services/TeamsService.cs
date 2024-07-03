@@ -1,4 +1,5 @@
 ﻿using Google.Apis.Auth.OAuth2;
+using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
@@ -8,6 +9,7 @@ using hqm_ranked_database.DbModels;
 using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using SixLabors.ImageSharp;
@@ -25,13 +27,15 @@ namespace hqm_ranked_backend.Services
         private IImageGeneratorService _imageGeneratorService;
         private IStorageService _storageService;
         private INotificationService _notificationService;
-        public TeamsService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService, INotificationService notificationService)
+        private readonly IHubContext<ActionHub> _hubContext;
+        public TeamsService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService, INotificationService notificationService, IHubContext<ActionHub> hubContext)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _imageGeneratorService = imageGeneratorService;
             _storageService = storageService;
             _notificationService = notificationService;
+            _hubContext = hubContext;
         }
         public async Task<TeamsStateViewModel> GetTeamsState(int? userId)
         {
@@ -486,6 +490,8 @@ namespace hqm_ranked_backend.Services
                         });
 
                         await _dbContext.SaveChangesAsync();
+
+                        await _hubContext.Clients.All.SendAsync("onInvitesChange");
                     }
                     else
                     {
@@ -506,6 +512,8 @@ namespace hqm_ranked_backend.Services
                 _dbContext.GameInvites.Remove(invite);
 
                 await _dbContext.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("onInvitesChange");
             }
         }
 
@@ -607,15 +615,16 @@ namespace hqm_ranked_backend.Services
                                 await _dbContext.SaveChangesAsync();
 
                                 await _notificationService.SendDiscordTeamsGame(invite, invite.InvitedTeam.Name, blueTeam.Name);
-
                                 invite.CreatedOn = invite.Date;
+
+                                await _hubContext.Clients.All.SendAsync("onGamesChange");
                             }
-
-
                         }
                     }
 
                     await _dbContext.SaveChangesAsync();
+
+                    await _hubContext.Clients.All.SendAsync("onInvitesChange");
                 }
             }
         }

@@ -32,12 +32,7 @@ namespace hqm_ranked_backend.Services
             result.Id = ev.Id;
             result.Left = String.Format("{0}h {1}m", ev.Date.AddDays(1).Subtract(date).Hours, ev.Date.AddDays(1).Subtract(date).Minutes);
 
-            result.Players = await _dbContext.EventWinners.Include(x => x.Event).Include(x => x.Player).Where(x => x.Event == ev).Select(x => new CurrentEventPlayersViewModel
-            {
-                Id = x.Player.Id,
-                Name = x.Player.Name,
-                CurrentValue = 0
-            }).ToListAsync();
+            result.Players = await GetDailyEventsState(ev);
 
             return result;
         }
@@ -64,6 +59,122 @@ namespace hqm_ranked_backend.Services
             }
         }
 
+        public async Task<List<CurrentEventPlayersViewModel>> GetDailyEventsState(Events ev)
+        {
+            var result = new List<CurrentEventPlayersViewModel>();
+
+            var now = DateTime.UtcNow.Date;
+            var todayGames = _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x => x.Player).Where(x => x.CreatedOn > now).ToList();
+            var gamePlayers = todayGames.SelectMany(x => x.GamePlayers).ToList();
+            var todayPlayers = gamePlayers.Select(y => y.Player).Distinct().ToList();
+
+            foreach (var player in todayPlayers)
+            {
+                var playerGames = gamePlayers.Where(x => x.Player == player).ToList();
+                var currentCount = 0;
+
+                switch (ev.EventType.Text)
+                {
+                    case "Score {0} goals":
+                        var goals = gamePlayers.Where(x => x.Player == player).Sum(x => x.Goals);
+                        currentCount = goals;
+                        break;
+                    case "Do {0} assists":
+                        var assists = gamePlayers.Where(x => x.Player == player).Sum(x => x.Assists);
+                        currentCount = assists;
+                        break;
+                    case "Win {0} games":
+                        var countWin = 0;
+
+                        foreach (var game in playerGames)
+                        {
+                            if (game.Team == 0)
+                            {
+                                if (game.Game.RedScore > game.Game.BlueScore)
+                                {
+                                    countWin += 1;
+                                }
+                            }
+                            else
+                            {
+                                if (game.Game.RedScore < game.Game.BlueScore)
+                                {
+                                    countWin += 1;
+                                }
+                            }
+                        }
+
+                        currentCount = countWin;
+                        break;
+                    case "Win {0} games in a row":
+                        var countWinstreak = 0;
+
+                        foreach (var game in playerGames)
+                        {
+                            if (game.Team == 0)
+                            {
+                                if (game.Game.RedScore > game.Game.BlueScore)
+                                {
+                                    countWinstreak += 1;
+                                }
+                                else
+                                {
+                                    countWinstreak = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (game.Game.RedScore < game.Game.BlueScore)
+                                {
+                                    countWinstreak += 1;
+                                }
+                                else
+                                {
+                                    countWinstreak = 0;
+                                }
+                            }
+
+                            if (countWinstreak >= ev.X)
+                            {
+                                currentCount = countWinstreak;
+                                break;
+                            }
+                        }
+
+                        currentCount = countWinstreak;
+
+                        break;
+                    case "Do same count of goals and assists more than 0 {0} games":
+                        var countSame = 0;
+
+                        foreach (var gameStat in playerGames)
+                        {
+                            if (gameStat.Goals != 0 && gameStat.Assists != 0)
+                            {
+                                if (gameStat.Goals == gameStat.Assists)
+                                {
+                                    countSame += 1;
+                                }
+                            }
+                        }
+
+                        currentCount = countSame;
+
+                        break;
+                }
+
+                result.Add(new CurrentEventPlayersViewModel
+                {
+                    CurrentValue = currentCount,
+                    Id = player.Id,
+                    Name = player.Name,
+                });
+            }
+
+            return result.Where(x=>x.CurrentValue !=0).OrderByDescending(x=>x.CurrentValue).ToList();
+        }
+
+        
 
         public async Task CalculateEvents()
         {
@@ -74,7 +185,7 @@ namespace hqm_ranked_backend.Services
             {
                 var passedUsers = _dbContext.EventWinners.Include(x=>x.Event).Include(x => x.Player).Where(x => x.Event == ev).Select(x => x.Player.Id).ToList();
                 var todayGames = _dbContext.Games.Include(x=>x.GamePlayers).ThenInclude(x=>x.Player).Where(x => x.CreatedOn > now).ToList();
-                var gamePlayers = todayGames.SelectMany(x => x.GamePlayers).ToList();
+                var gamePlayers = todayGames.SelectMany(x => x.GamePlayers).Where(x=> !passedUsers.Contains(x.PlayerId)).ToList();
                 var todayPlayers = gamePlayers.Select(y => y.Player).Distinct().ToList();
 
                 foreach (var player in todayPlayers)

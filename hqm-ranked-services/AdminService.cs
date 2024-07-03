@@ -124,6 +124,7 @@ namespace hqm_ranked_backend.Services
                 settings.DiscordNotificationWebhook = request.DiscordNotificationWebhook;
                 settings.DiscordAppClientId = request.DiscordAppClientId;
                 settings.DiscordNewsWebhook = request.DiscordNewsWebhook;
+                settings.DiscordJoinLink = request.DiscordJoinLink;
                 settings.WebhookCount = request.WebhookCount;
                 settings.ShadowBanReportsCount = request.ShadowBanReportsCount;
                 settings.StartingElo = request.StartingElo;
