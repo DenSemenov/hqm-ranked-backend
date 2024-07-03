@@ -7,6 +7,8 @@ using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_services;
+using hqm_ranked_services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,7 +24,8 @@ namespace hqm_ranked_backend.Services
         private readonly IHubContext<ActionHub> _hubContext;
         private IMemoryCache _cache;
         private ITeamsService _teamsService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService)
+        private IAwardsService _awardsService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
@@ -31,6 +34,7 @@ namespace hqm_ranked_backend.Services
             _notificationService = notificationService;
             _cache = memoryCache;
             _teamsService = teamsService;
+            _awardsService = awardsService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -601,8 +605,9 @@ namespace hqm_ranked_backend.Services
                         });
                     }
 
-                    BackgroundJob.Enqueue(()=>_eventService.CalculateEvents());
-
+                    BackgroundJob.Enqueue(() => _eventService.CalculateEvents());
+                    BackgroundJob.Enqueue(() => _awardsService.CalcAwards());
+                    
                     await _notificationService.SendDiscordEndGameNotification(server.Name);
 
                     var playersIds = game.GamePlayers.Select(x => x.PlayerId).ToList();

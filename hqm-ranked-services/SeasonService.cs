@@ -254,13 +254,36 @@ namespace hqm_ranked_backend.Services
                 Count = x.GamePlayers.Count,
                 Goals = x.GamePlayers.Sum(x => x.Goals),
                 Assists = x.GamePlayers.Sum(x => x.Assists),
-                LastGames = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3),
-                LastPoints = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(100).Select(x => new
+                LastGames = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(3).Select(x=> new PlayerLastGamesViewModel
+                {
+                    Date = x.CreatedOn,
+                    GameId = x.Game.Id,
+                    Goals = x.Goals,
+                    Assists = x.Assists,
+                    Score = x.Score,
+                    RedScore = x.Game.RedScore,
+                    BlueScore = x.Game.BlueScore,
+                    InstanceType = x.Game.InstanceType,
+                    RedTeamId = x.Game.RedTeamId,
+                    BlueTeamId = x.Game.BlueTeamId,
+                    RedTeamName = x.Game.RedTeam != null ? x.Game.RedTeam.Name : String.Empty,
+                    BlueTeamName = x.Game.BlueTeam != null ? x.Game.BlueTeam.Name : String.Empty,
+                    Players = x.Game.GamePlayers.Select(x => new GameDataPlayerViewModel
+                    {
+                        Id = x.PlayerId,
+                        Name = x.Player.Name,
+                        Goals = x.Goals,
+                        Assists = x.Assists,
+                        Score = x.Score,
+                        Team = x.Team,
+                    }).ToList()
+                }).ToList(),
+                LastPoints = x.GamePlayers.OrderByDescending(x => x.Game.CreatedOn).Take(50).Select(x => new
                 {
                     SeasonId = x.Game.Season.Id,
                     Elo = x.Score
                 }),
-                NicknameChanges = x.NicknameChanges,
+                NicknameChanges = x.NicknameChanges.OrderByDescending(x => x.CreatedOn).Select(x => x.OldNickname).ToList(),
                 Cost = x.Cost != null ? x.Cost.Cost : 0,
                 Awards = x.Awards.Select(y => new PlayerAwardViewModel
                 {
@@ -279,39 +302,6 @@ namespace hqm_ranked_backend.Services
             result.Cost = player.Cost;
 
             result.Awards = player.Awards.OrderByDescending(x=>x.SeasonName).ToList();
-
-            var currentSeasonStats = await GetSeasons();
-            var lastSeason = currentSeasonStats.FirstOrDefault();
-            var seasonStats = await GetSeasonStats(new CurrentSeasonStatsRequest { SeasonId = lastSeason.Id });
-
-            var currentPlayerStats = seasonStats.SingleOrDefault(x => x.PlayerId == request.Id);
-            if (currentPlayerStats != null)
-            {
-                result.CurrentSeasonData = new PlayerLastSeasonViewModel
-                {
-                    Games = currentPlayerStats.Win + currentPlayerStats.Lose,
-                    Goals = currentPlayerStats.Goals,
-                    Assists = currentPlayerStats.Assists,
-                    Points = currentPlayerStats.Goals + currentPlayerStats.Assists,
-                    Position = seasonStats.IndexOf(currentPlayerStats) + 1,
-                    Elo = currentPlayerStats.Rating
-                };
-            }
-
-            var lastSeasons = currentSeasonStats.Skip(1).Take(3);
-            foreach (var season in lastSeasons)
-            {
-                var seasonStatsTemp = await GetSeasonStats(new CurrentSeasonStatsRequest { SeasonId = season.Id });
-                var lastSeasonStats = seasonStatsTemp.SingleOrDefault(x => x.PlayerId == request.Id);
-                if (lastSeasonStats != null)
-                {
-                    result.LastSeasons.Add(new PlayerSeasonsViewModel
-                    {
-                        Name = season.Name,
-                        Place = seasonStatsTemp.IndexOf(lastSeasonStats) + 1
-                    });
-                }
-            }
 
             var includedSeasons = player.LastPoints.Select(x=>x.SeasonId).Distinct().ToList();
             var elosPerSeasons = new List<SeasonEloModel>();
@@ -339,34 +329,11 @@ namespace hqm_ranked_backend.Services
 
             result.PlayerPoints.Reverse();
 
-            result.LastGames = player.LastGames.Select(x => new PlayerLastGamesViewModel
-            {
-                Date = x.CreatedOn,
-                GameId = x.Game.Id,
-                Goals = x.Goals,
-                Assists = x.Assists,
-                Score = x.Score,
-                RedScore = x.Game.RedScore,
-                BlueScore = x.Game.BlueScore,
-                InstanceType = x.Game.InstanceType,
-                RedTeamId = x.Game.RedTeamId,
-                BlueTeamId = x.Game.BlueTeamId,
-                RedTeamName = x.Game.RedTeam != null ? x.Game.RedTeam.Name : String.Empty,
-                BlueTeamName = x.Game.BlueTeam != null ? x.Game.BlueTeam.Name : String.Empty,
-                Players = x.Game.GamePlayers.Select(x => new GameDataPlayerViewModel
-                {
-                    Id = x.PlayerId,
-                    Name = x.Player.Name,
-                    Goals = x.Goals,
-                    Assists = x.Assists,
-                    Score = x.Score,
-                    Team = x.Team,
-                }).ToList()
-            }).ToList();
+            result.LastGames = player.LastGames;
 
             result.CalcData = new PlayerCalcDataViewModel();
 
-            result.OldNicknames = player.NicknameChanges.OrderByDescending(x=>x.CreatedOn).Select(x=>x.OldNickname).ToList();
+            result.OldNicknames = player.NicknameChanges;
 
             return result;
         }
