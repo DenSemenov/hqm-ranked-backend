@@ -545,11 +545,46 @@ namespace hqm_ranked_backend.Services
                         Votes = x.GameInviteVotes.Where(x => teamPlayersIds.Contains(x.Player.Id)).Select(x => new GameInviteVoteViewModel
                         {
                             Id = x.Player.Id
-                        }).ToList()
+                        }).ToList(),
+                        OtherTeams = new List<GameInviteAnotherTeamViewModel>()
                     })
                     .Where(x => x.Date > dateNow)
                     .OrderBy(x => x.Date)
                     .ToListAsync();
+
+                var currentSeason = await _seasonService.GetCurrentSeason();
+
+                foreach(var invite in result)
+                {
+                    var otherVotes = await _dbContext.GameInviteVotes.Include(x => x.GameInvite).Include(x=>x.Player).Where(x => x.GameInvite.Id == invite.Id && !teamPlayersIds.Contains(x.Player.Id)).ToListAsync();
+                    foreach (var vote in otherVotes)
+                    {
+                        var team = await _dbContext.Teams.Include(x => x.TeamPlayers).ThenInclude(x => x.Player).FirstOrDefaultAsync(x => x.TeamPlayers.Any(y => y.Player.Id == vote.Player.Id));
+                        if (team != null)
+                        {
+                            var teamVotes = invite.OtherTeams.FirstOrDefault(x => x.Name == team.Name);
+                            if (teamVotes != null)
+                            {
+                                teamVotes.Votes += 1;
+                            }
+                            else
+                            {
+                                invite.OtherTeams.Add(new GameInviteAnotherTeamViewModel
+                                {
+                                    Name = team.Name,
+                                    Votes = 1
+                                });
+                            }
+                        }
+                    }
+
+                    var i = 1;
+                    foreach(var team in invite.OtherTeams)
+                    {
+                        team.Name = "Team " + i;
+                        i += 1;
+                    }
+                }
 
                 result = result.Where(x =>x.IsCurrentTeam || (!x.IsCurrentTeam && x.VotesCount >= state.TeamsMaxPlayers)).ToList();
             }
