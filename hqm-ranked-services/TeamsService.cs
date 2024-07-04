@@ -664,9 +664,9 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<List<TeamsStatsViewModel>> GetTeamsStats(CurrentSeasonStatsRequest request)
+        public async Task<TeamsStatsViewModel> GetTeamsStats(CurrentSeasonStatsRequest request)
         {
-            var result = new List<TeamsStatsViewModel>();
+            var result = new TeamsStatsViewModel();
 
             var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
             var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
@@ -679,11 +679,11 @@ namespace hqm_ranked_backend.Services
             {
                 if (team.TeamPlayers.Count > 0)
                 {
-                    var teamGames = await _dbContext.Games.Include(x => x.RedTeam).Include(x => x.BlueTeam).Where(x => (x.RedTeam == team || x.BlueTeam == team) && (x.State == ended || x.State == resigned)).ToListAsync();
+                    var teamGames = await _dbContext.Games.Include(x=>x.GamePlayers).ThenInclude(x=>x.Player).Include(x => x.RedTeam).Include(x => x.BlueTeam).Where(x => (x.RedTeam == team || x.BlueTeam == team) && (x.State == ended || x.State == resigned)).ToListAsync();
                     var redGames = teamGames.Where(x => x.RedTeam == team).ToList();
                     var blueGames = teamGames.Where(x => x.BlueTeam == team).ToList();
 
-                    var teamStats = new TeamsStatsViewModel
+                    var teamStats = new TeamsStatsTeamViewModel
                     {
                         Id = team.Id,
                         Name = team.Name,
@@ -695,17 +695,61 @@ namespace hqm_ranked_backend.Services
                         Rating = redGames.Sum(x => (int)x.RedPoints) + blueGames.Sum(x => (int)x.BluePoints)
                     };
 
-                    result.Add(teamStats);
+                    result.Teams.Add(teamStats);
                 }
             }
             int i = 1;
-            foreach(var team in result.OrderByDescending(x=>x.Rating))
+            foreach(var team in result.Teams.OrderByDescending(x=>x.Rating))
             {
                 team.Place = i;
                 i++;
             }
 
-            return result.OrderByDescending(x => x.Rating).ToList() ;
+            result.Teams = result.Teams.OrderByDescending(x => x.Rating).ToList();
+
+            var games = _dbContext.GamePlayers
+                .Include(x => x.Game)
+                .Include(x => x.Player)
+                .Where(x => x.Game.Season == season && (x.Game.State == ended || x.Game.State == resigned) && x.Game.InstanceType == Common.InstanceType.Teams)
+                .Select(x => new
+                {
+                    PlayerId = x.Player.Id,
+                    Nickname = x.Player.Name,
+                    Goals = x.Goals,
+                    Assists = x.Assists,
+                    Win = x.Team == 0 ? x.Game.RedScore > x.Game.BlueScore : x.Game.RedScore < x.Game.BlueScore,
+                    Lose = x.Team == 0 ? x.Game.RedScore < x.Game.BlueScore : x.Game.RedScore > x.Game.BlueScore,
+                    Mvp = x.Game.Mvp == x.Player,
+                    Score = x.Team == 0 ? x.Game.RedPoints : x.Game.BluePoints
+                })
+                .GroupBy(x => x.PlayerId)
+                .ToList();
+
+            foreach (var game in games)
+            {
+                result.Players.Add(new TeamsStatsPlayerViewModel
+                {
+                    PlayerId = game.Key,
+                    Nickname = game.FirstOrDefault().Nickname,
+                    Goals = game.Sum(x => x.Goals),
+                    Assists = game.Sum(x => x.Assists),
+                    Win = game.Count(x => x.Win),
+                    Lose = game.Count(x => x.Lose),
+                    Mvp = game.Count(x => x.Mvp),
+                    Rating = (int)game.Sum(x => x.Score)
+                });
+            }
+
+            result.Players = result.Players.OrderByDescending(x => x.Rating).ToList();
+
+            var j = 1;
+            foreach (var player in result.Players)
+            {
+                player.Place = j;
+                j++;
+            }
+
+            return result;
         }
 
         public async Task CreateTransferMarket(int userId, List<Position> positions, int budget)

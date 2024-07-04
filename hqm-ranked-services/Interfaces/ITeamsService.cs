@@ -28,7 +28,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task RemoveGameInvite(int userId, Guid inviteId);
         Task<List<GameInviteViewModel>> GetGameInvites(int userId);
         Task VoteGameInvite(int userId, Guid inviteId);
-        Task<List<TeamsStatsViewModel>> GetTeamsStats(CurrentSeasonStatsRequest request);
+        Task<TeamsStatsViewModel> GetTeamsStats(CurrentSeasonStatsRequest request);
         Task CreateTransferMarket(int userId, List<Position> positions, int budget);
         Task<List<TransferMarketViewModel>> GetTransferMarket();
         Task RemoveTransferMarket(RemoveTransferMarketRequest request);
