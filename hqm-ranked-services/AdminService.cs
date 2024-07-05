@@ -49,11 +49,19 @@ namespace hqm_ranked_backend.Services
 
         public async Task<List<AdminPlayerViewModel>> GetPlayers()
         {
-            return await _dbContext.Players.Include(x => x.Bans).Select(x => new AdminPlayerViewModel
+            return await _dbContext.Players.OrderByDescending(x=>x.Id).Include(x => x.Bans).Include(x => x.PlayerLogins).Select(x => new AdminPlayerViewModel
             {
                 Id = x.Id,
                 Name = x.Name,
-                IsBanned = x.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow)
+                IsBanned = x.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow),
+                Logins = x.PlayerLogins.OrderByDescending(x => x.CreatedOn).Select(y => new AdminPlayerLoginViewModel
+                {
+                    Date = y.CreatedOn,
+                    City = y.City,
+                    CountryCode = y.CountryCode,
+                    Ip = y.Ip,
+                    LoginInstance = y.LoginInstance
+                }).ToList()
             }).ToListAsync();
         }
 

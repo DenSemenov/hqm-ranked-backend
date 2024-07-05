@@ -9,7 +9,7 @@ namespace hqm_ranked_backend.Services.Interfaces
     {
         Task<LoginResult?> Login(LoginRequest request);
         Task<LoginResult?> Register(RegistrationRequest request);
-        Task<CurrentUserVIewModel> GetCurrentUser(int userId);
+        Task<CurrentUserVIewModel> GetCurrentUser(int userId, CurrentUserInfoRequest request);
         Task ChangePassword(PasswordChangeRequest request, int userId);
         Task<string> ChangeNickname(NicknameChangeRequest request, int userId);
         Task AddPushToken(PushTokenRequest request, int userId);

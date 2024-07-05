@@ -63,10 +63,10 @@ namespace hqm_ranked_backend.Controllers
 
         [Authorize]
         [HttpPost("GetCurrentUser")]
-        public async Task<IActionResult> GetCurrentUser()
+        public async Task<IActionResult> GetCurrentUser(CurrentUserInfoRequest request)
         {
             var userId = UserHelper.GetUserId(User);
-            var result = await _playerService.GetCurrentUser(userId);
+            var result = await _playerService.GetCurrentUser(userId, request);
             return Ok(result);
         }
 

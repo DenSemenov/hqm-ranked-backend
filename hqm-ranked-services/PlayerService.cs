@@ -146,11 +146,11 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId)
+        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId, CurrentUserInfoRequest request)
         {
             var result = new CurrentUserVIewModel();
 
-            var user = await _dbContext.Players.Include(x => x.Bans).Include(x => x.Role).SingleOrDefaultAsync(x => x.Id == userId);
+            var user = await _dbContext.Players.Include(x => x.Bans).Include(x => x.Role).Include(x=>x.PlayerLogins).SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
                 result.Id = user.Id;
@@ -164,6 +164,21 @@ namespace hqm_ranked_backend.Services
 
                 result.IsApproved = approveRequired ? result.IsApproved : true;
                 result.IsBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
+                if (result.IsBanned)
+                {
+                    var lastBan = user.Bans.OrderByDescending(x => x.CreatedOn).FirstOrDefault();
+                    result.BanLastDate = lastBan.CreatedOn.AddDays(lastBan.Days);
+                }
+
+                user.PlayerLogins.Add(new hqm_ranked_database.DbModels.PlayerLogin
+                {
+                    Ip = request.Ip,
+                    LoginInstance = hqm_ranked_database.DbModels.LoginInstance.Web,
+                    City = request.City,
+                    CountryCode = request.CountryCode
+                });
+
+                await _dbContext.SaveChangesAsync();
             }
 
             return result;
