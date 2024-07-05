@@ -9,7 +9,11 @@ using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Serilog;
 using SixLabors.ImageSharp;
+using SpotifyAPI.Web.Http;
+using System.Net;
+using System.Runtime;
 
 namespace hqm_ranked_backend.Services
 {
@@ -379,6 +383,34 @@ namespace hqm_ranked_backend.Services
             }
 
             return result;
+        }
+
+        public async Task PutServerPlayerInfo(int playerId, string ip)
+        {
+            var user = await _dbContext.Players.Include(x=>x.PlayerLogins).FirstOrDefaultAsync(x => x.Id == playerId);
+            if (user != null)
+            {
+                try
+                {
+
+                    var url = "http://ip-api.com/json/" + ip;
+                    var info = new WebClient().DownloadString(url);
+                    var ipInfo = JsonConvert.DeserializeObject<PlayerLoginInfo>(info);
+
+                    user.PlayerLogins.Add(new hqm_ranked_database.DbModels.PlayerLogin
+                    {
+                        City = ipInfo.city,
+                        CountryCode = ipInfo.countryCode,
+                        Ip = ip,
+                        LoginInstance = hqm_ranked_database.DbModels.LoginInstance.Server
+                    });
+                    await _dbContext.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(LogHelper.GetErrorLog(ex.Message, ex.StackTrace));
+                }
+            }
         }
     }
 }

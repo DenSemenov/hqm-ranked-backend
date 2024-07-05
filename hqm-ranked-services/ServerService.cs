@@ -25,7 +25,8 @@ namespace hqm_ranked_backend.Services
         private IMemoryCache _cache;
         private ITeamsService _teamsService;
         private IAwardsService _awardsService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService)
+        private IPlayerService _playerService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService, IPlayerService playerService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
@@ -35,6 +36,7 @@ namespace hqm_ranked_backend.Services
             _cache = memoryCache;
             _teamsService = teamsService;
             _awardsService = awardsService;
+            _playerService = playerService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -119,6 +121,8 @@ namespace hqm_ranked_backend.Services
                         var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
                         if (player != null)
                         {
+                            BackgroundJob.Enqueue(() => _playerService.PutServerPlayerInfo(player.Id, request.Ip));
+
                             var lastBan = player.Bans.Where(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow).OrderByDescending(x=>x.CreatedOn).FirstOrDefault();
                             if (lastBan !=null)
                             {

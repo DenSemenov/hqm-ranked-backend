@@ -4,6 +4,7 @@
     {
         public string Login { get; set; }
         public string Password { get; set; }
+        public string Ip { get; set; }
         public string ServerToken { get; set; }
     }
 }
