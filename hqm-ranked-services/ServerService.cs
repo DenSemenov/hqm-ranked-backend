@@ -152,54 +152,69 @@ namespace hqm_ranked_backend.Services
 
                                 if ((approveRequired && player.IsApproved) || !approveRequired)
                                 {
-                                    var oldNickname = String.Empty;
-                                    var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
-                                    if (oldNicknameItem != null)
-                                    {
-                                        oldNickname = oldNicknameItem.OldNickname;
-                                    }
+                                    var discordApproveRequered = _dbContext.Settings.FirstOrDefault().DiscordApprove;
 
-                                    var instanceType = await GetServerType(request.ServerToken);
-
-                                    if (instanceType == InstanceType.Ranked)
+                                    if ((discordApproveRequered && !String.IsNullOrEmpty(player.DiscordId)) || !discordApproveRequered)
                                     {
-                                        return new ServerLoginViewModel
+
+                                        var oldNickname = String.Empty;
+                                        var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
+                                        if (oldNicknameItem != null)
                                         {
-                                            Id = player.Id,
-                                            Success = true,
-                                            OldNickname = oldNickname,
-                                        };
-                                    } 
-                                    else if (instanceType == InstanceType.Teams)
-                                    {
-                                        var teamsState = await _teamsService.GetTeamsState(player.Id);
+                                            oldNickname = oldNicknameItem.OldNickname;
+                                        }
 
-                                        if (teamsState.Team != null)
+                                        var instanceType = await GetServerType(request.ServerToken);
+
+                                        if (instanceType == InstanceType.Ranked)
                                         {
-                                            var currentDate = DateTime.UtcNow;
-                                            var incomingGame = await _dbContext.Games
-                                                .Include(x => x.GamePlayers)
-                                                .ThenInclude(x => x.Player)
-                                                .Include(x => x.GameInvites)
-                                                .Where(x =>
-                                                    x.InstanceType == InstanceType.Teams &&
-                                                    x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
-                                                    x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate  &&
-                                                    (x.RedTeamId == teamsState.Team.Id || x.BlueTeamId == teamsState.Team.Id)
-                                                   )
-                                                .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
-                                                .FirstOrDefaultAsync();
-
-                                            if (incomingGame != null)
+                                            return new ServerLoginViewModel
                                             {
-                                                var team = incomingGame.RedTeamId == teamsState.Team.Id ? 0 : 1;
-                                                return new ServerLoginViewModel
+                                                Id = player.Id,
+                                                Success = true,
+                                                OldNickname = oldNickname,
+                                            };
+                                        }
+                                        else if (instanceType == InstanceType.Teams)
+                                        {
+                                            var teamsState = await _teamsService.GetTeamsState(player.Id);
+
+                                            if (teamsState.Team != null)
+                                            {
+                                                var currentDate = DateTime.UtcNow;
+                                                var incomingGame = await _dbContext.Games
+                                                    .Include(x => x.GamePlayers)
+                                                    .ThenInclude(x => x.Player)
+                                                    .Include(x => x.GameInvites)
+                                                    .Where(x =>
+                                                        x.InstanceType == InstanceType.Teams &&
+                                                        x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
+                                                        x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate &&
+                                                        (x.RedTeamId == teamsState.Team.Id || x.BlueTeamId == teamsState.Team.Id)
+                                                       )
+                                                    .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
+                                                    .FirstOrDefaultAsync();
+
+                                                if (incomingGame != null)
                                                 {
-                                                    Id = player.Id,
-                                                    Success = true,
-                                                    OldNickname = oldNickname,
-                                                    Team = team
-                                                };
+                                                    var team = incomingGame.RedTeamId == teamsState.Team.Id ? 0 : 1;
+                                                    return new ServerLoginViewModel
+                                                    {
+                                                        Id = player.Id,
+                                                        Success = true,
+                                                        OldNickname = oldNickname,
+                                                        Team = team
+                                                    };
+                                                }
+                                                else
+                                                {
+                                                    return new ServerLoginViewModel
+                                                    {
+                                                        Id = 0,
+                                                        Success = false,
+                                                        ErrorMessage = "[Server] You will not have any games for the next 30 minutes"
+                                                    };
+                                                }
                                             }
                                             else
                                             {
@@ -207,7 +222,7 @@ namespace hqm_ranked_backend.Services
                                                 {
                                                     Id = 0,
                                                     Success = false,
-                                                    ErrorMessage = "[Server] You will not have any games for the next 30 minutes"
+                                                    ErrorMessage = "[Server] You are not in team"
                                                 };
                                             }
                                         }
@@ -217,7 +232,7 @@ namespace hqm_ranked_backend.Services
                                             {
                                                 Id = 0,
                                                 Success = false,
-                                                ErrorMessage = "[Server] You are not in team"
+                                                ErrorMessage = "[Server] Server instance type not supported"
                                             };
                                         }
                                     }
@@ -227,7 +242,7 @@ namespace hqm_ranked_backend.Services
                                         {
                                             Id = 0,
                                             Success = false,
-                                            ErrorMessage = "[Server] Server instance type not supported"
+                                            ErrorMessage = "[Server] Connect Discord in your profile to play"
                                         };
                                     }
 

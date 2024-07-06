@@ -25,5 +25,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public string DiscordAppClientId { get; set; }
         public string DiscordNewsWebhook { get; set; }
         public string DiscordJoinLink { get; set; }
+        public bool DiscordApprove { get; set; } = false;
     }
 }
