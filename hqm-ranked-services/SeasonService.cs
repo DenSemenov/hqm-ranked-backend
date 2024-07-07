@@ -241,6 +241,7 @@ namespace hqm_ranked_backend.Services
             result.Id = request.Id;
 
             var player = await _dbContext.Players
+                .Include(x=>x.PlayerCalcStats)
                 .Include(x => x.Awards).ThenInclude(x => x.Season)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.Season)
                 .Include(x => x.GamePlayers).ThenInclude(x => x.Game).ThenInclude(x => x.RedTeam)
@@ -291,7 +292,8 @@ namespace hqm_ranked_backend.Services
                     Date = y.CreatedOn,
                     Count = y.Count,
                     SeasonName = y.Season != null ? y.Season.Name : String.Empty
-                }).ToList()
+                }).ToList(),
+                PlayerCalcStats = x.PlayerCalcStats
             }).SingleOrDefaultAsync(x => x.Id == request.Id);
 
             result.Name = player.Name;
@@ -300,6 +302,16 @@ namespace hqm_ranked_backend.Services
             result.Assists = player.Assists;
             result.Points = result.Goals + result.Assists;
             result.Cost = player.Cost;
+
+            result.CalcStats = new PlayerCalcStatsViewModel
+            {
+                Mvp = player.PlayerCalcStats != null ? Math.Round(player.PlayerCalcStats.Mvp,2) : 0,
+                Goals = player.PlayerCalcStats != null ? Math.Round(player.PlayerCalcStats.Goals, 2) : 0,
+                Assists = player.PlayerCalcStats != null ? Math.Round(player.PlayerCalcStats.Assists, 2) : 0,
+                Winrate = player.PlayerCalcStats != null ? Math.Round(player.PlayerCalcStats.Winrate, 2) : 0,
+                Shots = player.PlayerCalcStats != null ? Math.Round(player.PlayerCalcStats.Shots, 2) : 0,
+                Saves = player.PlayerCalcStats != null ? Math.Round(player.PlayerCalcStats.Saves, 2) : 0,
+            };
 
             result.Awards = player.Awards.OrderByDescending(x=>x.SeasonName).ToList();
 

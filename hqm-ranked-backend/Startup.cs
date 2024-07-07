@@ -170,6 +170,8 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
             var awardsService = scope.ServiceProvider.GetRequiredService<IAwardsService>() as AwardsService;
             RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Daily);
+            var playerService = scope.ServiceProvider.GetRequiredService<IPlayerService>() as PlayerService;
+            RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily);
         }
     }
 }

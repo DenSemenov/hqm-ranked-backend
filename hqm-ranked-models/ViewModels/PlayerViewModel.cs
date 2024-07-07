@@ -19,6 +19,17 @@ namespace hqm_ranked_backend.Models.ViewModels
         public List<int> PlayerPoints { get; set; } = new List<int>();
         public List<string> OldNicknames { get; set; } = new List<string>();
         public List<PlayerAwardViewModel> Awards { get; set; }
+        public PlayerCalcStatsViewModel CalcStats {  get; set; }
+    }
+
+    public class PlayerCalcStatsViewModel
+    {
+        public double Mvp { get; set; }
+        public double Winrate { get; set; }
+        public double Goals { get; set; }
+        public double Assists { get; set; }
+        public double Shots { get; set; }
+        public double Saves { get; set; }
     }
 
     public class PlayerAwardViewModel

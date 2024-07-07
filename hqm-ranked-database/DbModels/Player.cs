@@ -26,6 +26,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public string DiscordNickname { get; set; } = string.Empty;
         public ICollection<Award> Awards { get; set; }
         public ICollection<PlayerLogin> PlayerLogins { get; set; }
-
+        public PlayerCalcStats? PlayerCalcStats { get; set; }
+        public Guid? PlayerCalcStatsId { get; set; }
     }
 }

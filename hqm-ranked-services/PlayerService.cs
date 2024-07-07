@@ -4,6 +4,7 @@ using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_helpers;
 using hqm_ranked_models.DTO;
 using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
@@ -411,6 +412,99 @@ namespace hqm_ranked_backend.Services
                     Log.Error(LogHelper.GetErrorLog(ex.Message, ex.StackTrace));
                 }
             }
+        }
+
+        public async Task CalcPlayersStats()
+        {
+            var players = await _dbContext.Players.Include(x => x.PlayerCalcStats).ToListAsync();
+
+            var tempStats = new List<PlayerCalcModel>();
+
+            foreach (var player in players)
+            {
+                var last100Games = await _dbContext.GamePlayers.Include(x => x.Game).Where(x => x.PlayerId == player.Id).OrderByDescending(x => x.CreatedOn).Take(100).Select(x=>new
+                {
+                    MvpId = x.Game.MvpId,
+                    Goals = x.Goals,
+                    Assists = x.Assists,
+                    Team = x.Team,
+                    RedScore = x.Game.RedScore,
+                    BlueScore = x.Game.BlueScore,
+                    Shots = x.Shots,
+                    Saves = x.Saves,
+                    Conceded = x.Conceded
+                }).ToListAsync();
+
+                if (last100Games.Count >= 100)
+                {
+                    tempStats.Add(new PlayerCalcModel
+                    {
+                        PlayerId = player.Id,
+                        Mvp = last100Games.Count(x => x.MvpId == player.Id) / (double)100,
+                        Gpg = last100Games.Sum(x => x.Goals) / (double)100,
+                        Apg = last100Games.Sum(x => x.Assists) / (double)100,
+                        Winrate = last100Games.Count(x => (x.Team == 0 && x.RedScore > x.BlueScore) || (x.Team == 1 && x.RedScore < x.BlueScore)) / (double)100,
+                        Shots = last100Games.Sum(x => x.Goals) / (double)last100Games.Sum(x => x.Shots < x.Goals ? x.Goals : x.Shots),
+                        Saves = last100Games.Sum(x => x.Saves) / (double)last100Games.Sum(x => x.Conceded + x.Saves)
+                    });
+                }
+            }
+
+            var minMvp = tempStats.Min(x => x.Mvp);
+            var maxMvp = tempStats.Max(x => x.Mvp);
+
+            var minGpg = tempStats.Min(x => x.Gpg);
+            var maxGpg = tempStats.Max(x => x.Gpg);
+
+            var minApg = tempStats.Min(x => x.Apg);
+            var maxApg = tempStats.Max(x => x.Apg);
+
+            var minWinrate = tempStats.Min(x => x.Winrate);
+            var maxWinrate = tempStats.Max(x => x.Winrate);
+
+            var minShots = tempStats.Min(x => x.Shots);
+            var maxShots = tempStats.Max(x => x.Shots);
+
+            var minSaves = tempStats.Min(x => x.Saves);
+            var maxSaves = tempStats.Max(x => x.Saves);
+
+            foreach (var player in players)
+            {
+                var tempStat = tempStats.FirstOrDefault(x => x.PlayerId == player.Id);
+                if (tempStat != null)
+                {
+                    var mvpValue = PercentageInRangeCalc.CalculatePercentage(tempStat.Mvp, minMvp, maxMvp);
+                    var gpgValue = PercentageInRangeCalc.CalculatePercentage(tempStat.Gpg, minGpg, maxGpg);
+                    var apgValue = PercentageInRangeCalc.CalculatePercentage(tempStat.Apg, minApg, maxApg);
+                    var winrateValue = PercentageInRangeCalc.CalculatePercentage(tempStat.Winrate, minWinrate, maxWinrate);
+                    var shotsValue = PercentageInRangeCalc.CalculatePercentage(tempStat.Shots, minShots, maxShots);
+                    var savesValue = PercentageInRangeCalc.CalculatePercentage(tempStat.Saves, minSaves, maxSaves);
+
+                    if (player.PlayerCalcStats != null)
+                    {
+                        player.PlayerCalcStats.Mvp = mvpValue;
+                        player.PlayerCalcStats.Goals = gpgValue;
+                        player.PlayerCalcStats.Assists = apgValue;
+                        player.PlayerCalcStats.Winrate = winrateValue;
+                        player.PlayerCalcStats.Shots = shotsValue;
+                        player.PlayerCalcStats.Saves = savesValue;
+                    }
+                    else
+                    {
+                        player.PlayerCalcStats = new hqm_ranked_database.DbModels.PlayerCalcStats
+                        {
+                            Mvp = mvpValue,
+                            Goals = gpgValue,
+                            Assists = apgValue,
+                            Winrate = winrateValue,
+                            Shots = shotsValue,
+                            Saves = savesValue
+                        };
+                    }
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

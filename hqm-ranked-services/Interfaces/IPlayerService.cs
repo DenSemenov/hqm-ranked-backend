@@ -23,5 +23,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<LoginResult?> LoginWithDiscord(DiscordAuthRequest request);
         Task<List<PlayerWarningViewModel>> GetPlayerWarnings(int userId);
         Task PutServerPlayerInfo(int playerId, string ip);
+        Task CalcPlayersStats();
     }
 }
