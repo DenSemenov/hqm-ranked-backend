@@ -94,63 +94,99 @@ namespace hqm_ranked_backend.Services
 
         public async Task<List<SeasonStatsViewModel>> GetSeasonStats(CurrentSeasonStatsRequest request)
         {
-            var result  = new List<SeasonStatsViewModel>();
+            var result = new List<SeasonStatsViewModel>();
 
             var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
             var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
             var startingElo = _dbContext.Settings.FirstOrDefault().StartingElo;
 
             var season = await _dbContext.Seasons.SingleOrDefaultAsync(x => x.Id == request.SeasonId);
-            var games = _dbContext.GamePlayers
+
+            var players = _dbContext.GamePlayers
                 .Include(x => x.Game)
                 .Include(x => x.Player)
                 .Where(x => x.Game.Season == season && (x.Game.State == ended || x.Game.State == resigned) && x.Game.InstanceType == Common.InstanceType.Ranked)
-                .Select(x => new 
+                .Select(x => new
                 {
-                    PlayerId = x.Player.Id,
+                    PlayerId = x.PlayerId,
                     Nickname = x.Player.Name,
                     Goals = x.Goals,
                     Assists = x.Assists,
-                    Win = x.Team == 0 ? x.Game.RedScore > x.Game.BlueScore: x.Game.RedScore < x.Game.BlueScore,
+                    Win = x.Team == 0 ? x.Game.RedScore > x.Game.BlueScore : x.Game.RedScore < x.Game.BlueScore,
                     Lose = x.Team == 0 ? x.Game.RedScore < x.Game.BlueScore : x.Game.RedScore > x.Game.BlueScore,
-                    Mvp = x.Game.Mvp == x.Player,
-                    Score = x.Score 
+                    Mvp = x.Game.MvpId == x.PlayerId,
+                    Score = x.Score
                 })
                 .GroupBy(x => x.PlayerId)
                 .ToList();
 
-            var elos = await _dbContext.Elos.Include(x=>x.Player).Where(x => x.Season == season).ToListAsync();
+            var dateWeekAgo = DateTime.UtcNow.AddDays(-7);
 
-            foreach(var game in games)
+            var playersWeekAgo = _dbContext.GamePlayers
+                .Include(x => x.Game)
+                .Where(x => x.Game.Season == season && (x.Game.State == ended || x.Game.State == resigned) && x.Game.InstanceType == Common.InstanceType.Ranked && x.CreatedOn < dateWeekAgo)
+                .Select(x => new
+                {
+                    PlayerId = x.PlayerId,
+                    Score = x.Score
+                })
+                .GroupBy(x => x.PlayerId)
+                .ToList();
+
+            var elos = await _dbContext.Elos.Include(x => x.Player).Where(x => x.Season == season).ToListAsync();
+
+            foreach (var player in players)
             {
                 var elo = startingElo;
 
-                var playerElo = elos.SingleOrDefault(x => x.Player.Id == game.Key && x.Season == season);
+                var playerElo = elos.SingleOrDefault(x => x.Player.Id == player.Key && x.Season == season);
                 if (playerElo != null)
                 {
                     elo = playerElo.Value;
                 }
 
+                var oldRating = elo;
+
+                var playerWeekAgo = playersWeekAgo.FirstOrDefault(x => x.Key == player.Key);
+                if (playerWeekAgo != null)
+                {
+                    oldRating += playerWeekAgo.Sum(x => x.Score);
+                }
+
                 result.Add(new SeasonStatsViewModel
                 {
-                    PlayerId = game.Key,
-                    Nickname = game.FirstOrDefault().Nickname,
-                    Goals = game.Sum(x => x.Goals),
-                    Assists = game.Sum(x => x.Assists),
-                    Win = game.Count(x => x.Win),
-                    Lose = game.Count(x => x.Lose),
-                    Mvp = game.Count(x => x.Mvp),
-                    Rating = game.Sum(x => x.Score) + elo
+                    PlayerId = player.Key,
+                    Nickname = player.FirstOrDefault().Nickname,
+                    Goals = player.Sum(x => x.Goals),
+                    Assists = player.Sum(x => x.Assists),
+                    Win = player.Count(x => x.Win),
+                    Lose = player.Count(x => x.Lose),
+                    Mvp = player.Count(x => x.Mvp),
+                    Rating = player.Sum(x => x.Score) + elo,
+                    RatingWeekAgo = oldRating,
+                    Change = 0
                 });
             }
 
             result = result.OrderByDescending(x => x.Rating).ToList();
 
             var i = 1;
-            foreach(var player in result)
+            foreach (var player in result)
             {
                 player.Place = i;
                 i++;
+            }
+
+            i = 1;
+            foreach (var player in result.OrderByDescending(x => x.RatingWeekAgo))
+            {
+                player.PlaceWeekAgo = i;
+                i++;
+            }
+
+            foreach (var player in result)
+            {
+                player.Change = player.PlaceWeekAgo - player.Place;
             }
 
             return result;
