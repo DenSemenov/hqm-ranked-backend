@@ -174,10 +174,6 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Daily);
             var playerService = scope.ServiceProvider.GetRequiredService<IPlayerService>() as PlayerService;
             RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily);
-
-
-            var nn = scope.ServiceProvider.GetRequiredService<INotificationService>() as NotificationService;
-            nn.SendDiscordStartGameWithPlayersNotification("Test", new List<string> { "391611077634293772", "391611077634293772", "442249017825689610" }).Wait();
         }
     }
 }
