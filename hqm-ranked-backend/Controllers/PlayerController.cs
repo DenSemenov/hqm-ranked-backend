@@ -191,7 +191,7 @@ namespace hqm_ranked_backend.Controllers
         [HttpPost("GetIpInfo")]
         public async Task<IActionResult> GetIpInfo()
         {
-            var ip = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ip = Request.Headers["X-Real-IP"].FirstOrDefault();
             var result = await _playerService.GetIpInfo(ip);
             return Ok(Request.Headers);
         }
