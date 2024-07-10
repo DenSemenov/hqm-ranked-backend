@@ -1,5 +1,6 @@
 ﻿using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
+using hqm_ranked_models.DTO;
 using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 
@@ -24,5 +25,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<PlayerWarningViewModel>> GetPlayerWarnings(int userId);
         Task PutServerPlayerInfo(int playerId, string ip);
         Task CalcPlayersStats();
+        Task<PlayerLoginInfo> GetIpInfo(string ip);
     }
 }

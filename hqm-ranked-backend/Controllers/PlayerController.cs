@@ -187,5 +187,13 @@ namespace hqm_ranked_backend.Controllers
             var result = await _playerService.GetPlayerWarnings(userId);
             return Ok(result);
         }
+
+        [HttpPost("GetIpInfo")]
+        public async Task<IActionResult> GetIpInfo()
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress.ToString();
+            var result = await _playerService.GetIpInfo(ip);
+            return Ok(result);
+        }
     }
 }

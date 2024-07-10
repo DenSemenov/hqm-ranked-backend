@@ -386,6 +386,15 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
+        public async Task<PlayerLoginInfo> GetIpInfo(string ip)
+        {
+            var url = "http://ip-api.com/json/" + ip;
+            var info = new WebClient().DownloadString(url);
+            var ipInfo = JsonConvert.DeserializeObject<PlayerLoginInfo>(info);
+
+            return ipInfo;
+        }
+
         public async Task PutServerPlayerInfo(int playerId, string ip)
         {
             var user = await _dbContext.Players.Include(x=>x.PlayerLogins).FirstOrDefaultAsync(x => x.Id == playerId);
