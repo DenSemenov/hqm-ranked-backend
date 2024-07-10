@@ -12,6 +12,7 @@ using hqm_ranked_services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -62,6 +63,7 @@ namespace hqm_ranked_backend
             services.AddScoped<ICostService, CostService>();
             services.AddScoped<ITeamsService, TeamsService>();
             services.AddScoped<IAwardsService, AwardsService>();
+            services.AddHostedService<TelegramService>();
 
             services.AddScoped<ExceptionMiddleware>();
 
@@ -172,6 +174,10 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Daily);
             var playerService = scope.ServiceProvider.GetRequiredService<IPlayerService>() as PlayerService;
             RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily);
+
+
+            var nn = scope.ServiceProvider.GetRequiredService<INotificationService>() as NotificationService;
+            nn.SendDiscordStartGameWithPlayersNotification("Test", new List<string> { "391611077634293772", "391611077634293772", "442249017825689610" }).Wait();
         }
     }
 }

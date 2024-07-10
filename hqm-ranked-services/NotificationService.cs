@@ -262,7 +262,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task SendDiscordStartGameNotification(string serverName)
+        public async Task SendDiscordStartGameNotification(string serverName, List<string> ids)
         {
             var settings = await _dbContext.Settings.FirstOrDefaultAsync();
 
@@ -275,7 +275,7 @@ namespace hqm_ranked_backend.Services
 
                     var message = new DiscordMessage();
 
-                    message.Content = String.Format("{0}: Game started", serverName);
+                    message.Content = String.Format("{0}: Game started\n{1}", serverName, String.Join(", ", ids.Select(x => "<@!" + x + ">")));
 
                     try
                     {

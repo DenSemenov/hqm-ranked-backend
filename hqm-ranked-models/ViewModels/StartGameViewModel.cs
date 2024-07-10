@@ -15,5 +15,6 @@
         public int Score { get; set; }
         public int Count { get; set; }
         public int Reports { get; set; }
+        public string DiscordId { get; set; }
     }
 }

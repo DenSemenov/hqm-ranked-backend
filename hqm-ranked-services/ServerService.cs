@@ -416,10 +416,12 @@ namespace hqm_ranked_backend.Services
                         result.Title = String.Format("{0} vs {1}", incomingGame.RedTeam.Name, incomingGame.BlueTeam.Name);
                     }
                 }
-
-                await _notificationService.SendDiscordStartGameNotification(server.Name);
-
                 var playersIds = result.Players.Select(x => x.Id).ToList();
+
+                var discordIds = await _dbContext.Players.Where(x => playersIds.Contains(x.Id) && x.DiscordId != "").Select(x => x.DiscordId).ToListAsync();
+
+                await _notificationService.SendDiscordStartGameNotification(server.Name, discordIds);
+
                 var tokens = await _dbContext.PlayerNotifications
                         .Include(x => x.Player)
                          .Where(x => !String.IsNullOrEmpty(x.Token))
