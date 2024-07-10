@@ -193,7 +193,11 @@ namespace hqm_ranked_backend.Controllers
         {
             var ip = Request.Headers["X-Real-IP"].FirstOrDefault();
             var result = await _playerService.GetIpInfo(ip);
-            return Ok(Request.Headers);
+            return Ok(new
+            {
+                Headers = Request.Headers,
+                Result = result
+            });
         }
     }
 }
