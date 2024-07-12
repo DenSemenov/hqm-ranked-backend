@@ -10,7 +10,7 @@ namespace hqm_ranked_backend.Services.Interfaces
     {
         Task<LoginResult?> Login(LoginRequest request);
         Task<LoginResult?> Register(RegistrationRequest request);
-        Task<CurrentUserVIewModel> GetCurrentUser(int userId, CurrentUserInfoRequest request);
+        Task<CurrentUserVIewModel> GetCurrentUser(int userId, string ip);
         Task ChangePassword(PasswordChangeRequest request, int userId);
         Task<string> ChangeNickname(NicknameChangeRequest request, int userId);
         Task AddPushToken(PushTokenRequest request, int userId);
@@ -23,7 +23,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task RemoveDiscord(int userId);
         Task<LoginResult?> LoginWithDiscord(DiscordAuthRequest request);
         Task<List<PlayerWarningViewModel>> GetPlayerWarnings(int userId);
-        Task PutServerPlayerInfo(int playerId, string ip);
+        Task PutServerPlayerInfo(int playerId, string ip, hqm_ranked_database.DbModels.LoginInstance loginInstance);
         Task CalcPlayersStats();
         Task<PlayerLoginInfo> GetIpInfo(string ip);
     }

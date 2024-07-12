@@ -151,7 +151,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId, CurrentUserInfoRequest request)
+        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId, string ip)
         {
             var result = new CurrentUserVIewModel();
 
@@ -175,13 +175,7 @@ namespace hqm_ranked_backend.Services
                     result.BanLastDate = lastBan.CreatedOn.AddDays(lastBan.Days);
                 }
 
-                user.PlayerLogins.Add(new hqm_ranked_database.DbModels.PlayerLogin
-                {
-                    Ip = request.Ip,
-                    LoginInstance = hqm_ranked_database.DbModels.LoginInstance.Web,
-                    City = request.City,
-                    CountryCode = request.CountryCode
-                });
+                await PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web);
 
                 await _dbContext.SaveChangesAsync();
             }
@@ -395,7 +389,7 @@ namespace hqm_ranked_backend.Services
             return ipInfo;
         }
 
-        public async Task PutServerPlayerInfo(int playerId, string ip)
+        public async Task PutServerPlayerInfo(int playerId, string ip, hqm_ranked_database.DbModels.LoginInstance loginInstance)
         {
             var user = await _dbContext.Players.Include(x=>x.PlayerLogins).FirstOrDefaultAsync(x => x.Id == playerId);
             if (user != null)
@@ -412,7 +406,7 @@ namespace hqm_ranked_backend.Services
                         City = ipInfo.city,
                         CountryCode = ipInfo.countryCode,
                         Ip = ip,
-                        LoginInstance = hqm_ranked_database.DbModels.LoginInstance.Server
+                        LoginInstance = loginInstance
                     });
                     await _dbContext.SaveChangesAsync();
                 }
