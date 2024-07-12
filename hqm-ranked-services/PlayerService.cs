@@ -1,4 +1,5 @@
 ﻿using FirebaseAdmin.Messaging;
+using Hangfire;
 using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
@@ -175,7 +176,7 @@ namespace hqm_ranked_backend.Services
                     result.BanLastDate = lastBan.CreatedOn.AddDays(lastBan.Days);
                 }
 
-                await PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web);
+                BackgroundJob.Enqueue(() => this.PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web));
 
                 await _dbContext.SaveChangesAsync();
             }
