@@ -176,7 +176,7 @@ namespace hqm_ranked_backend.Services
                     result.BanLastDate = lastBan.CreatedOn.AddDays(lastBan.Days);
                 }
 
-                BackgroundJob.Enqueue(() => this.PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web, userAgent, acceptLang, browser, platform));
+                BackgroundJob.Enqueue(() => this.PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web, userAgent, acceptLang, browser??String.Empty, platform ?? String.Empty));
 
                 await _dbContext.SaveChangesAsync();
             }
