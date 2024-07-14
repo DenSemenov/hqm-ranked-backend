@@ -67,7 +67,11 @@ namespace hqm_ranked_backend.Controllers
         {
             var userId = UserHelper.GetUserId(User);
             var ip = Request.Headers["X-Real-IP"].FirstOrDefault();
-            var result = await _playerService.GetCurrentUser(userId, ip);
+            var userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+            var acceptLang = Request.Headers["Accept-Language"].FirstOrDefault();
+            var browser = Request.Headers["sec-ch-ua"].FirstOrDefault();
+            var platform = Request.Headers["sec-ch-ua-platform"].FirstOrDefault();
+            var result = await _playerService.GetCurrentUser(userId, ip, userAgent, acceptLang, browser, platform);
 
             return Ok(result);
         }

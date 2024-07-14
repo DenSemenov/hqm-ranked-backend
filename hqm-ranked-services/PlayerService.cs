@@ -152,7 +152,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId, string ip)
+        public async Task<CurrentUserVIewModel> GetCurrentUser(int userId, string ip, string userAgent, string acceptLang, string browser, string platform)
         {
             var result = new CurrentUserVIewModel();
 
@@ -176,7 +176,7 @@ namespace hqm_ranked_backend.Services
                     result.BanLastDate = lastBan.CreatedOn.AddDays(lastBan.Days);
                 }
 
-                BackgroundJob.Enqueue(() => this.PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web));
+                BackgroundJob.Enqueue(() => this.PutServerPlayerInfo(user.Id, ip, hqm_ranked_database.DbModels.LoginInstance.Web, userAgent, acceptLang, browser, platform));
 
                 await _dbContext.SaveChangesAsync();
             }
@@ -390,7 +390,7 @@ namespace hqm_ranked_backend.Services
             return ipInfo;
         }
 
-        public async Task PutServerPlayerInfo(int playerId, string ip, hqm_ranked_database.DbModels.LoginInstance loginInstance)
+        public async Task PutServerPlayerInfo(int playerId, string ip, hqm_ranked_database.DbModels.LoginInstance loginInstance, string userAgent, string acceptLang, string browser, string platform)
         {
             var user = await _dbContext.Players.Include(x=>x.PlayerLogins).FirstOrDefaultAsync(x => x.Id == playerId);
             if (user != null)
@@ -407,7 +407,11 @@ namespace hqm_ranked_backend.Services
                         City = ipInfo.city,
                         CountryCode = ipInfo.countryCode,
                         Ip = ip,
-                        LoginInstance = loginInstance
+                        LoginInstance = loginInstance,
+                        UserAgent = userAgent,
+                        AcceptLang = acceptLang,
+                        Browser = browser,
+                        Platform = platform
                     });
                     await _dbContext.SaveChangesAsync();
                 }

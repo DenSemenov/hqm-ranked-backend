@@ -121,7 +121,7 @@ namespace hqm_ranked_backend.Services
                         var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
                         if (player != null)
                         {
-                            BackgroundJob.Enqueue(() => _playerService.PutServerPlayerInfo(player.Id, request.Ip, hqm_ranked_database.DbModels.LoginInstance.Server));
+                            BackgroundJob.Enqueue(() => _playerService.PutServerPlayerInfo(player.Id, request.Ip, hqm_ranked_database.DbModels.LoginInstance.Server, String.Empty, String.Empty, String.Empty, String.Empty));
 
                             var lastBan = player.Bans.Where(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow).OrderByDescending(x=>x.CreatedOn).FirstOrDefault();
                             if (lastBan !=null)
