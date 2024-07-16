@@ -3,6 +3,7 @@ using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
 using hqm_ranked_models.DTO;
+using hqm_ranked_models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
@@ -659,6 +660,33 @@ namespace hqm_ranked_backend.Services
                 .ToListAsync();
 
             return patrols;
+        }
+
+        public async Task<HomeStatsViewModel> GetHomeStats()
+        {
+            var result = new HomeStatsViewModel();
+            var total = 500;
+            var dates = await _dbContext.Games.OrderByDescending(x => x.CreatedOn).Take(total).Select(x => x.CreatedOn).ToListAsync();
+
+            for (int i = 0; i <= 23; i++)
+            {
+                result.Daily.Add(new HomeStatsDailyViewModel
+                {
+                    Hour = i,
+                    Count = dates.Where(x => x.Hour == i).Count()/ (double)total* 100
+                });
+            }
+
+            foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+            {
+                result.Weekly.Add(new HomeStatsWeeklyViewModel
+                {
+                    Day = day.ToString(),
+                    Count = dates.Where(x => x.DayOfWeek == day).Count() / (double)total * 100
+                });
+            }
+
+            return result;
         }
     }
 }

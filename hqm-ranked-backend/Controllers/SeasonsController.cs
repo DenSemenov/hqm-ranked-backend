@@ -121,5 +121,13 @@ namespace hqm_ranked_backend.Controllers
 
             return Ok();
         }
+
+        [HttpPost("GetHomeStats")]
+        public async Task<IActionResult> GetHomeStats()
+        {
+            var result = await _seasonService.GetHomeStats();
+
+            return Ok(result);
+        }
     }
 }

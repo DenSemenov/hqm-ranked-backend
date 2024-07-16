@@ -1,6 +1,7 @@
 ﻿using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
+using hqm_ranked_models.ViewModels;
 
 namespace hqm_ranked_backend.Services.Interfaces
 {
@@ -20,5 +21,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<string> Report(Guid gameId, int toId, Guid reasonId, int tick, int fromId);
         Task<List<PartolViewModel>> GetPatrol(int userId);
         Task ReportDecision(Guid id, int userId, bool isReported);
+        Task<HomeStatsViewModel> GetHomeStats();
     }
 }
