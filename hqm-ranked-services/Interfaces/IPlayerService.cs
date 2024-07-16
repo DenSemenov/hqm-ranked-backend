@@ -26,5 +26,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task PutServerPlayerInfo(int playerId, string ip, hqm_ranked_database.DbModels.LoginInstance loginInstance, string userAgent, string acceptLang, string browser, string platform);
         Task CalcPlayersStats();
         Task<PlayerLoginInfo> GetIpInfo(string ip);
+        Task SetShowLocation(SetShowLocationRequest request, int userId);
+        Task<List<PlayerMapViewModel>> GetMap();
     }
 }

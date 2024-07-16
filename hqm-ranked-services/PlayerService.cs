@@ -10,10 +10,12 @@ using hqm_ranked_models.DTO;
 using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Serilog;
 using SixLabors.ImageSharp;
 using SpotifyAPI.Web.Http;
+using System.CodeDom;
 using System.Net;
 using System.Runtime;
 
@@ -165,6 +167,7 @@ namespace hqm_ranked_backend.Services
                 result.Role = user.Role.Name;
                 result.IsAcceptedRules = user.IsAcceptedRules;
                 result.DiscordLogin = user.DiscordNickname;
+                result.ShowLocation = user.ShowLocation;
 
                 var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
 
@@ -411,7 +414,9 @@ namespace hqm_ranked_backend.Services
                         UserAgent = userAgent,
                         AcceptLang = acceptLang,
                         Browser = browser,
-                        Platform = platform
+                        Platform = platform,
+                        Lat = ipInfo.lat,
+                        Lon = ipInfo.lon
                     });
                     await _dbContext.SaveChangesAsync();
                 }
@@ -420,6 +425,86 @@ namespace hqm_ranked_backend.Services
                     Log.Error(LogHelper.GetErrorLog(ex.Message, ex.StackTrace));
                 }
             }
+        }
+
+        public async Task SetShowLocation(SetShowLocationRequest request, int userId)
+        {
+            var user = await _dbContext.Players.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                user.ShowLocation = request.ShowLocation;
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<PlayerMapViewModel>> GetMap()
+        {
+            var result = new List<PlayerMapViewModel>();
+            var players = await _dbContext.Players.Include(x => x.PlayerLogins).Where(x => x.PlayerLogins.Count > 10).Select(x => new
+            {
+                PlayerId = x.ShowLocation ? x.Id : 0,
+                PlayerName = x.ShowLocation ? x.Name : String.Empty,
+                IsHidden = !x.ShowLocation,
+                Locations = x.PlayerLogins.OrderByDescending(x => x.CreatedOn).Where(x => x.Lat != 0).Take(100).Select(x=>new
+                {
+                    x.Lon,
+                    x.Lat
+                }).ToList()
+            }).ToListAsync();
+
+            var rnd = new Random();
+            foreach (var player in players)
+            {
+                var location = player.Locations.GroupBy(x => new { x.Lon, x.Lat }).OrderByDescending(x=>x.Count()).FirstOrDefault();
+
+                result.Add(new PlayerMapViewModel
+                {
+                    PlayerId = player.PlayerId == 0 ? rnd.Next(): player.PlayerId,
+                    PlayerName = player.PlayerName,
+                    IsHidden = player.IsHidden,
+                    Lon = location.Key.Lon,
+                    Lat = location.Key.Lat,
+                });
+            }
+
+            return result;
+        }
+
+        public async Task FillLocations()
+        {
+            var logins = await _dbContext.PlayerLogins.Where(x => x.Lat == 0).ToListAsync();
+            var ips = logins.Select(x => x.Ip).Distinct().ToList();
+
+            var chunks = ips.Chunk(100);
+
+            var results = new List<PlayerLoginInfo>();
+
+            foreach (var chunk in chunks)
+            {
+                var json = JsonConvert.SerializeObject(chunk);
+                var client = new HttpClient();
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://ip-api.com/batch?fields=query,lat,lon");
+                var content = new StringContent(json, null, "application/json");
+                request.Content = content;
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var result = await response.Content.ReadAsStringAsync();
+                var r = JsonConvert.DeserializeObject<PlayerLoginInfo[]>(result);
+                results.AddRange(r);
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+            }
+
+            foreach (var item in results)
+            {
+                var foundLogins = logins.Where(x => x.Ip == item.query);
+                foreach (var foundLogin in foundLogins)
+                {
+                    foundLogin.Lat = item.lat;
+                    foundLogin.Lon = item.lon;
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task CalcPlayersStats()

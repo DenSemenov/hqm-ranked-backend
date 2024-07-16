@@ -194,6 +194,22 @@ namespace hqm_ranked_backend.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpPost("SetShowLocation")]
+        public async Task<IActionResult> SetShowLocation(SetShowLocationRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.SetShowLocation(request, userId);
+            return Ok();
+        }
+
+        [HttpPost("GetMap")]
+        public async Task<IActionResult> GetMap()
+        {
+            var result = await _playerService.GetMap();
+            return Ok(result);
+        }
+
         [HttpPost("GetIpInfo")]
         public async Task<IActionResult> GetIpInfo()
         {

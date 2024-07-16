@@ -12,5 +12,6 @@
         public bool IsAcceptedRules { get; set; }
         public bool IsDiscordConnected { get; set; } = false;
         public string DiscordLogin { get; set; } = string.Empty;
+        public bool ShowLocation { get; set; } = false;
     }
 }

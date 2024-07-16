@@ -14,6 +14,8 @@ namespace hqm_ranked_database.DbModels
         public string AcceptLang { get; set; }
         public string Browser { get; set; }
         public string Platform { get; set; }
+        public double Lat { get; set; } = 0;
+        public double Lon { get; set; } = 0;
     }
 
     public enum LoginInstance

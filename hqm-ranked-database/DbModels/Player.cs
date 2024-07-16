@@ -28,5 +28,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public ICollection<PlayerLogin> PlayerLogins { get; set; }
         public PlayerCalcStats? PlayerCalcStats { get; set; }
         public Guid? PlayerCalcStatsId { get; set; }
+        public bool ShowLocation { get; set; } = false;
     }
 }
