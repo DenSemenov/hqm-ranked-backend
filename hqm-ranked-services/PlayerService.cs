@@ -440,7 +440,7 @@ namespace hqm_ranked_backend.Services
         public async Task<List<PlayerMapViewModel>> GetMap()
         {
             var result = new List<PlayerMapViewModel>();
-            var players = await _dbContext.Players.Include(x => x.PlayerLogins).Where(x => x.PlayerLogins.Count > 10).Select(x => new
+            var players = await _dbContext.Players.Include(x => x.PlayerLogins).Where(x => x.PlayerLogins.Count > 0).Select(x => new
             {
                 PlayerId = x.ShowLocation ? x.Id : 0,
                 PlayerName = x.ShowLocation ? x.Name : String.Empty,
