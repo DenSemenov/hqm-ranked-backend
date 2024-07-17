@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Models.DbModels;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class CurrentUserVIewModel
     {
@@ -13,5 +15,6 @@
         public bool IsDiscordConnected { get; set; } = false;
         public string DiscordLogin { get; set; } = string.Empty;
         public bool ShowLocation { get; set; } = false;
+        public LimitsType LimitType { get; set; }
     }
 }

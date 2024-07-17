@@ -1,5 +1,6 @@
 ﻿using hqm_ranked_backend.Helpers;
 using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_database.DbModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace hqm_ranked_backend.Common
@@ -216,6 +217,137 @@ namespace hqm_ranked_backend.Common
                 {
                     Title = "Multiple accounts",
                     Description = "It is forbidden to have more than one account, in case of loss of the password, you must write to the administrator"
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
+
+            if (!await _dbContext.Contracts.AnyAsync())
+            {
+                _dbContext.Contracts.Add(new Contract
+                {
+                     ContractType = ContractType.Assists,
+                     Count = 20,
+                     Points = 100,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Assists,
+                    Count = 40,
+                    Points = 250,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Assists,
+                    Count = 60,
+                    Points = 400,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.WinWith800Elo,
+                    Count = 5,
+                    Points = 100,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.WinWith800Elo,
+                    Count = 10,
+                    Points = 250,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.WinWith800Elo,
+                    Count = 15,
+                    Points = 400,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Saves,
+                    Count = 15,
+                    Points = 100,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Saves,
+                    Count = 30,
+                    Points = 250,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Saves,
+                    Count = 45,
+                    Points = 400,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.WinWith20Possesion,
+                    Count = 10,
+                    Points = 100,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.WinWith20Possesion,
+                    Count = 20,
+                    Points = 250,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.WinWith20Possesion,
+                    Count = 30,
+                    Points = 400,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Winstreak,
+                    Count = 4,
+                    Points = 100,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Winstreak,
+                    Count = 8,
+                    Points = 250,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.Winstreak,
+                    Count = 12,
+                    Points = 400,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.RiseInRanking,
+                    Count = 2,
+                    Points = 100,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.RiseInRanking,
+                    Count = 4,
+                    Points = 250,
+                });
+
+                _dbContext.Contracts.Add(new Contract
+                {
+                    ContractType = ContractType.RiseInRanking,
+                    Count = 6,
+                    Points = 400,
                 });
 
                 await _dbContext.SaveChangesAsync();

@@ -29,5 +29,14 @@ namespace hqm_ranked_backend.Models.DbModels
         public PlayerCalcStats? PlayerCalcStats { get; set; }
         public Guid? PlayerCalcStatsId { get; set; }
         public bool ShowLocation { get; set; } = false;
+        public ICollection<ContractSelect> ContractSelects { get; set; }
+        public LimitsType LimitType { get; set; } = LimitsType.New;
+    }
+
+    public enum LimitsType
+    {
+        Default,
+        New,
+        None
     }
 }

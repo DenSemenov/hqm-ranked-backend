@@ -86,6 +86,15 @@ namespace hqm_ranked_backend.Controllers
         }
 
         [Authorize]
+        [HttpPost("ChangeLimitType")]
+        public async Task<IActionResult> ChangeLimitType(LimitTypeRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+            await _playerService.ChangeLimitType(request, userId);
+            return Ok();
+        }
+
+        [Authorize]
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword(PasswordChangeRequest request)
         {

@@ -28,5 +28,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<PlayerLoginInfo> GetIpInfo(string ip);
         Task SetShowLocation(SetShowLocationRequest request, int userId);
         Task<List<PlayerMapViewModel>> GetMap();
+        Task ChangeLimitType(LimitTypeRequest request, int userId);
     }
 }

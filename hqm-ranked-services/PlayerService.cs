@@ -168,6 +168,7 @@ namespace hqm_ranked_backend.Services
                 result.IsAcceptedRules = user.IsAcceptedRules;
                 result.DiscordLogin = user.DiscordNickname;
                 result.ShowLocation = user.ShowLocation;
+                result.LimitType = user.LimitType;
 
                 var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
 
@@ -236,6 +237,16 @@ namespace hqm_ranked_backend.Services
             }
 
             return result;
+        }
+
+        public async Task ChangeLimitType(LimitTypeRequest request, int userId)
+        {
+            var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                user.LimitType = request.LimitType;
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
         public async Task AddPushToken(PushTokenRequest request, int userId)

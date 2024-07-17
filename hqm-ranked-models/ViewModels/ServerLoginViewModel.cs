@@ -1,4 +1,6 @@
-﻿namespace hqm_ranked_backend.Models.ViewModels
+﻿using hqm_ranked_backend.Models.DbModels;
+
+namespace hqm_ranked_backend.Models.ViewModels
 {
     public class ServerLoginViewModel
     {
@@ -8,5 +10,6 @@
         public string OldNickname { get; set; } = String.Empty;
         public bool SendToAll { get; set; } = false;
         public int Team { get; set; } = 0;
+        public LimitsType LimitType { get; set; }
     }
 }
