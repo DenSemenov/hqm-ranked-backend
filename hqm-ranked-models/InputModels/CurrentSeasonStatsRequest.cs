@@ -4,5 +4,6 @@
     {
         public Guid SeasonId { get; set; }
         public int Offset { get; set;}
+        public DateTime? DateAgo { get; set; } = null;
     }
 }

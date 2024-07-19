@@ -1,4 +1,5 @@
-﻿using hqm_ranked_models.ViewModels;
+﻿using hqm_ranked_models.InputModels;
+using hqm_ranked_models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace hqm_ranked_services.Interfaces
     public interface IContractService
     {
         Task<List<ContractViewModel>> GetContracts(int? userId);
+        Task SelectContract(SelectContractRequest request, int userId);
+        Task<int> GetCoins(int userId);
     }
 }

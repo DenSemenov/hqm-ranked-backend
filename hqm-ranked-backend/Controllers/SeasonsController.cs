@@ -52,6 +52,14 @@ namespace hqm_ranked_backend.Controllers
             return Ok(result);
         }
 
+        [HttpPost("GetPlayerLiteData")]
+        public async Task<IActionResult> GetPlayerLiteData(PlayerRequest request)
+        {
+            var result = await _seasonService.GetPlayerLiteData(request);
+
+            return Ok(result);
+        }
+
         [HttpPost("GetGameData")]
         public async Task<IActionResult> GetGameData(GameRequest request)
         {

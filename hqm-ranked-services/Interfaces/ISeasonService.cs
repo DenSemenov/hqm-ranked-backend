@@ -22,5 +22,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<List<PartolViewModel>> GetPatrol(int userId);
         Task ReportDecision(Guid id, int userId, bool isReported);
         Task<HomeStatsViewModel> GetHomeStats();
+        Task<PlayerLiteDataViewModel> GetPlayerLiteData(PlayerRequest request);
     }
 }

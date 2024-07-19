@@ -122,6 +122,10 @@ namespace hqm_ranked_backend.Services
                 .ToList();
 
             var dateWeekAgo = DateTime.UtcNow.AddDays(-7);
+            if (request.DateAgo !=null)
+            {
+                dateWeekAgo = (DateTime)request.DateAgo;
+            }
 
             var playersWeekAgo = _dbContext.GamePlayers
                 .Include(x => x.Game)
@@ -385,6 +389,33 @@ namespace hqm_ranked_backend.Services
             result.OldNicknames = player.NicknameChanges;
 
             return result;
+        }
+
+        public async Task<PlayerLiteDataViewModel> GetPlayerLiteData(PlayerRequest request)
+        {
+            var player = await _dbContext.Players
+                .Include(x => x.PlayerCalcStats)
+                .Include(x => x.GamePlayers)
+                .Select(x =>
+            new PlayerLiteDataViewModel
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Gp = x.GamePlayers.Count,
+                Goals = x.GamePlayers.Sum(x => x.Goals),
+                Assists = x.GamePlayers.Sum(x => x.Assists),
+                CalcStats = new PlayerCalcStatsViewModel
+                {
+                    Mvp = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Mvp, 2) : 0,
+                    Goals = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Goals, 2) : 0,
+                    Assists = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Assists, 2) : 0,
+                    Winrate = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Winrate, 2) : 0,
+                    Shots = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Shots, 2) : 0,
+                    Saves = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Saves, 2) : 0,
+                }
+            }).SingleOrDefaultAsync(x => x.Id == request.Id);
+
+            return player;
         }
 
         public async Task<GameDataViewModel> GetGameData(GameRequest request)
