@@ -13,5 +13,6 @@ namespace hqm_ranked_services.Interfaces
         Task<List<ContractViewModel>> GetContracts(int? userId);
         Task SelectContract(SelectContractRequest request, int userId);
         Task<int> GetCoins(int userId);
+        Task CalcContracts();
     }
 }

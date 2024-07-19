@@ -26,7 +26,8 @@ namespace hqm_ranked_backend.Services
         private ITeamsService _teamsService;
         private IAwardsService _awardsService;
         private IPlayerService _playerService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService, IPlayerService playerService)
+        private IContractService _contractService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService, IPlayerService playerService, IContractService contractService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
@@ -37,6 +38,7 @@ namespace hqm_ranked_backend.Services
             _teamsService = teamsService;
             _awardsService = awardsService;
             _playerService = playerService;
+            _contractService = contractService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -630,7 +632,8 @@ namespace hqm_ranked_backend.Services
 
                     BackgroundJob.Enqueue(() => _eventService.CalculateEvents());
                     BackgroundJob.Enqueue(() => _awardsService.CalcAwards());
-                    
+                    BackgroundJob.Enqueue(() => _contractService.CalcContracts());
+
                     await _notificationService.SendDiscordEndGameNotification(server.Name);
 
                     var playersIds = game.GamePlayers.Select(x => x.PlayerId).ToList();
