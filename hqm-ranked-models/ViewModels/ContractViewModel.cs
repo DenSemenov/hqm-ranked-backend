@@ -14,6 +14,7 @@ namespace hqm_ranked_models.ViewModels
         public int Count { get; set; }
         public int Points { get; set; }
         public bool IsSelected { get; set; }
+        public DateTime? SelectedDate { get; set; }
         public bool IsHidden { get; set; }
     }
 }

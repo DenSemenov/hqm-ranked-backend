@@ -1,5 +1,6 @@
 ﻿using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_database.DbModels;
 using hqm_ranked_helpers;
 using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
@@ -26,23 +27,28 @@ namespace hqm_ranked_services
 
         public async Task<List<ContractViewModel>> GetContracts(int? userId)
         {
-            var selectedContractIds = new List<Guid>();
+            var selectedContractIds = new List<ContractSelect>();
 
             if (userId != null)
             {
                 var weekStartDate = DateHelper.StartOfWeek(DateTime.UtcNow, DayOfWeek.Monday);
-                selectedContractIds = await _dbContext.ContractSelects.Include(x => x.Player).Where(x => x.Player.Id == userId && x.CreatedOn > weekStartDate).Select(x=>x.Contract.Id).ToListAsync();
+                selectedContractIds = await _dbContext.ContractSelects.Include(x => x.Player).Where(x => x.Player.Id == userId && x.CreatedOn > weekStartDate).ToListAsync();
             }
 
-            var result = await _dbContext.Contracts.OrderBy(x => x.ContractType).ThenBy(x=>x.Count).Select(x => new ContractViewModel
+
+
+            var r = await _dbContext.Contracts.OrderBy(x => x.ContractType).ThenBy(x => x.Count).ToListAsync();
+                
+            var result =   r.Select(x => new ContractViewModel
             {
                 Id = x.Id,
-                IsSelected = selectedContractIds.Contains(x.Id),
+                IsSelected = selectedContractIds.Any(y=>y.Contract.Id == x.Id),
+                SelectedDate = selectedContractIds.Any(y => y.Contract.Id == x.Id)? selectedContractIds.FirstOrDefault(y => y.Contract.Id == x.Id).CreatedOn: null,
                 ContractType = x.ContractType,
                 Count = x.Count,
                 Points = x.Points,
-                IsHidden = selectedContractIds.Count >=2 && !selectedContractIds.Contains(x.Id)
-            }).ToListAsync();
+                IsHidden = selectedContractIds.Count >=2 && !selectedContractIds.Any(y => y.Contract.Id == x.Id)
+            }).ToList();
 
             return result;
         }
