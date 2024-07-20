@@ -42,13 +42,24 @@ namespace hqm_ranked_services
             var result =   r.Select(x => new ContractViewModel
             {
                 Id = x.Id,
-                IsSelected = selectedContractIds.Any(y=>y.Contract.Id == x.Id),
-                SelectedDate = selectedContractIds.Any(y => y.Contract.Id == x.Id)? selectedContractIds.FirstOrDefault(y => y.Contract.Id == x.Id).CreatedOn: null,
                 ContractType = x.ContractType,
                 Count = x.Count,
                 Points = x.Points,
-                IsHidden = selectedContractIds.Count >=2 && !selectedContractIds.Any(y => y.Contract.Id == x.Id)
+                IsSelected = selectedContractIds.Any(y => y.Contract.Id == x.Id),
+                SelectedId = selectedContractIds.Any(y => y.Contract.Id == x.Id) ? selectedContractIds.FirstOrDefault(y => y.Contract.Id == x.Id).Id : null,
+                SelectedDate = selectedContractIds.Any(y => y.Contract.Id == x.Id) ? selectedContractIds.FirstOrDefault(y => y.Contract.Id == x.Id).CreatedOn : null,
+                IsHidden = selectedContractIds.Count >=2 && !selectedContractIds.Any(y => y.Contract.Id == x.Id),
+                IsPassed = selectedContractIds.Any(y => y.Contract.Id == x.Id) ? selectedContractIds.FirstOrDefault(y => y.Contract.Id == x.Id).Passed : false,
+                CurrentCount = 0
             }).ToList();
+
+            foreach (var item in result)
+            {
+                if (item.SelectedId != null)
+                {
+                    item.CurrentCount = await CalcContractsCurrent((Guid)item.SelectedId);
+                }
+            }
 
             return result;
         }
@@ -164,6 +175,75 @@ namespace hqm_ranked_services
             }
 
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<int> CalcContractsCurrent(Guid id)
+        {
+            var current = 0;
+
+            var contractsToCalc = await _dbContext.ContractSelects.Include(x => x.Player).Include(x => x.Contract).Where(x => x.Id == id && !x.Passed).ToListAsync();
+
+            foreach (var contract in contractsToCalc)
+            {
+                var ended = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Ended");
+                var resigned = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Resigned");
+                var gamePlayers = _dbContext.GamePlayers.Include(x => x.Game).ThenInclude(x => x.GamePlayers).Include(x => x.Game).ThenInclude(x => x.State).Where(x => x.PlayerId == contract.Player.Id && x.CreatedOn >= contract.CreatedOn && (x.Game.State == ended || x.Game.State == resigned)).OrderBy(x => x.CreatedOn).ToList();
+
+                switch (contract.Contract.ContractType)
+                {
+                    case hqm_ranked_database.DbModels.ContractType.Assists:
+                        current = gamePlayers.Sum(x => x.Assists);
+                        break;
+                    case hqm_ranked_database.DbModels.ContractType.WinWith800Elo:
+
+                        break;
+                    case hqm_ranked_database.DbModels.ContractType.Saves:
+                        current = gamePlayers.Sum(x => x.Saves);
+                        break;
+                    case hqm_ranked_database.DbModels.ContractType.WinWith20Possesion:
+                        current = gamePlayers.Count(x => x.Possession != 0 && x.Possession <= x.Game.GamePlayers.Where(y => y.Team == x.Team).Sum(x => x.Possession) / 5 && ((x.Team == 0 && x.Game.RedScore > x.Game.BlueScore) || (x.Team == 1 && x.Game.BlueScore > x.Game.RedScore)));
+                        break;
+                    case hqm_ranked_database.DbModels.ContractType.Winstreak:
+                        var maxCount = 0;
+                        var currentCount = 1;
+
+                        foreach (var gamePlayer in gamePlayers)
+                        {
+                            if ((gamePlayer.Team == 0 && gamePlayer.Game.RedScore > gamePlayer.Game.BlueScore) || (gamePlayer.Team == 1 && gamePlayer.Game.RedScore < gamePlayer.Game.BlueScore))
+                            {
+                                currentCount++;
+                            }
+                            else
+                            {
+                                maxCount = Math.Max(maxCount, currentCount);
+                                currentCount = 1;
+                            }
+                        }
+
+                        maxCount = Math.Max(maxCount, currentCount);
+
+                        currentCount = maxCount;
+
+                        break;
+                    case hqm_ranked_database.DbModels.ContractType.RiseInRanking:
+                        var currentSeason = await _seasonService.GetCurrentSeason();
+                        var stats = await _seasonService.GetSeasonStats(new hqm_ranked_backend.Models.InputModels.CurrentSeasonStatsRequest
+                        {
+                            SeasonId = currentSeason.Id,
+                            Offset = 0,
+                            DateAgo = contract.CreatedOn
+                        });
+
+                        var foundPlayer = stats.FirstOrDefault(x => x.PlayerId == contract.Player.Id);
+                        if (foundPlayer != null)
+                        {
+                            currentCount = foundPlayer.Place - foundPlayer.PlaceWeekAgo;
+                        }
+                        break;
+                }
+            }
+
+            return current;
         }
     }
 }

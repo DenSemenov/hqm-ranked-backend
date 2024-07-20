@@ -158,7 +158,7 @@ namespace hqm_ranked_backend.Services
         {
             var result = new CurrentUserVIewModel();
 
-            var user = await _dbContext.Players.Include(x => x.Bans).Include(x => x.Role).Include(x=>x.PlayerLogins).SingleOrDefaultAsync(x => x.Id == userId);
+            var user = await _dbContext.Players.Include(x => x.Bans).Include(x => x.Role).SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
                 result.Id = user.Id;

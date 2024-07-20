@@ -12,9 +12,12 @@ namespace hqm_ranked_models.ViewModels
         public Guid Id { get; set; }
         public ContractType ContractType { get; set; }
         public int Count { get; set; }
+        public int CurrentCount { get; set; }
         public int Points { get; set; }
         public bool IsSelected { get; set; }
+        public Guid? SelectedId { get; set; }
         public DateTime? SelectedDate { get; set; }
         public bool IsHidden { get; set; }
+        public bool IsPassed { get; set; }
     }
 }

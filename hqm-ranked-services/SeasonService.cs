@@ -394,7 +394,6 @@ namespace hqm_ranked_backend.Services
         public async Task<PlayerLiteDataViewModel> GetPlayerLiteData(PlayerRequest request)
         {
             var player = await _dbContext.Players
-                .Include(x => x.PlayerCalcStats)
                 .Include(x => x.GamePlayers)
                 .Select(x =>
             new PlayerLiteDataViewModel
@@ -404,15 +403,6 @@ namespace hqm_ranked_backend.Services
                 Gp = x.GamePlayers.Count,
                 Goals = x.GamePlayers.Sum(x => x.Goals),
                 Assists = x.GamePlayers.Sum(x => x.Assists),
-                CalcStats = new PlayerCalcStatsViewModel
-                {
-                    Mvp = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Mvp, 2) : 0,
-                    Goals = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Goals, 2) : 0,
-                    Assists = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Assists, 2) : 0,
-                    Winrate = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Winrate, 2) : 0,
-                    Shots = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Shots, 2) : 0,
-                    Saves = x.PlayerCalcStats != null ? Math.Round(x.PlayerCalcStats.Saves, 2) : 0,
-                }
             }).SingleOrDefaultAsync(x => x.Id == request.Id);
 
             return player;
