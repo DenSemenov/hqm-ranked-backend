@@ -308,8 +308,8 @@ namespace hqm_ranked_backend.Services
 
                     foreach (var player in request.PlayerIds)
                     {
-                        var reportsCount = await _dbContext.Reports.Include(x => x.To).Where(x => x.CreatedOn.AddMonths(1) > date && x.To.Id == player).CountAsync();
-                        if (reportsCount < 3)
+                        var reportsCount = await _dbContext.Reports.Include(x => x.To).Where(x => x.CreatedOn.AddDays(7) > date && x.To.Id == player).CountAsync();
+                        if (reportsCount < 5)
                         {
                             reportsCount = 0;
                         }
