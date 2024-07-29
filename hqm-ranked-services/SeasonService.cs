@@ -140,6 +140,8 @@ namespace hqm_ranked_backend.Services
 
             var elos = await _dbContext.Elos.Include(x => x.Player).Where(x => x.Season == season).ToListAsync();
 
+            var requiredGamesCount = _dbContext.Settings.FirstOrDefault().RequiredGamesCount;
+
             foreach (var player in players)
             {
                 var elo = startingElo;
@@ -169,11 +171,12 @@ namespace hqm_ranked_backend.Services
                     Mvp = player.Count(x => x.Mvp),
                     Rating = player.Sum(x => x.Score) + elo,
                     RatingWeekAgo = oldRating,
-                    Change = 0
+                    Change = 0,
+                    IsCalculated = player.Count(x => x.Win) + player.Count(x => x.Lose) >= requiredGamesCount
                 });
             }
 
-            result = result.OrderByDescending(x => x.Rating).ToList();
+            result = result.OrderByDescending(x=>x.IsCalculated).ThenByDescending(x => x.Rating).ToList();
 
             var i = 1;
             foreach (var player in result)
@@ -183,7 +186,7 @@ namespace hqm_ranked_backend.Services
             }
 
             i = 1;
-            foreach (var player in result.OrderByDescending(x => x.RatingWeekAgo))
+            foreach (var player in result.OrderByDescending(x => x.IsCalculated).ThenByDescending(x => x.RatingWeekAgo))
             {
                 player.PlaceWeekAgo = i;
                 i++;

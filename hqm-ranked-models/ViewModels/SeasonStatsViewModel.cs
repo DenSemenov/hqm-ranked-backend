@@ -14,5 +14,6 @@
         public int Rating { get; set; }
         public int RatingWeekAgo { get; set; }
         public int Change { get; set; }
+        public bool IsCalculated { get; set; }
     }
 }
