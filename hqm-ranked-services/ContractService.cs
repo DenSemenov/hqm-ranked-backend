@@ -88,6 +88,8 @@ namespace hqm_ranked_services
             if (player != null)
             {
                 coins = player.ContractSelects.Where(x => x.Passed).Sum(x => x.Contract.Points);
+                var purchasedItemsCost = await _dbContext.ShopPurchases.Include(x=>x.ShopItem).Include(x=>x.Player).Where(x => x.Player == player).SumAsync(x => x.ShopItem.Cost);
+                coins = coins - purchasedItemsCost;
             }
 
             return coins;

@@ -64,6 +64,7 @@ namespace hqm_ranked_backend
             services.AddScoped<ITeamsService, TeamsService>();
             services.AddScoped<IAwardsService, AwardsService>();
             services.AddScoped<IContractService, ContractService>();
+            services.AddScoped<IShopService, ShopService>();
             //services.AddHostedService<TelegramService>();
 
             services.AddScoped<ExceptionMiddleware>();

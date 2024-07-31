@@ -367,6 +367,153 @@ namespace hqm_ranked_backend.Common
                 await _dbContext.SaveChangesAsync();
             }
 
+            if (!await _dbContext.ShopItems.AnyAsync())
+            {
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.AvatarShape,
+                    Type = ShopItemType.Square,
+                    Cost = 300,
+                    Description = "Square"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.AvatarShape,
+                    Type = ShopItemType.Star,
+                    Cost = 450,
+                    Description = "Star"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.AvatarShape,
+                    Type = ShopItemType.Hexagon,
+                    Cost = 400,
+                    Description = "Hexagon"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.AvatarShape,
+                    Type = ShopItemType.Heart,
+                    Cost = 500,
+                    Description = "Heart"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.AvatarShape,
+                    Type = ShopItemType.Rhomb,
+                    Cost = 350,
+                    Description = "Rhomb"
+                });
+
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.AvatarShape,
+                    Type = ShopItemType.Pacman,
+                    Cost = 600,
+                    Description = "Pacman"
+                });
+
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Frame,
+                    Type = ShopItemType.Lightning,
+                    Cost = 400,
+                    Description = "Lightning"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Frame,
+                    Type = ShopItemType.Rain,
+                    Cost = 400,
+                    Description = "Rain"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Frame,
+                    Type = ShopItemType.Sphere,
+                    Cost = 400,
+                    Description = "Sphere"
+                });
+
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Frame,
+                    Type = ShopItemType.Triangles,
+                    Cost = 400,
+                    Description = "Triangles"
+                });
+
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Frame,
+                    Type = ShopItemType.CircleFrame,
+                    Cost = 400,
+                    Description = "CircleFrame"
+                });
+
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Background,
+                    Type = ShopItemType.City,
+                    Cost = 500,
+                    Description = "City"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Background,
+                    Type = ShopItemType.Solar,
+                    Cost = 500,
+                    Description = "Solar"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Background,
+                    Type = ShopItemType.Solar2,
+                    Cost = 500,
+                    Description = "Solar"
+                });
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Background,
+                    Type = ShopItemType.SunAndSea,
+                    Cost = 500,
+                    Description = "SunAndSea"
+                });
+
+
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Background,
+                    Type = ShopItemType.DarkSun,
+                    Cost = 500,
+                    Description = "DarkSun"
+                });
+                _dbContext.ShopItems.Add(new ShopItem
+                {
+                    Group = ShopItemGroup.Background,
+                    Type = ShopItemType.Tree,
+                    Cost = 500,
+                    Description = "Tree"
+                });
+
+                await _dbContext.SaveChangesAsync();
+            }
+
             await _dbContext.SaveChangesAsync();
 
         }

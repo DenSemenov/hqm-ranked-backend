@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
 
 #nullable disable
 
-namespace hqm_ranked_backend.Migrations
+namespace hqm_ranked_database.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240730132549_AddedShopItems")]
+    partial class AddedShopItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1518,9 +1521,6 @@ namespace hqm_ranked_backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Cost")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -1543,39 +1543,6 @@ namespace hqm_ranked_backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ShopItems");
-                });
-
-            modelBuilder.Entity("hqm_ranked_database.DbModels.ShopPurchases", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsSelected")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ShopItemId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlayerId");
-
-                    b.HasIndex("ShopItemId");
-
-                    b.ToTable("ShopPurchases");
                 });
 
             modelBuilder.Entity("hqm_ranked_database.DbModels.TransferMarket", b =>
@@ -2129,25 +2096,6 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Player");
-                });
-
-            modelBuilder.Entity("hqm_ranked_database.DbModels.ShopPurchases", b =>
-                {
-                    b.HasOne("hqm_ranked_backend.Models.DbModels.Player", "Player")
-                        .WithMany()
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("hqm_ranked_database.DbModels.ShopItem", "ShopItem")
-                        .WithMany()
-                        .HasForeignKey("ShopItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Player");
-
-                    b.Navigation("ShopItem");
                 });
 
             modelBuilder.Entity("hqm_ranked_database.DbModels.TransferMarket", b =>

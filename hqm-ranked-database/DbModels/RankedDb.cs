@@ -44,6 +44,8 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<PlayerLogin> PlayerLogins { get; set; }
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<ContractSelect> ContractSelects { get; set; }
+        public DbSet<ShopItem> ShopItems { get; set; }
+        public DbSet<ShopPurchases> ShopPurchases { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)
