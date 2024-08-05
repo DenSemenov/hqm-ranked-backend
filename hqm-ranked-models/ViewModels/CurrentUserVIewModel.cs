@@ -16,5 +16,6 @@ namespace hqm_ranked_backend.Models.ViewModels
         public string DiscordLogin { get; set; } = string.Empty;
         public bool ShowLocation { get; set; } = false;
         public LimitsType LimitType { get; set; }
+        public double LimitTypeValue { get; set; }
     }
 }

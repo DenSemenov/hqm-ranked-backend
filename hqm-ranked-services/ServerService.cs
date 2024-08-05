@@ -175,7 +175,8 @@ namespace hqm_ranked_backend.Services
                                                 Id = player.Id,
                                                 Success = true,
                                                 OldNickname = oldNickname,
-                                                LimitType = player.LimitType
+                                                LimitType = player.LimitType,
+                                                LimitTypeValue = player.LimitTypeValue
                                             };
                                         }
                                         else if (instanceType == InstanceType.Teams)
@@ -207,7 +208,8 @@ namespace hqm_ranked_backend.Services
                                                         Success = true,
                                                         OldNickname = oldNickname,
                                                         Team = team,
-                                                        LimitType = player.LimitType
+                                                        LimitType = player.LimitType,
+                                                        LimitTypeValue = player.LimitTypeValue
                                                     };
                                                 }
                                                 else

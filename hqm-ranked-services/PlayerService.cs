@@ -169,6 +169,7 @@ namespace hqm_ranked_backend.Services
                 result.DiscordLogin = user.DiscordNickname;
                 result.ShowLocation = user.ShowLocation;
                 result.LimitType = user.LimitType;
+                result.LimitTypeValue = user.LimitTypeValue;
 
                 var approveRequired = _dbContext.Settings.FirstOrDefault().NewPlayerApproveRequired;
 
@@ -244,7 +245,7 @@ namespace hqm_ranked_backend.Services
             var user = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == userId);
             if (user != null)
             {
-                user.LimitType = request.LimitType;
+                user.LimitTypeValue = request.LimitTypeValue;
                 await _dbContext.SaveChangesAsync();
             }
         }

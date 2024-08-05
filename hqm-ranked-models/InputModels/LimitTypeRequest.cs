@@ -9,6 +9,6 @@ namespace hqm_ranked_models.InputModels
 {
     public class LimitTypeRequest
     {
-        public LimitsType LimitType {  get; set; }
+        public double LimitTypeValue {  get; set; }
     }
 }

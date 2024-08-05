@@ -11,5 +11,6 @@ namespace hqm_ranked_backend.Models.ViewModels
         public bool SendToAll { get; set; } = false;
         public int Team { get; set; } = 0;
         public LimitsType LimitType { get; set; }
+        public double LimitTypeValue { get; set; }
     }
 }

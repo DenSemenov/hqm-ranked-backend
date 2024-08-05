@@ -31,6 +31,7 @@ namespace hqm_ranked_backend.Models.DbModels
         public bool ShowLocation { get; set; } = false;
         public ICollection<ContractSelect> ContractSelects { get; set; }
         public LimitsType LimitType { get; set; } = LimitsType.New;
+        public double LimitTypeValue { get; set; } = 0.01;
     }
 
     public enum LimitsType
