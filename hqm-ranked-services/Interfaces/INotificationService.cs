@@ -13,7 +13,7 @@ namespace hqm_ranked_backend.Services.Interfaces
         public Task SendPush(string title, string body, List<string> tokens);
         public Task SendDiscordNewsAward(Award award, string playerName);
         public Task SendDiscordTeamInvite(GameInvites gameInvite);
-        public Task SendDiscordNicknameChange(Player player, string oldNickname);
+        public Task SendDiscordNicknameChange(Player player, string newNickname);
         public Task SendDiscordTeamsGame(GameInvites gameInvite, string team1, string team2);
     }
 }

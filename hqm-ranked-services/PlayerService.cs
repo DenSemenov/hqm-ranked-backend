@@ -227,7 +227,7 @@ namespace hqm_ranked_backend.Services
                             OldNickname = user.Name.Trim()
                         });
 
-                        await _notificationService.SendDiscordNicknameChange(user, user.Name.Trim());
+                        await _notificationService.SendDiscordNicknameChange(user, request.Name.Trim());
 
                         user.Name = request.Name.Trim();
 

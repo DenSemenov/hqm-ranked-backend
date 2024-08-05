@@ -131,7 +131,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task SendDiscordNicknameChange(Player player, string oldNickname)
+        public async Task SendDiscordNicknameChange(Player player, string newNickname)
         {
             var settings = await _dbContext.Settings.FirstOrDefaultAsync();
 
@@ -144,12 +144,12 @@ namespace hqm_ranked_backend.Services
 
                     var message = new DiscordMessage();
 
-                    var desc = String.Format("New nickname: {0}", player.Name);
+                    var desc = String.Format("New nickname: {0}", newNickname);
 
                     var storageUrl = String.Format("https://{0}/{1}/{2}/", settings.S3Domain, settings.S3Bucket, settings.Id);
                     var imageUrl = String.Format("{0}images/{1}.png", storageUrl, player.Id);
 
-                    message.Username = oldNickname;
+                    message.Username = player.Name;
                     message.AvatarUrl = new Uri(imageUrl);
 
                     message.Embeds.Add(new DiscordEmbed
