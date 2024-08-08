@@ -22,6 +22,13 @@ namespace hqm_ranked_backend.Services
             _storageService = storageService;
             _spotifyService = spotifyService;
         }
+
+        public async Task<List<ReplayTick>> ProcessReplay(byte[] data)
+        {
+            var result = ReplayHandler.ReplayHandler.ParseReplay(data);
+
+            return result;
+        }
         public async Task ParseReplay(ReplayRequest request)
         {
             var replayData = await _dbContext.ReplayData.Include(x => x.Game).FirstOrDefaultAsync(x => x.Game.Id == request.Id);

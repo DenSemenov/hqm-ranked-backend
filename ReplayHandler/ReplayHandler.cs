@@ -25,11 +25,11 @@ namespace ReplayHandler
             while (reader.pos < dataLen)
             {
                 reader.ReadByteAligned();
-                var gameOver = reader.ReadBits(1) == 1;
+                reader.ReadBits(1) ;
                 var redScore = reader.ReadBits(8);
                 var blueScore = reader.ReadBits(8);
                 var time = reader.ReadBits(16);
-                var goalMessageTimer = reader.ReadBits(16);
+                reader.ReadBits(16);
                 var period = reader.ReadBits(8);
 
                 var (objects, packetNumber) = ReadObjects(ref reader, ref oldSavedPackets);
@@ -52,15 +52,8 @@ namespace ReplayHandler
                 currentMsgPos = msgPos + messageNum;
                 reader.Next();
 
-                if (j % 2 == 0)
-                {
-                    AddReplayTick(replayTicks, packet, (int)redScore, (int)blueScore, (int)period, (int)time, objects, currentPlayerList, messagesInThisPacket, prevMessagesPacket);
-                    packet++;
-                }
-                else
-                {
-                    prevMessagesPacket = messagesInThisPacket;
-                }
+                AddReplayTick(replayTicks, packet, (int)redScore, (int)blueScore, (int)period, (int)time, objects, currentPlayerList, messagesInThisPacket, prevMessagesPacket);
+                packet++;
                 j++;
             }
 
@@ -100,31 +93,31 @@ namespace ReplayHandler
             var pucks = objects.OfType<HQMPuck>().Select(puck => new ReplayPuck
             {
                 Index = puck.index,
-                PosX = puck.pos_x,
-                PosY = puck.pos_y,
-                PosZ = puck.pos_z,
-                RotX = puck.rot_x,
-                RotY = puck.rot_y,
-                RotZ = puck.rot_z
+                PosX = Math.Round(puck.pos_x,5),
+                PosY = Math.Round(puck.pos_y, 5),
+                PosZ = Math.Round(puck.pos_z, 5),
+                RotX = Math.Round(puck.rot_x, 5),
+                RotY = Math.Round(puck.rot_y, 5),
+                RotZ = Math.Round(puck.rot_z, 5)
             }).ToList();
 
             var skaters = objects.OfType<HQMSkater>().Select(skater => new ReplayPlayer
             {
                 Index = skater.index,
-                PosX = skater.pos_x,
-                PosY = skater.pos_y,
-                PosZ = skater.pos_z,
-                RotX = skater.rot_x,
-                RotY = skater.rot_y,
-                RotZ = skater.rot_z,
-                StickPosX = skater.stick_pos_x,
-                StickPosY = skater.stick_pos_y,
-                StickPosZ = skater.stick_pos_z,
-                StickRotX = skater.stick_rot_x,
-                StickRotY = skater.stick_rot_y,
-                StickRotZ = skater.stick_rot_z,
-                HeadTurn = skater.body_turn,
-                BodyLean = skater.body_lean
+                PosX = Math.Round(skater.pos_x, 5),
+                PosY = Math.Round(skater.pos_y, 5),
+                PosZ = Math.Round(skater.pos_z, 5),
+                RotX = Math.Round(skater.rot_x, 5),
+                RotY = Math.Round(skater.rot_y, 5),
+                RotZ = Math.Round(skater.rot_z, 5),
+                StickPosX = Math.Round(skater.stick_pos_x, 5),
+                StickPosY = Math.Round(skater.stick_pos_y, 5),
+                StickPosZ = Math.Round(skater.stick_pos_z, 5),
+                StickRotX = Math.Round(skater.stick_rot_x, 5),
+                StickRotY = Math.Round(skater.stick_rot_y, 5),
+                StickRotZ = Math.Round(skater.stick_rot_z, 5),
+                HeadTurn = Math.Round(skater.body_turn, 5),
+                BodyLean = Math.Round(skater.body_lean, 5)
             }).ToList();
 
             if (skaters.Count > 0)
@@ -285,13 +278,17 @@ namespace ReplayHandler
                         var x = reader.ReadPos(17, old_skater?.pos.Item1);
                         var y = reader.ReadPos(17, old_skater?.pos.Item2);
                         var z = reader.ReadPos(17, old_skater?.pos.Item3);
+
                         var r1 = reader.ReadPos(31, old_skater?.rot.Item1);
                         var r2 = reader.ReadPos(31, old_skater?.rot.Item2);
+
                         var stick_x = reader.ReadPos(13, old_skater?.stick_pos.Item1);
                         var stick_y = reader.ReadPos(13, old_skater?.stick_pos.Item2);
                         var stick_z = reader.ReadPos(13, old_skater?.stick_pos.Item3);
+
                         var stick_r1 = reader.ReadPos(25, old_skater?.stick_rot.Item1);
                         var stick_r2 = reader.ReadPos(25, old_skater?.stick_rot.Item2);
+
                         var body_turn = reader.ReadPos(16, old_skater?.body_turn);
                         var body_lean = reader.ReadPos(16, old_skater?.body_lean);
 
@@ -345,7 +342,7 @@ namespace ReplayHandler
                         objects.Add(new HQMPuck
                         {
                             index = index,
-                            pos_x = pos_x,
+                            pos_x = 30-pos_x,
                             pos_y = pos_y,
                             pos_z = pos_z,
                             rot_x = rot_x,
@@ -371,13 +368,13 @@ namespace ReplayHandler
                         objects.Add(new HQMSkater
                         {
                             index = index,
-                            pos_x = pos_x_p,
+                            pos_x = 30 - pos_x_p,
                             pos_y = pos_y_p,
                             pos_z = pos_z_p,
                             rot_x = rot_x_p,
                             rot_y = rot_y_p,
                             rot_z = rot_z_p,
-                            stick_pos_x = stick_pos_x,
+                            stick_pos_x = 30 - stick_pos_x,
                             stick_pos_y = stick_pos_y,
                             stick_pos_z = stick_pos_z,
                             stick_rot_x = stick_rot_x,
