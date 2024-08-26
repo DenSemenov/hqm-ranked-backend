@@ -28,7 +28,7 @@ async Task Main()
     {
         await ParseLastReplay();
 
-        Thread.Sleep(10000);
+        //Thread.Sleep(10000);
     }
 }
 

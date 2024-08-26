@@ -93,31 +93,31 @@ namespace ReplayHandler
             var pucks = objects.OfType<HQMPuck>().Select(puck => new ReplayPuck
             {
                 Index = puck.index,
-                PosX = Math.Round(puck.pos_x,5),
-                PosY = Math.Round(puck.pos_y, 5),
-                PosZ = Math.Round(puck.pos_z, 5),
-                RotX = Math.Round(puck.rot_x, 5),
-                RotY = Math.Round(puck.rot_y, 5),
-                RotZ = Math.Round(puck.rot_z, 5)
+                PosX = Math.Round(puck.pos_x,3),
+                PosY = Math.Round(puck.pos_y, 3),
+                PosZ = Math.Round(puck.pos_z, 3),
+                RotX = Math.Round(puck.rot_x, 3),
+                RotY = Math.Round(puck.rot_y, 3),
+                RotZ = Math.Round(puck.rot_z, 3)
             }).ToList();
 
             var skaters = objects.OfType<HQMSkater>().Select(skater => new ReplayPlayer
             {
                 Index = skater.index,
-                PosX = Math.Round(skater.pos_x, 5),
-                PosY = Math.Round(skater.pos_y, 5),
-                PosZ = Math.Round(skater.pos_z, 5),
-                RotX = Math.Round(skater.rot_x, 5),
-                RotY = Math.Round(skater.rot_y, 5),
-                RotZ = Math.Round(skater.rot_z, 5),
-                StickPosX = Math.Round(skater.stick_pos_x, 5),
-                StickPosY = Math.Round(skater.stick_pos_y, 5),
-                StickPosZ = Math.Round(skater.stick_pos_z, 5),
-                StickRotX = Math.Round(skater.stick_rot_x, 5),
-                StickRotY = Math.Round(skater.stick_rot_y, 5),
-                StickRotZ = Math.Round(skater.stick_rot_z, 5),
-                HeadTurn = Math.Round(skater.body_turn, 5),
-                BodyLean = Math.Round(skater.body_lean, 5)
+                PosX = Math.Round(skater.pos_x, 3),
+                PosY = Math.Round(skater.pos_y, 3),
+                PosZ = Math.Round(skater.pos_z, 3),
+                RotX = Math.Round(skater.rot_x, 3),
+                RotY = Math.Round(skater.rot_y, 3),
+                RotZ = Math.Round(skater.rot_z, 3),
+                StickPosX = Math.Round(skater.stick_pos_x, 3),
+                StickPosY = Math.Round(skater.stick_pos_y, 3),
+                StickPosZ = Math.Round(skater.stick_pos_z, 3),
+                StickRotX = Math.Round(skater.stick_rot_x, 3),
+                StickRotY = Math.Round(skater.stick_rot_y, 3),
+                StickRotZ = Math.Round(skater.stick_rot_z, 3),
+                HeadTurn = Math.Round(skater.body_turn, 3),
+                BodyLean = Math.Round(skater.body_lean, 3)
             }).ToList();
 
             if (skaters.Count > 0)

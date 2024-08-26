@@ -120,7 +120,27 @@ namespace hqm_ranked_backend.Services
                     var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
                     if (server != null)
                     {
-                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Select(x=>new
+                        {
+                            Id = x.Id,
+                            Name = x.Name,
+                            Password = x.Password,
+                            Bans = x.Bans.Select(y=>new
+                            {
+                                CreatedOn = y.CreatedOn,
+                                Days = y.Days
+                            }),
+                            NicknameChanges = x.NicknameChanges.Select(y => new
+                            {
+                                CreatedOn = y.CreatedOn,
+                                OldNickname = y.OldNickname
+                            }),
+                            IsAcceptedRules = x.IsAcceptedRules,
+                            IsApproved = x.IsApproved,
+                            DiscordId = x.DiscordId,
+                            LimitType = x.LimitType,
+                            LimitTypeValue = x.LimitTypeValue
+                        }).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
                         if (player != null)
                         {
                             BackgroundJob.Enqueue(() => _playerService.PutServerPlayerInfo(player.Id, request.Ip, hqm_ranked_database.DbModels.LoginInstance.Server, String.Empty, String.Empty, String.Empty, String.Empty));
