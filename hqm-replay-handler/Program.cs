@@ -34,7 +34,7 @@ async Task Main()
 
 async Task ParseLastReplay()
 {
-    var replayId = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.Game).Where(x => x.ReplayFragments.Count == 0).Select(x => x.Game.Id).FirstOrDefault();
+    var replayId = _dbContext.ReplayData.Include(x => x.ReplayGoals).Include(x => x.Game).Where(x => x.ReplayGoals.Count == 0).Select(x => x.Game.Id).FirstOrDefault();
 
     if (replayId != null)
     {

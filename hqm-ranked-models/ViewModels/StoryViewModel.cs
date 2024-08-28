@@ -16,7 +16,8 @@ namespace hqm_ranked_backend.Models.ViewModels
         public DateTime Date { get; set; }
         public Guid ReplayId { get; set; }  
         public uint Packet {  get; set; }
-        public List<StoryLikeViewModel> Likes { get; set; }
+        public string Url { get; set; }
+        public List<StoryLikeViewModel> Likes { get; set; } = new List<StoryLikeViewModel> { };
         public Music? Music { get; set; }
         public InstanceType InstanceType { get; set; }
 
