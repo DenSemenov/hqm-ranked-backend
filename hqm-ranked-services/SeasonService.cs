@@ -211,7 +211,7 @@ namespace hqm_ranked_backend.Services
                 .Include(x => x.BlueTeam)
                 .Include(x=>x.GameInvites)
                 .Include(x => x.ReplayDatas)
-                .ThenInclude(x => x.ReplayFragments)
+                .ThenInclude(x => x.ReplayGoals)
                 .Where(x => x.Season == season && x.InstanceType == Common.InstanceType.Ranked)
                 .OrderByDescending(x => x.CreatedOn)
                 .Select(x => new SeasonGameViewModel
@@ -222,7 +222,7 @@ namespace hqm_ranked_backend.Services
                     BlueScore = x.BlueScore,
                     Status = x.State.Name,
                     ReplayId = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().Id : null,
-                    HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
+                    HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayGoals.Count != 0 : false,
                     InstanceType = x.InstanceType,
                     RedTeamId = x.RedTeamId,
                     BlueTeamId = x.BlueTeamId,
@@ -247,7 +247,7 @@ namespace hqm_ranked_backend.Services
                .Include(x => x.BlueTeam)
                .Include(x => x.GameInvites)
                .Include(x => x.ReplayDatas)
-               .ThenInclude(x => x.ReplayFragments)
+               .ThenInclude(x => x.ReplayGoals)
                .Where(x => x.Season == season && x.InstanceType == Common.InstanceType.Teams)
                .OrderByDescending(x => x.CreatedOn)
                .Select(x => new SeasonGameViewModel
@@ -258,7 +258,7 @@ namespace hqm_ranked_backend.Services
                    BlueScore = x.BlueScore,
                    Status = x.State.Name,
                    ReplayId = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().Id : null,
-                   HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
+                   HasReplayFragments = x.ReplayDatas.Any() ? x.ReplayDatas.FirstOrDefault().ReplayGoals.Count != 0 : false,
                    InstanceType = x.InstanceType,
                    RedTeamId = x.RedTeamId,
                    BlueTeamId = x.BlueTeamId,
@@ -420,8 +420,6 @@ namespace hqm_ranked_backend.Services
                 .Include(x => x.GamePlayers)
                 .ThenInclude(x => x.Player)
                 .Include(x => x.ReplayDatas)
-                .ThenInclude(x => x.ReplayFragments)
-                .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayChats)
                 .Include(x => x.ReplayDatas)
                 .ThenInclude(x => x.ReplayGoals)
@@ -435,7 +433,7 @@ namespace hqm_ranked_backend.Services
                     RedScore = game.RedScore,
                     BlueScore = game.BlueScore,
                     ReplayId = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().Id : null,
-                    HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayFragments.Count != 0 : false,
+                    HasReplayFragments = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals.Count != 0 : false,
                     ChatMessages = new List<ReplayChat>(),
                     Goals = game.ReplayDatas.Any() ? game.ReplayDatas.FirstOrDefault().ReplayGoals.OrderBy(x => x.Packet).ToList() : new List<ReplayGoal>(),
                     ReplayUrl = storageUrl + "replays/" + game.Id.ToString() + ".hrp",
