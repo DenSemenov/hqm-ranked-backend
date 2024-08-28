@@ -75,6 +75,20 @@ namespace hqm_ranked_backend.Services
                         var id = Guid.NewGuid();
 
                         var goalTicks = result.Skip((int)(goal.Packet - 250)).Take(300).ToList();
+                        foreach(var p in goalTicks[0].PlayersInList)
+                        {
+                            goalTicks[0].Messages.Add(new ReplayMessage
+                            {
+                                ReplayMessageType = ReplayMessageType.PlayerUpdate,
+                                InServer = true,
+                                ObjectIndex = p.Index,
+                                PlayerIndex = p.Index,
+                                PlayerName = p.Name,
+                                Team = p.Team,
+                                UpdatePlayerIndex = p.Index,
+                            });
+                        }
+                        
                         var json = JsonConvert.SerializeObject(goalTicks);
                         var path = "replayGoals/" + request.Id.ToString() + id.ToString() + ".json";
                         goalTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
