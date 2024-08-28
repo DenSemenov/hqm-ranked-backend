@@ -16,6 +16,7 @@ namespace hqm_ranked_backend.Models.DTO
     public class ReplayCalculatedChat
     {
         public uint Packet { get; set; }
+        public string Name { get; set; }
         public string Text { get; set; }
     }
 

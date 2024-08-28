@@ -58,8 +58,12 @@ namespace hqm_ranked_backend.Services
 
                     foreach (var msg in processedData.Chats)
                     {
+                        var player = _dbContext.Players.FirstOrDefault(x => x.Name == msg.Name);
+
                         chatsToAdd.Add(new ReplayChat
                         {
+                            Name = msg.Name??String.Empty,
+                            Player = player,
                             Packet = msg.Packet,
                             Text = msg.Text,
                             ReplayData = replayData
@@ -134,7 +138,6 @@ namespace hqm_ranked_backend.Services
                         });
                     }
 
-
                     foreach (var save in processedData.Saves)
                     {
                         var player = _dbContext.Players.FirstOrDefault(x => x.Name == save.Name);
@@ -150,57 +153,9 @@ namespace hqm_ranked_backend.Services
                         });
                     }
 
-                    var fragmentLenght = 1000;
-
-                    var count = Math.Ceiling((double)result.Count / (double)fragmentLenght);
-
-                    replayData.Min = result.FirstOrDefault().PacketNumber;
-                    replayData.Max = result.LastOrDefault().PacketNumber;
-
-                    replayData.ReplayFragments = new List<ReplayFragment>();
-
-                    var fragmentsToAdd = new List<ReplayFragment>();
-
-                    var fragmentsTaskList = new List<Task>();
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        var fragment = result.Skip(i * fragmentLenght).Take(fragmentLenght).ToArray();
-
-                        var json = JsonConvert.SerializeObject(fragment);
-                        var path = "replayFragments/" + request.Id.ToString() + i.ToString() + ".json";
-
-                        fragmentsTaskList.Add(Task.Run(() => _storageService.UploadTextFile(path, json).Wait()));
-
-                        fragmentsToAdd.Add(new ReplayFragment
-                        {
-                            Data = path,
-                            Index = i,
-                            Min = fragment.Min(x => x.PacketNumber),
-                            Max = fragment.Max(x => x.PacketNumber),
-                            ReplayData = replayData,
-                            StorageType = Common.StorageType.S3
-                        });
-                    }
-
-                    var t2 = Task.WhenAll(fragmentsTaskList);
-                    t2.Wait();
-
-                    var wasAdded = false;
-                    var replayDataItem = _dbContext.ReplayData.Include(x => x.Game).Include(x => x.ReplayFragments).FirstOrDefault(x => x.Game.Id == request.Id);
-
-                    if (replayDataItem != null)
-                    {
-                        wasAdded = replayDataItem.ReplayFragments.Any();
-                    }
-
-                    if (!wasAdded)
-                    {
-                        _dbContext.ReplayGoals.AddRange(goalsToAdd);
-                        _dbContext.ReplayChats.AddRange(chatsToAdd);
-                        _dbContext.ReplayFragments.AddRange(fragmentsToAdd);
-                        _dbContext.ReplayHighlights.AddRange(highlightsToAdd);
-                    }
+                    _dbContext.ReplayGoals.AddRange(goalsToAdd);
+                    _dbContext.ReplayChats.AddRange(chatsToAdd);
+                    _dbContext.ReplayHighlights.AddRange(highlightsToAdd);
 
                     var game = _dbContext.Games.Include(x => x.GamePlayers).ThenInclude(x => x.Player).FirstOrDefault(x => x.Id == replayData.Game.Id);
                     if (game != null)
