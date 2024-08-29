@@ -12,5 +12,6 @@ namespace hqm_ranked_backend.Models.ViewModels
         public int Team { get; set; } = 0;
         public LimitsType LimitType { get; set; }
         public double LimitTypeValue { get; set; }
+        public bool IsAdmin { get; set; } = false;
     }
 }

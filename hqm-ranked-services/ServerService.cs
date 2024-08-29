@@ -120,12 +120,12 @@ namespace hqm_ranked_backend.Services
                     var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
                     if (server != null)
                     {
-                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Select(x=>new
+                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Include(x=>x.Role).Select(x => new
                         {
                             Id = x.Id,
                             Name = x.Name,
                             Password = x.Password,
-                            Bans = x.Bans.Select(y=>new
+                            Bans = x.Bans.Select(y => new
                             {
                                 CreatedOn = y.CreatedOn,
                                 Days = y.Days
@@ -139,8 +139,9 @@ namespace hqm_ranked_backend.Services
                             IsApproved = x.IsApproved,
                             DiscordId = x.DiscordId,
                             LimitType = x.LimitType,
-                            LimitTypeValue = x.LimitTypeValue
-                        }).SingleOrDefaultAsync(x => x.Name == request.Login.Trim() && x.Password == password);
+                            LimitTypeValue = x.LimitTypeValue,
+                            IsAdmin = x.Role.Name == "admin"
+                        }).SingleOrDefaultAsync(x => (x.Name == request.Login.Trim() || x.NicknameChanges.Any(y => y.OldNickname == request.Login.Trim())) && x.Password == password);
                         if (player != null)
                         {
                             BackgroundJob.Enqueue(() => _playerService.PutServerPlayerInfo(player.Id, request.Ip, hqm_ranked_database.DbModels.LoginInstance.Server, String.Empty, String.Empty, String.Empty, String.Empty));
@@ -183,7 +184,14 @@ namespace hqm_ranked_backend.Services
                                         var oldNicknameItem = player.NicknameChanges.OrderByDescending(x => x.CreatedOn).FirstOrDefault(x => x.CreatedOn.AddDays(30) > DateTime.UtcNow);
                                         if (oldNicknameItem != null)
                                         {
-                                            oldNickname = oldNicknameItem.OldNickname;
+                                            if (request.Login.Trim() == player.Name)
+                                            {
+                                                oldNickname = oldNicknameItem.OldNickname;
+                                            }
+                                            else
+                                            {
+                                                oldNickname = player.Name;
+                                            }
                                         }
 
                                         var instanceType = await GetServerType(request.ServerToken);
@@ -196,7 +204,8 @@ namespace hqm_ranked_backend.Services
                                                 Success = true,
                                                 OldNickname = oldNickname,
                                                 LimitType = player.LimitType,
-                                                LimitTypeValue = player.LimitTypeValue
+                                                LimitTypeValue = player.LimitTypeValue,
+                                                IsAdmin = player.IsAdmin
                                             };
                                         }
                                         else if (instanceType == InstanceType.Teams)
@@ -229,7 +238,8 @@ namespace hqm_ranked_backend.Services
                                                         OldNickname = oldNickname,
                                                         Team = team,
                                                         LimitType = player.LimitType,
-                                                        LimitTypeValue = player.LimitTypeValue
+                                                        LimitTypeValue = player.LimitTypeValue,
+                                                        IsAdmin = player.IsAdmin
                                                     };
                                                 }
                                                 else
