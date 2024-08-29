@@ -120,7 +120,7 @@ namespace hqm_ranked_backend.Services
                     var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
                     if (server != null)
                     {
-                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Include(x=>x.Role).Include(x=>x.Reports).Select(x => new
+                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Include(x=>x.Role).Select(x => new
                         {
                             Id = x.Id,
                             Name = x.Name,
@@ -140,11 +140,12 @@ namespace hqm_ranked_backend.Services
                             DiscordId = x.DiscordId,
                             LimitType = x.LimitType,
                             LimitTypeValue = x.LimitTypeValue,
-                            IsAdmin = x.Role.Name == "admin",
-                            IsShadowBanned = x.Reports.Count(x=>x.CreatedOn.AddDays(7) > DateTime.UtcNow)>=5
+                            IsAdmin = x.Role.Name == "admin"
                         }).SingleOrDefaultAsync(x => (x.Name == request.Login.Trim() || x.NicknameChanges.Any(y => y.OldNickname == request.Login.Trim())) && x.Password == password);
                         if (player != null)
                         {
+                            var isShadowBanned = _dbContext.Reports.Include(x=>x.To).Count(x => x.CreatedOn.AddDays(7) > DateTime.UtcNow && x.To.Id == player.Id) >= 5;
+
                             BackgroundJob.Enqueue(() => _playerService.PutServerPlayerInfo(player.Id, request.Ip, hqm_ranked_database.DbModels.LoginInstance.Server, String.Empty, String.Empty, String.Empty, String.Empty));
 
                             var lastBan = player.Bans.Where(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow).OrderByDescending(x=>x.CreatedOn).FirstOrDefault();
@@ -207,7 +208,7 @@ namespace hqm_ranked_backend.Services
                                                 LimitType = player.LimitType,
                                                 LimitTypeValue = player.LimitTypeValue,
                                                 IsAdmin = player.IsAdmin,
-                                                IsShadowBanned = player.IsShadowBanned
+                                                IsShadowBanned = isShadowBanned
                                             };
                                         }
                                         else if (instanceType == InstanceType.Teams)
