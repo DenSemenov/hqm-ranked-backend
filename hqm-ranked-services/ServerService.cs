@@ -120,7 +120,7 @@ namespace hqm_ranked_backend.Services
                     var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.ServerToken);
                     if (server != null)
                     {
-                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Include(x=>x.Role).Select(x => new
+                        var player = await _dbContext.Players.Include(x => x.Bans).Include(x => x.NicknameChanges).Include(x=>x.Role).Include(x=>x.Reports).Select(x => new
                         {
                             Id = x.Id,
                             Name = x.Name,
@@ -140,7 +140,8 @@ namespace hqm_ranked_backend.Services
                             DiscordId = x.DiscordId,
                             LimitType = x.LimitType,
                             LimitTypeValue = x.LimitTypeValue,
-                            IsAdmin = x.Role.Name == "admin"
+                            IsAdmin = x.Role.Name == "admin",
+                            IsShadowBanned = x.Reports.Count(x=>x.CreatedOn.AddDays(7) > DateTime.UtcNow)>=5
                         }).SingleOrDefaultAsync(x => (x.Name == request.Login.Trim() || x.NicknameChanges.Any(y => y.OldNickname == request.Login.Trim())) && x.Password == password);
                         if (player != null)
                         {
@@ -205,7 +206,8 @@ namespace hqm_ranked_backend.Services
                                                 OldNickname = oldNickname,
                                                 LimitType = player.LimitType,
                                                 LimitTypeValue = player.LimitTypeValue,
-                                                IsAdmin = player.IsAdmin
+                                                IsAdmin = player.IsAdmin,
+                                                IsShadowBanned = player.IsShadowBanned
                                             };
                                         }
                                         else if (instanceType == InstanceType.Teams)
