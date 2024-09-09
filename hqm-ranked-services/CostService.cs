@@ -28,8 +28,8 @@ namespace hqm_ranked_backend.Services
                 .Select(x => new
                 {
                     Id = x.Id,
-                    Winrate = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Take(100).Count(gp => (gp.Team == 0 && gp.Game.RedScore > gp.Game.BlueScore) || (gp.Team == 1 && gp.Game.RedScore < gp.Game.BlueScore)),
-                    PointsPerGame = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Take(100).Sum(gp => gp.Goals+gp.Assists) / (double)x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).Take(100).Count(),
+                    Winrate = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).OrderByDescending(x=>x.CreatedOn).Take(100).Count(gp => (gp.Team == 0 && gp.Game.RedScore > gp.Game.BlueScore) || (gp.Team == 1 && gp.Game.RedScore < gp.Game.BlueScore)),
+                    PointsPerGame = x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).OrderByDescending(x => x.CreatedOn).Take(100).Sum(gp => gp.Goals+gp.Assists) / (double)x.GamePlayers.Where(x => x.Game.State == ended || x.Game.State == resigned).OrderByDescending(x => x.CreatedOn).Take(100).Count(),
                 })
                 .ToListAsync();
 

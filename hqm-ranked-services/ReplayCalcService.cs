@@ -58,7 +58,7 @@ namespace hqm_ranked_backend.Services
 
                     foreach (var msg in processedData.Chats)
                     {
-                        var player = _dbContext.Players.FirstOrDefault(x => x.Name == msg.Name);
+                        var player = _dbContext.Players.Include(x => x.NicknameChanges).FirstOrDefault(x => x.Name == msg.Name || x.NicknameChanges.Any(y => y.OldNickname == msg.Name));
 
                         chatsToAdd.Add(new ReplayChat
                         {
@@ -99,7 +99,7 @@ namespace hqm_ranked_backend.Services
 
                         var sound = await _spotifyService.GetSoundAsync();
 
-                        var player = _dbContext.Players.FirstOrDefault(x => x.Name == goal.GoalBy);
+                        var player = _dbContext.Players.Include(x => x.NicknameChanges).FirstOrDefault(x => x.Name == goal.GoalBy || x.NicknameChanges.Any(y => y.OldNickname == goal.GoalBy));
                         if (player != null)
                         {
                             goalsToAdd.Add(new ReplayGoal
@@ -125,7 +125,7 @@ namespace hqm_ranked_backend.Services
 
                     foreach (var shot in processedData.Shots)
                     {
-                        var player = _dbContext.Players.FirstOrDefault(x => x.Name == shot.Name);
+                        var player = _dbContext.Players.Include(x => x.NicknameChanges).FirstOrDefault(x => x.Name == shot.Name || x.NicknameChanges.Any(y => y.OldNickname == shot.Name));
 
                         highlightsToAdd.Add(new ReplayHighlight
                         {
@@ -140,7 +140,7 @@ namespace hqm_ranked_backend.Services
 
                     foreach (var save in processedData.Saves)
                     {
-                        var player = _dbContext.Players.FirstOrDefault(x => x.Name == save.Name);
+                        var player = _dbContext.Players.Include(x=>x.NicknameChanges).FirstOrDefault(x => x.Name == save.Name || x.NicknameChanges.Any(y=>y.OldNickname == save.Name));
 
                         highlightsToAdd.Add(new ReplayHighlight
                         {
@@ -199,12 +199,10 @@ namespace hqm_ranked_backend.Services
 
                     _dbContext.SaveChanges();
                 }
-                catch(Exception ex)
+                catch(DbUpdateException ex)
                 {
                     Console.WriteLine(ex.Message + ex.StackTrace);
                     Log.Error(ex.Message + ex.StackTrace);
-                    _dbContext.ReplayData.Remove(replayData);
-                    _dbContext.SaveChanges();
                 }
             }
         }
