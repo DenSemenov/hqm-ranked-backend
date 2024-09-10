@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
 
 #nullable disable
 
-namespace hqm_ranked_backend.Migrations
+namespace hqm_ranked_database.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20240910110943_WtChanges2")]
+    partial class WtChanges2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1675,13 +1678,7 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("State")
-                        .HasColumnType("integer");
-
                     b.Property<int>("WeekNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -1706,9 +1703,6 @@ namespace hqm_ranked_backend.Migrations
 
                     b.Property<Guid>("GameId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Index")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
@@ -2446,7 +2440,7 @@ namespace hqm_ranked_backend.Migrations
             modelBuilder.Entity("hqm_ranked_database.DbModels.WeeklyTourneyTeam", b =>
                 {
                     b.HasOne("hqm_ranked_database.DbModels.WeeklyTourney", "WeeklyTourney")
-                        .WithMany("WeeklyTourneyTeams")
+                        .WithMany()
                         .HasForeignKey("WeeklyTourneyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2530,8 +2524,6 @@ namespace hqm_ranked_backend.Migrations
                     b.Navigation("WeeklyTourneyGames");
 
                     b.Navigation("WeeklyTourneyRequests");
-
-                    b.Navigation("WeeklyTourneyTeams");
                 });
 
             modelBuilder.Entity("hqm_ranked_database.DbModels.WeeklyTourneyTeam", b =>

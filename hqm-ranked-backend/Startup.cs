@@ -65,6 +65,7 @@ namespace hqm_ranked_backend
             services.AddScoped<IAwardsService, AwardsService>();
             services.AddScoped<IContractService, ContractService>();
             services.AddScoped<IShopService, ShopService>();
+            services.AddScoped<IWeeklyTourneyService, WeeklyTourneyService>();
             //services.AddHostedService<TelegramService>();
 
             services.AddScoped<ExceptionMiddleware>();
@@ -176,6 +177,11 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Daily);
             var playerService = scope.ServiceProvider.GetRequiredService<IPlayerService>() as PlayerService;
             RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily);
+            var weeklyTourneyService = scope.ServiceProvider.GetRequiredService<IWeeklyTourneyService>() as WeeklyTourneyService;
+            RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "42 19 * * 2");
+            //RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "30 17 * * 6");
+            RecurringJob.AddOrUpdate("RandomizeTourney", () => weeklyTourneyService.RandomizeTourney(), "48 19 * * 2");
+            //RecurringJob.AddOrUpdate("RandomizeTourney", () => weeklyTourneyService.RandomizeTourney(), "0 18 * * 6");
         }
     }
 }
