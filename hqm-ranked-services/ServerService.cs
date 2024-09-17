@@ -279,7 +279,7 @@ namespace hqm_ranked_backend.Services
                                                 if (team != null)
                                                 {
                                                     var currentRoundMatches = tourney.WeeklyTourneyGames.Where(x => x.PlayoffType == tourney.Round).ToList();
-                                                    var currentGame = currentRoundMatches.FirstOrDefault(x => x.RedTeamId == team.Id || x.BlueTeamId == team.Id);
+                                                    var currentGame = currentRoundMatches.FirstOrDefault(x => (x.RedTeamId == team.Id || x.BlueTeamId == team.Id) && x.ServerId == server.Id);
                                                     if (currentGame !=null)
                                                     {
                                                         return new ServerLoginViewModel
