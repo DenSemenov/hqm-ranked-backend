@@ -133,12 +133,17 @@ namespace hqm_ranked_services
 
                 tourney.Round = stage;
 
+                if (games.Count() == 0)
+                {
+                    tourney.State = WeeklyTourneyState.Finished;
+                }
+
                 await _dbContext.SaveChangesAsync();
 
                 await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", tourney.Id);
 
                 var lastRound = tourney.WeeklyTourneyGames.Max(x => x.PlayoffType);
-                if (lastRound != tourney.Round)
+                if (tourney.Round < lastRound + 1)
                 {
                     BackgroundJob.Schedule(() => this.RandomizeTourneyNextStage(tourney.Round + 1), TimeSpan.FromMinutes(30));
                 }
