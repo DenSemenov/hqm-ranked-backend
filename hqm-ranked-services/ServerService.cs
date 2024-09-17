@@ -451,7 +451,7 @@ namespace hqm_ranked_backend.Services
                     var currentDate = DateTime.UtcNow;
 
                     var season = await _seasonService.GetCurrentSeason();
-                    var teamsPlayers = await _dbContext.TeamPlayers.Include(x=>x.Team).Include(x => x.Player).Where(x => request.PlayerIds.Contains(x.Player.Id) && x.Team.Season == season).ToListAsync();
+                    var teamsPlayers = await _dbContext.TeamPlayers.Include(x => x.Team).Include(x => x.Player).Where(x => request.PlayerIds.Contains(x.Player.Id) && x.Team.Season == season).ToListAsync();
                     var teamIds = teamsPlayers.Select(x => x.Team.Id as Guid?).Distinct().ToList();
 
                     var scheduled = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Scheduled");
@@ -460,13 +460,13 @@ namespace hqm_ranked_backend.Services
                         .Include(x => x.GamePlayers)
                         .ThenInclude(x => x.Player)
                         .Include(x => x.GameInvites)
-                        .Include(x=>x.RedTeam)
+                        .Include(x => x.RedTeam)
                         .Include(x => x.BlueTeam)
                         .Where(x =>
                             x.InstanceType == InstanceType.Teams &&
                             x.GameInvites.FirstOrDefault().Date.AddMinutes(-30) < currentDate &&
                             x.GameInvites.FirstOrDefault().Date.AddMinutes(30) > currentDate &&
-                            (teamIds.Contains(x.RedTeamId) && teamIds.Contains(x.BlueTeamId)) && 
+                            (teamIds.Contains(x.RedTeamId) && teamIds.Contains(x.BlueTeamId)) &&
                             x.State == scheduled
                            )
                         .OrderBy(x => x.GameInvites.FirstOrDefault().Date)
@@ -512,6 +512,93 @@ namespace hqm_ranked_backend.Services
                         result.Title = String.Format("{0} vs {1}", incomingGame.RedTeam.Name, incomingGame.BlueTeam.Name);
                     }
                 }
+                else if (instanceType == InstanceType.WeeklyTourney)
+                {
+                    var currentDate = DateTime.UtcNow;
+                    var season = await _seasonService.GetCurrentSeason();
+
+                    var currentTourney = await _weeklyTourneyService.GetCurrentRunningTourneyId();
+                    if (currentTourney != null)
+                    {
+                        var tourney = await _dbContext.WeeklyTourneys
+                            .Include(x => x.WeeklyTourneyGames)
+                            .ThenInclude(x => x.RedTeam)
+                            .ThenInclude(x=>x.WeeklyTourneyPlayers)
+                            .Include(x => x.WeeklyTourneyGames)
+                            .ThenInclude(x => x.BlueTeam)
+                            .ThenInclude(x => x.WeeklyTourneyPlayers)
+                            .Include(x=>x.WeeklyTourneyGames)
+                            .ThenInclude(x=>x.Game)
+                            .ThenInclude(x=>x.GamePlayers)
+                            .FirstOrDefaultAsync(x => x.Id == currentTourney);
+                        var gameInThisServer = tourney.WeeklyTourneyGames.FirstOrDefault(x => x.PlayoffType == tourney.Round && x.ServerId == server.Id);
+                        if (gameInThisServer != null)
+                        {
+                            var gamePlayers = new List<GamePlayer>();
+
+                            foreach (var gamePlayer in gameInThisServer.RedTeam.WeeklyTourneyPlayers)
+                            {
+                                gamePlayers.Add(new GamePlayer
+                                {
+                                    PlayerId = gamePlayer.PlayerId,
+                                    Team = 0,
+                                    Score = 0,
+                                    Ping = 0,
+                                    Ip = String.Empty,
+                                    Goals = 0,
+                                    Assists = 0,
+                                    IsCaptain = false
+                                });
+                            }
+
+                            foreach (var gamePlayer in gameInThisServer.BlueTeam.WeeklyTourneyPlayers)
+                            {
+                                gamePlayers.Add(new GamePlayer
+                                {
+                                    PlayerId = gamePlayer.PlayerId,
+                                    Team = 1,
+                                    Score = 0,
+                                    Ping = 0,
+                                    Ip = String.Empty,
+                                    Goals = 0,
+                                    Assists = 0,
+                                    IsCaptain = false
+                                });
+                            }
+
+                            var newId = Guid.NewGuid();
+
+                            gameInThisServer.Game = new Game
+                            {
+                                Id = newId,
+                                RedScore = 0,
+                                BlueScore = 0,
+                                InstanceType = InstanceType.WeeklyTourney,
+                                GamePlayers = gamePlayers,
+                                MvpId = gamePlayers.FirstOrDefault().PlayerId,
+                                Season = season,
+                                State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Live"),
+                            };
+
+                            await _dbContext.SaveChangesAsync();
+
+                            foreach (var player in request.PlayerIds)
+                            {
+                                result.Players.Add(new StartGamePlayerViewModel
+                                {
+                                    Id = player,
+                                    Score = await _seasonService.GetPlayerElo(player),
+                                    Count = 0,
+                                    Reports = 0
+                                });
+                            }
+                            result.GameId = newId;
+                            result.Title = String.Format("{0} vs {1}", gameInThisServer.RedTeam.Name, gameInThisServer.BlueTeam.Name);
+                        }
+                    }
+
+                }
+                
                 var playersIds = result.Players.Select(x => x.Id).ToList();
 
                 var discordIds = await _dbContext.Players.Where(x => playersIds.Contains(x.Id) && x.DiscordId != "").Select(x => x.DiscordId).ToListAsync();
@@ -798,7 +885,7 @@ namespace hqm_ranked_backend.Services
                     var currentTourney = await _weeklyTourneyService.GetCurrentRunningTourneyId();
                     if (currentTourney != null)
                     {
-                        var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyGames).ThenInclude(x=>x.RedTeam).Include(x => x.WeeklyTourneyGames).ThenInclude(x => x.BlueTeam).FirstOrDefaultAsync(x => x.Id == currentTourney);
+                        var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyGames).ThenInclude(x => x.RedTeam).Include(x => x.WeeklyTourneyGames).ThenInclude(x => x.BlueTeam).FirstOrDefaultAsync(x => x.Id == currentTourney);
                         var gameInThisServer = tourney.WeeklyTourneyGames.FirstOrDefault(x => x.PlayoffType == tourney.Round && x.ServerId == server.Id);
                         if (gameInThisServer != null)
                         {
@@ -810,7 +897,8 @@ namespace hqm_ranked_backend.Services
                             result.IsPublic = false;
                         }
 
-                    }else
+                    }
+                    else
                     {
                         result.Name = "WT: No weekly tourneys yet";
                         result.IsPublic = false;
