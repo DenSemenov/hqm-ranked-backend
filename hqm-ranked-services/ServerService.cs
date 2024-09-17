@@ -7,6 +7,7 @@ using hqm_ranked_backend.Models.DTO;
 using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Models.ViewModels;
 using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.ViewModels;
 using hqm_ranked_services;
 using hqm_ranked_services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
@@ -297,7 +298,7 @@ namespace hqm_ranked_backend.Services
                                                         {
                                                             Id = 0,
                                                             Success = false,
-                                                            ErrorMessage = "[Server] You don't currently have any games available on this server."
+                                                            ErrorMessage = "[Server] You don't have any games available on this server"
                                                         };
                                                     }
                                                 }
@@ -743,8 +744,10 @@ namespace hqm_ranked_backend.Services
 
             return result;
         }
-        public async Task Heartbeat(HeartbeatRequest request)
+        public async Task<HeartbeatViewModel> Heartbeat(HeartbeatRequest request)
         {
+            var result = new HeartbeatViewModel();
+
             var server = await _dbContext.Servers.SingleOrDefaultAsync(x => x.Token == request.Token);
             if (server != null)
             {
@@ -787,7 +790,11 @@ namespace hqm_ranked_backend.Services
                                 .ToListAsync();
                     await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2), tokens);
                 }
+
+                result.Name = request.Name +" Test";
             }
+
+            return result;
         }
 
         public async Task<ReportViewModel> Report(ReportRequest request)

@@ -68,9 +68,9 @@ namespace hqm_ranked_backend.Controllers
         [HttpPost("Heartbeat")]
         public async Task<IActionResult> Heartbeat(HeartbeatRequest request)
         {
-            await _serverService.Heartbeat(request);
+            var result = await _serverService.Heartbeat(request);
 
-            return Ok();
+            return Ok(result);
         }
 
         [HttpPost("Report")]
