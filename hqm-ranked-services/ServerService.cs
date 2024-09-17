@@ -13,6 +13,7 @@ using hqm_ranked_services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using static SpotifyAPI.Web.PlayerSetRepeatRequest;
 
 namespace hqm_ranked_backend.Services
 {
@@ -534,12 +535,27 @@ namespace hqm_ranked_backend.Services
                         var gameInThisServer = tourney.WeeklyTourneyGames.FirstOrDefault(x => x.PlayoffType == tourney.Round && x.ServerId == server.Id);
                         if (gameInThisServer != null)
                         {
+                            
+
+                            var game =  new Game
+                            {
+                                RedScore = 0,
+                                BlueScore = 0,
+                                InstanceType = InstanceType.WeeklyTourney,
+                                MvpId = gameInThisServer.RedTeam.WeeklyTourneyPlayers.FirstOrDefault().PlayerId,
+                                Season = season,
+                                State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Live"),
+                            };
+
+                            var entity = _dbContext.Games.Add(game);
+
                             var gamePlayers = new List<GamePlayer>();
 
                             foreach (var gamePlayer in gameInThisServer.RedTeam.WeeklyTourneyPlayers)
                             {
                                 gamePlayers.Add(new GamePlayer
                                 {
+                                    GameId = entity.Entity.Id,
                                     PlayerId = gamePlayer.PlayerId,
                                     Team = 0,
                                     Score = 0,
@@ -555,6 +571,7 @@ namespace hqm_ranked_backend.Services
                             {
                                 gamePlayers.Add(new GamePlayer
                                 {
+                                    GameId = entity.Entity.Id,
                                     PlayerId = gamePlayer.PlayerId,
                                     Team = 1,
                                     Score = 0,
@@ -566,21 +583,21 @@ namespace hqm_ranked_backend.Services
                                 });
                             }
 
-                            var newId = Guid.NewGuid();
+                            gameInThisServer.Game = entity.Entity;
 
-                            gameInThisServer.Game = new Game
+                            foreach (var gamePlayer in gamePlayers)
                             {
-                                Id = newId,
-                                RedScore = 0,
-                                BlueScore = 0,
-                                InstanceType = InstanceType.WeeklyTourney,
-                                GamePlayers = gamePlayers,
-                                MvpId = gamePlayers.FirstOrDefault().PlayerId,
-                                Season = season,
-                                State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Live"),
-                            };
+                                _dbContext.GamePlayers.Add(gamePlayer);
+                            }
 
-                            await _dbContext.SaveChangesAsync();
+                            try
+                            {
+                                await _dbContext.SaveChangesAsync();
+                            }
+                            catch (DbUpdateException Ex)
+                            {
+
+                            }
 
                             foreach (var player in request.PlayerIds)
                             {
@@ -592,7 +609,7 @@ namespace hqm_ranked_backend.Services
                                     Reports = 0
                                 });
                             }
-                            result.GameId = newId;
+                            result.GameId = entity.Entity.Id;
                             result.Title = String.Format("{0} vs {1}", gameInThisServer.RedTeam.Name, gameInThisServer.BlueTeam.Name);
                         }
                     }

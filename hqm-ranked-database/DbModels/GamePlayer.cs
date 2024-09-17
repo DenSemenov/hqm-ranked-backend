@@ -7,6 +7,7 @@ namespace hqm_ranked_backend.Models.DbModels
     {
         [Required]
         public Game Game { get; set; }
+        public Guid GameId { get; set; }
         [Required]
         public Player Player { get; set; }
         public int PlayerId { get; set; }
