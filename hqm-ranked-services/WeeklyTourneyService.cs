@@ -402,17 +402,6 @@ namespace hqm_ranked_services
             var weeklyTourney = await _dbContext.WeeklyTourneys.FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
             if (weeklyTourney != null)
             {
-                var p = await _dbContext.Players.OrderBy(x => Guid.NewGuid()).Take(19).ToListAsync();
-                foreach(var pl in p)
-                {
-                    _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
-                    {
-                        PlayerId = pl.Id,
-                        WeeklyTourneyId = weeklyTourney.Id,
-                        Positions = new List<Position>()
-                    });
-                }
-
                 var weeklyTourneyRequest = await _dbContext.WeeklyTourneyRequests.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == userId);
                 if (weeklyTourneyRequest != null )
                 {
