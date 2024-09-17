@@ -8,7 +8,7 @@ namespace hqm_ranked_helpers
 {
     public static class PlayoffHelper
     {
-        static int[] teamsCount = [4, 8, 16, 32];
+        static int[] teamsCount = [2, 4, 8, 16, 32];
 
         public static List<Game> GenerateBracket(Guid[] teams)
         {

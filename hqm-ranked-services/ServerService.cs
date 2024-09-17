@@ -889,7 +889,7 @@ namespace hqm_ranked_backend.Services
                         var gameInThisServer = tourney.WeeklyTourneyGames.FirstOrDefault(x => x.PlayoffType == tourney.Round && x.ServerId == server.Id);
                         if (gameInThisServer != null)
                         {
-                            result.Name = String.Format("WT: {0} vs {1}", gameInThisServer.RedTeam.Name, gameInThisServer.BlueTeam.Name);
+                            result.Name = String.Format("WT: {0} vs {1}", gameInThisServer.RedTeam.Name, gameInThisServer.BlueTeam.Name).Substring(0, 30);
                         }
                         else
                         {
