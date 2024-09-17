@@ -27,7 +27,8 @@ namespace hqm_ranked_backend.Services
         private IAwardsService _awardsService;
         private IPlayerService _playerService;
         private IContractService _contractService;
-        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService, IPlayerService playerService, IContractService contractService)
+        private IWeeklyTourneyService _weeklyTourneyService;
+        public ServerService(RankedDb dbContext, ISeasonService seasonService, IEventService eventService, IHubContext<ActionHub> hubContext, INotificationService notificationService, IMemoryCache memoryCache, ITeamsService teamsService, IAwardsService awardsService, IPlayerService playerService, IContractService contractService, IWeeklyTourneyService weeklyTourneyService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
@@ -39,6 +40,7 @@ namespace hqm_ranked_backend.Services
             _awardsService = awardsService;
             _playerService = playerService;
             _contractService = contractService;
+            _weeklyTourneyService = weeklyTourneyService;
         }
 
         public async Task<List<ActiveServerViewModel>> GetActiveServers()
@@ -262,6 +264,60 @@ namespace hqm_ranked_backend.Services
                                                     Id = 0,
                                                     Success = false,
                                                     ErrorMessage = "[Server] You are not in team"
+                                                };
+                                            }
+                                        }
+                                        else if (instanceType == InstanceType.WeeklyTourney)
+                                        {
+                                            var currentTourney = await _weeklyTourneyService.GetCurrentRunningTourneyId();
+                                            if (currentTourney != null)
+                                            {
+                                                var tourney = await _dbContext.WeeklyTourneys.Include(x=>x.WeeklyTourneyTeams).ThenInclude(x=>x.WeeklyTourneyPlayers).Include(x=>x.WeeklyTourneyGames).FirstOrDefaultAsync(x => x.Id == currentTourney);
+                                                var team = tourney.WeeklyTourneyTeams.FirstOrDefault(x => x.WeeklyTourneyPlayers.Any(y => y.PlayerId == player.Id));
+                                                if (team != null)
+                                                {
+                                                    var currentRoundMatches = tourney.WeeklyTourneyGames.Where(x => x.PlayoffType == tourney.Round).ToList();
+                                                    var currentGame = currentRoundMatches.FirstOrDefault(x => x.RedTeamId == team.Id || x.BlueTeamId == team.Id);
+                                                    if (currentGame !=null)
+                                                    {
+                                                        return new ServerLoginViewModel
+                                                        {
+                                                            Id = player.Id,
+                                                            Success = true,
+                                                            OldNickname = oldNickname,
+                                                            Team = currentGame.RedTeamId == team.Id ? 0 : 1,
+                                                            LimitType = player.LimitType,
+                                                            LimitTypeValue = player.LimitTypeValue,
+                                                            IsAdmin = player.IsAdmin
+                                                        };
+                                                    }
+                                                    else
+                                                    {
+                                                        return new ServerLoginViewModel
+                                                        {
+                                                            Id = 0,
+                                                            Success = false,
+                                                            ErrorMessage = "[Server] You don't currently have any games available on this server."
+                                                        };
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    return new ServerLoginViewModel
+                                                    {
+                                                        Id = 0,
+                                                        Success = false,
+                                                        ErrorMessage = "[Server] You are not in team"
+                                                    };
+                                                }
+                                            }
+                                            else
+                                            {
+                                                return new ServerLoginViewModel
+                                                {
+                                                    Id = 0,
+                                                    Success = false,
+                                                    ErrorMessage = "[Server] Weekly tourney not started yet"
                                                 };
                                             }
                                         }

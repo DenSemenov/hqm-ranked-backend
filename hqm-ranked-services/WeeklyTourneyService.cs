@@ -57,6 +57,18 @@ namespace hqm_ranked_services
             return tourney !=null? tourney.Id: null;
         }
 
+        public async Task<Guid?> GetCurrentRunningTourneyId()
+        {
+            var weekNumber = GetCurrentWeek();
+            var tourney = await _dbContext.WeeklyTourneys
+                .Include(x => x.WeeklyTourneyRequests)
+                .ThenInclude(x => x.Player)
+                .ThenInclude(x => x.Cost)
+                .FirstOrDefaultAsync(x => x.WeekNumber == weekNumber && ( x.State == WeeklyTourneyState.Running));
+
+            return tourney != null ? tourney.Id : null;
+        }
+
         public async Task<List<WeeklyTourneyItemViewModel>> GetWeeklyTourneys()
         {
             var result = await _dbContext.WeeklyTourneys

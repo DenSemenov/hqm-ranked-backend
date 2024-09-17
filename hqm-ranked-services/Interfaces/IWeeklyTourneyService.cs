@@ -14,6 +14,7 @@ namespace hqm_ranked_services.Interfaces
         Task RandomizeTourney();
         Task RandomizeTourneyNextStage(int stage);
         Task<Guid?> GetCurrentTourneyId();
+        Task<Guid?> GetCurrentRunningTourneyId();
         Task<List<WeeklyTourneyItemViewModel>> GetWeeklyTourneys();
         Task<WeeklyTourneyViewModel> GetWeeklyTournament(WeeklyTourneyIdRequest request);
         Task WeeklyTourneyRegister(int userId);
