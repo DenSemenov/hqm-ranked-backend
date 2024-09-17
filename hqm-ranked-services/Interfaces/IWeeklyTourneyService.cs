@@ -1,4 +1,5 @@
-﻿using hqm_ranked_models.ViewModels;
+﻿using hqm_ranked_models.InputModels;
+using hqm_ranked_models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,10 @@ namespace hqm_ranked_services.Interfaces
     {
         Task CreateTourney();
         Task RandomizeTourney();
-        Task<WeeklyTourneyViewModel> GetCurrentWeeklyTournament();
+        Task RandomizeTourneyNextStage(int stage);
+        Task<Guid?> GetCurrentTourneyId();
+        Task<List<WeeklyTourneyItemViewModel>> GetWeeklyTourneys();
+        Task<WeeklyTourneyViewModel> GetWeeklyTournament(WeeklyTourneyIdRequest request);
         Task WeeklyTourneyRegister(int userId);
     }
 }

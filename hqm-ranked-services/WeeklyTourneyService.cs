@@ -1,21 +1,21 @@
 ﻿using hqm_ranked_backend.Common;
+using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
 using hqm_ranked_backend.Services.Interfaces;
 using hqm_ranked_database.DbModels;
+using hqm_ranked_helpers;
 using hqm_ranked_models.DTO;
+using hqm_ranked_models.InputModels;
 using hqm_ranked_models.ViewModels;
 using hqm_ranked_services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic.FileIO;
 using SixLabors.ImageSharp;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using static SpotifyAPI.Web.PlayerSetRepeatRequest;
+using System.Net;
+
 
 namespace hqm_ranked_services
 {
@@ -25,12 +25,14 @@ namespace hqm_ranked_services
         private ISeasonService _seasonService;
         private IImageGeneratorService _imageGeneratorService;
         private IStorageService _storageService;
-        public WeeklyTourneyService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService)
+        private readonly IHubContext<ActionHub> _hubContext;
+        public WeeklyTourneyService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService, IHubContext<ActionHub> hubContext)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _imageGeneratorService = imageGeneratorService;
             _storageService = storageService;
+            _hubContext = hubContext;
         }
 
         public int GetCurrentWeek()
@@ -43,33 +45,103 @@ namespace hqm_ranked_services
             return weekNumber;
         }
 
-        public string GetRandomTeamName()
+        public async Task<Guid?> GetCurrentTourneyId()
         {
-            var adjectives = new List<string>()
+            var weekNumber = GetCurrentWeek();
+            var tourney = await _dbContext.WeeklyTourneys
+                .Include(x => x.WeeklyTourneyRequests)
+                .ThenInclude(x => x.Player)
+                .ThenInclude(x => x.Cost)
+                .FirstOrDefaultAsync(x => x.WeekNumber == weekNumber && (x.State ==  WeeklyTourneyState.Registration || x.State == WeeklyTourneyState.Running));
+
+            return tourney !=null? tourney.Id: null;
+        }
+
+        public async Task<List<WeeklyTourneyItemViewModel>> GetWeeklyTourneys()
+        {
+            var result = await _dbContext.WeeklyTourneys
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new WeeklyTourneyItemViewModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    State = x.State
+                }).ToListAsync();
+
+            return result;
+        }
+
+        public async Task RandomizeTourneyNextStage(int stage)
+        {
+            var currentTourneyId = await GetCurrentTourneyId();
+            var tourney = await _dbContext.WeeklyTourneys.Include(x=>x.WeeklyTourneyGames).ThenInclude(x=>x.Game).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
+
+            if (tourney != null)
             {
-                "Awesome", "Brilliant", "Dynamic", "Epic", "Fantastic",
-                "Incredible", "Legendary", "Marvelous", "Phenomenal", "Stellar"
-            };
+                var games = tourney.WeeklyTourneyGames.Where(x => x.PlayoffType == stage);
+                foreach(var game in games)
+                {
+                    if (game.RedTeamId == null)
+                    {
+                        var prevGame = tourney.WeeklyTourneyGames.FirstOrDefault(x=>x.NextGameId == game.Id);
+                        if (prevGame != null)
+                        {
+                            if (prevGame.Game != null)
+                            {
+                                var winnerRed = prevGame.Game.RedScore > prevGame.Game.BlueScore;
+                                game.RedTeamId = winnerRed ? prevGame.RedTeamId : prevGame.BlueTeamId;
+                            }
+                            else
+                            {
+                                var teamIds = new Guid?[2] { prevGame.RedTeamId, prevGame.BlueTeamId };
+                                game.RedTeamId = teamIds.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                            }
+                        }
+                    }
 
-            var nouns = new List<string>()
+                    if (game.BlueTeamId == null)
+                    {
+                        var prevGame = tourney.WeeklyTourneyGames.LastOrDefault(x => x.NextGameId == game.Id);
+                        if (prevGame != null)
+                        {
+                            if (prevGame.Game != null)
+                            {
+                                var winnerRed = prevGame.Game.RedScore > prevGame.Game.BlueScore;
+                                game.BlueTeamId = winnerRed ? prevGame.RedTeamId : prevGame.BlueTeamId;
+                            }
+                            else
+                            {
+                                var teamIds = new Guid?[2] { prevGame.RedTeamId, prevGame.BlueTeamId };
+                                game.BlueTeamId = teamIds.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                            }
+                        }
+                    }
+                }
+
+                tourney.Round = stage;
+
+                await _dbContext.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", tourney.Id);
+            }
+        }
+
+        public Stream ImageUrlToStream(string imageUrl)
+        {
+            using (WebClient webClient = new WebClient())
             {
-                "Avengers", "Crusaders", "Dynamos", "Eagles", "Guardians",
-                "Heroes", "Legends", "Ninjas", "Rangers", "Titans"
-            };
+                byte[] imageBytes = webClient.DownloadData(imageUrl);
 
-            var random = new Random();
-            var randomAdjective = adjectives[random.Next(adjectives.Count)];
-            var randomNoun = nouns[random.Next(nouns.Count)];
+                MemoryStream ms = new MemoryStream(imageBytes);
 
-            var teamName = $"{randomAdjective} {randomNoun}";
-
-            return teamName;
+                return ms;
+            }
         }
 
         public async Task RandomizeTourney()
         {
-            var weekNumber = GetCurrentWeek();
-            var tourney = await _dbContext.WeeklyTourneys.Include(x=>x.WeeklyTourneyRequests).ThenInclude(x=>x.Player).ThenInclude(x=>x.Cost).FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
+            var currentTourneyId = await GetCurrentTourneyId();
+            var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyRequests).ThenInclude(x => x.Player).ThenInclude(x => x.Cost).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
 
             if (tourney != null)
             {
@@ -108,12 +180,16 @@ namespace hqm_ranked_services
 
                     var newTeams = new List<WeeklyTourneyTeam>();
 
+                    var nhlTeams = NhlTeamsHelper.GetTeams().OrderBy(x=>Guid.NewGuid()).ToList();
+
+                    var l = 0;
                     foreach (var team in teams)
                     {
+                        var nhlTeam = nhlTeams[l];
                         var newTeam = new WeeklyTourneyTeam
                         {
                             WeeklyTourney = tourney,
-                            Name = GetRandomTeamName(),
+                            Name = nhlTeam.Name,
                             WeeklyTourneyPlayers = team.Players.Select(x => new WeeklyTourneyPlayer
                             {
                                 PlayerId = x
@@ -123,36 +199,57 @@ namespace hqm_ranked_services
                         var teamEntity = _dbContext.WeeklyTourneyTeams.Add(newTeam);
 
                         var path = String.Format("images/{0}.png", teamEntity.Entity.Id);
-                        var file = _imageGeneratorService.GenerateImage();
-                        var strm = new MemoryStream();
-                        file.SaveAsPng(strm);
+                        var strm = ImageUrlToStream(nhlTeam.Url);
 
                         await _storageService.UploadFileStream(path, strm);
+
+                        l += 1;
                     }
 
                     _dbContext.WeeklyTourneyTeams.AddRange(newTeams);
 
-                    for (int i = 0; i < numTeams / 2; i++)
-                    {
-                        var game = new Game
-                        {
-                            InstanceType = hqm_ranked_backend.Common.InstanceType.WeeklyTourney,
-                            GamePlayers = new List<GamePlayer>(),
-                            Season = await _seasonService.GetCurrentSeason(),
-                            State = await _dbContext.States.FirstOrDefaultAsync(x => x.Name == "Scheduled")
-                        };
+                    var matches = PlayoffHelper.GenerateBracket(newTeams.Select(x => x.Id).ToArray());
 
-                        game.MvpId = newTeams[i].WeeklyTourneyPlayers.FirstOrDefault().PlayerId;
+                    var round = 1;
+                    var index = 0;
+
+                    var servers = _dbContext.Servers.Where(x => x.InstanceType == InstanceType.WeeklyTourney).ToList();
+
+                    foreach(var match in matches.OrderByDescending(x=>x.Round))
+                    {
+                        if (round != match.Round)
+                        {
+                            round = match.Round;
+                            index = 0;
+                        }
+
+                        Guid? teamRed = match.TeamRed;
+                        Guid? teamBlue = match.TeamBlue;
+
+                        var matchesPrevRound = matches.Where(x => x.Round == match.Round - 1);
+
+                        if (matchesPrevRound.Any(x => x.TeamRed == teamRed || x.TeamBlue == teamRed)){
+                            teamRed = null;
+                        }
+
+                        if (matchesPrevRound.Any(x => x.TeamRed == teamBlue || x.TeamBlue == teamBlue))
+                        {
+                            teamBlue = null;
+                        }
 
                         _dbContext.WeeklyTourneyGame.Add(new WeeklyTourneyGame
                         {
-                            RedTeam = newTeams[i],
-                            BlueTeam = newTeams[newTeams.Count - 1 - i],
-                            PlayoffType = 0,
-                            Game = game,
+                            Id = match.Id,
+                            NextGameId = match.NextGameId,
                             WeeklyTourney = tourney,
-                            Index = i
-                        });
+                            RedTeamId = teamRed,
+                            BlueTeamId = teamBlue,
+                            PlayoffType = match.Round,
+                            Index = index,
+                            Server = servers[index]
+                        }) ;
+
+                        index += 1;                        
                     }
                 }
                 else
@@ -161,6 +258,8 @@ namespace hqm_ranked_services
                 }
 
                 await _dbContext.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", tourney.Id);
             }
         }
 
@@ -172,7 +271,7 @@ namespace hqm_ranked_services
 
             if (!_dbContext.WeeklyTourneys.Any(x => x.Name == name))
             {
-                _dbContext.WeeklyTourneys.Add(new hqm_ranked_database.DbModels.WeeklyTourney
+                var entity = _dbContext.WeeklyTourneys.Add(new hqm_ranked_database.DbModels.WeeklyTourney
                 {
                     Name = name,
                     WeekNumber = weekNumber,
@@ -182,17 +281,18 @@ namespace hqm_ranked_services
                 });
 
                 await _dbContext.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", entity.Entity.Id);
             }
         }
 
-        public async Task<WeeklyTourneyViewModel> GetCurrentWeeklyTournament()
+        public async Task<WeeklyTourneyViewModel> GetWeeklyTournament(WeeklyTourneyIdRequest request)
         {
             var result = new WeeklyTourneyViewModel();
 
-            var weekNumber = GetCurrentWeek();
-            var tr = _dbContext.WeeklyTourneys.FirstOrDefault(x => x.WeekNumber == weekNumber);
-           
-            if (tr != null && (tr.State == WeeklyTourneyState.Registration || tr.State == WeeklyTourneyState.Running))
+            var tr = await  _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyRequests).ThenInclude(x => x.Player).ThenInclude(x => x.Cost).FirstOrDefaultAsync(x => x.Id == request.Id);
+
+            if (tr != null && (tr.State == WeeklyTourneyState.Registration || tr.State == WeeklyTourneyState.Running || tr.State == WeeklyTourneyState.Finished))
             {
                 result.State = tr.State;
                 if (tr.State == WeeklyTourneyState.Registration)
@@ -208,45 +308,53 @@ namespace hqm_ranked_services
                             Id = y.Player.Id,
                             Name = y.Player.Name
                         }).ToList()
-                    }).FirstOrDefault(x => x.WeekNumber == weekNumber);
+                    }).FirstOrDefault(x => x.TourneyId == request.Id);
                 }
-                else if (tr.State == WeeklyTourneyState.Running)
+                else if (tr.State == WeeklyTourneyState.Running || tr.State == WeeklyTourneyState.Finished)
                 {
-                    var tourney = _dbContext.WeeklyTourneys
+                    result.Tourney = _dbContext.WeeklyTourneys
                         .Include(x => x.WeeklyTourneyTeams)
+                        .ThenInclude(x => x.WeeklyTourneyPlayers)
+                        .ThenInclude(x => x.Player)
                         .Include(x => x.WeeklyTourneyGames)
                         .ThenInclude(x => x.RedTeam)
                         .Include(x => x.WeeklyTourneyGames)
                         .ThenInclude(x => x.BlueTeam)
                         .Include(x => x.WeeklyTourneyRequests)
                         .ThenInclude(x => x.Player)
-                        .Select(x => new
+                        .Select(tourney => new WeeklyTourneyTourneyViewModel
                         {
-                            TourneyId = x.Id,
-                            TourneyName = x.Name,
-                            WeekNumber = x.WeekNumber,
-                            Teams = x.WeeklyTourneyTeams,
-                            Games = x.WeeklyTourneyGames
-                        }).FirstOrDefault(x => x.WeekNumber == weekNumber);
-
-                    result.Tourney = new WeeklyTourneyTourneyViewModel
-                    {
-                        TourneyId = tourney.TourneyId,
-                        TourneyName = tourney.TourneyName,
-                        WeekNumber = tourney.WeekNumber,
-                        Rounds = tourney.Teams.Count / 2,
-                        Games = tourney.Games.Select(x => new WeeklyTourneyGameViewModel
-                        {
-                            Id = x.Id,
-                            RedTeamId = x.RedTeam.Id,
-                            BlueTeamId = x.BlueTeam.Id,
-                            RedTeamName = x.RedTeam.Name,
-                            BlueTeamName = x.BlueTeam.Name,
-                            PlayoffType = x.PlayoffType
-                        }).ToList()
-                    };
+                            TourneyId = tourney.Id,
+                            TourneyName = tourney.Name,
+                            WeekNumber = tourney.WeekNumber,
+                            Rounds = (int)Math.Ceiling(((double)tourney.WeeklyTourneyTeams.Count - 1) / 2),
+                            Teams = tourney.WeeklyTourneyTeams.Select(x => new WeeklyTourneyTeamViewModel
+                            {
+                                Id = x.Id,
+                                Name = x.Name,
+                                Players = x.WeeklyTourneyPlayers.Select(y => new WeeklyTourneyTeamPlayerViewModel
+                                {
+                                    Id = y.PlayerId,
+                                    Name = y.Player.Name
+                                }).ToList()
+                            }).ToList(),
+                            Games = tourney.WeeklyTourneyGames.Select(x => new WeeklyTourneyGameViewModel
+                            {
+                                Id = x.Id,
+                                RedTeamId = x.RedTeamId,
+                                BlueTeamId = x.BlueTeamId,
+                                RedTeamName = x.RedTeam!=null ? x.RedTeam.Name: String.Empty,
+                                BlueTeamName = x.BlueTeam != null ? x.BlueTeam.Name : String.Empty,
+                                RedScore = x.Game !=null? x.Game.RedScore: 0,
+                                BlueScore = x.Game != null ? x.Game.BlueScore : 0,
+                                PlayoffType = x.PlayoffType,
+                                Index = x.Index,
+                                NextGameId = x.NextGameId
+                            }).OrderBy(x => x.PlayoffType).ThenBy(x => x.Index).ToList()
+                        }).FirstOrDefault(x => x.TourneyId == request.Id);
                 }
-            } else
+            }
+            else
             {
                 var today = DateTime.UtcNow;
                 int daysUntilSaturday = ((int)DayOfWeek.Saturday - (int)today.DayOfWeek + 7) % 7;
@@ -266,6 +374,17 @@ namespace hqm_ranked_services
             var weeklyTourney = await _dbContext.WeeklyTourneys.FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
             if (weeklyTourney != null)
             {
+                var p = await _dbContext.Players.OrderBy(x => Guid.NewGuid()).Take(19).ToListAsync();
+                foreach(var pl in p)
+                {
+                    _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
+                    {
+                        PlayerId = pl.Id,
+                        WeeklyTourneyId = weeklyTourney.Id,
+                        Positions = new List<Position>()
+                    });
+                }
+
                 var weeklyTourneyRequest = await _dbContext.WeeklyTourneyRequests.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == userId);
                 if (weeklyTourneyRequest != null )
                 {
@@ -282,6 +401,8 @@ namespace hqm_ranked_services
                 }
 
                 await _dbContext.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", weeklyTourney.Id);
             }
         }
     }

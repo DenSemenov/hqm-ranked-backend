@@ -1,6 +1,5 @@
 ﻿using hqm_ranked_backend.Common;
-using hqm_ranked_backend.Services;
-using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.InputModels;
 using hqm_ranked_services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +17,26 @@ namespace hqm_ranked_backend.Controllers
             _weeklyTourneyService = weeklyTourneyService;
         }
 
-        [HttpPost("GetCurrentWeeklyTournament")]
-        public async Task<IActionResult> GetCurrentWeeklyTournament()
+        [HttpPost("GetCurrentWeeklyTourneyId")]
+        public async Task<IActionResult> GetCurrentWeeklyTourneyId()
         {
-            var result = await _weeklyTourneyService.GetCurrentWeeklyTournament();
+            var result = await _weeklyTourneyService.GetCurrentTourneyId();
+
+            return Ok(result);
+        }
+
+        [HttpPost("GetWeeklyTourneys")]
+        public async Task<IActionResult> GetWeeklyTourneys()
+        {
+            var result = await _weeklyTourneyService.GetWeeklyTourneys();
+
+            return Ok(result);
+        }
+
+        [HttpPost("GetWeeklyTournament")]
+        public async Task<IActionResult> GetWeeklyTournament(WeeklyTourneyIdRequest request)
+        {
+            var result = await _weeklyTourneyService.GetWeeklyTournament(request);
 
             return Ok(result);
         }
@@ -33,6 +48,14 @@ namespace hqm_ranked_backend.Controllers
             var userId = UserHelper.GetUserId(User);
 
             await _weeklyTourneyService.WeeklyTourneyRegister(userId);
+
+            return Ok();
+        }
+
+        [HttpPost("RandomizeNextStage")]
+        public async Task<IActionResult> RandomizeNextStage(int request)
+        {
+            await _weeklyTourneyService.RandomizeTourneyNextStage(request);
 
             return Ok();
         }

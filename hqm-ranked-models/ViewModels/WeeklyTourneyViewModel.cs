@@ -22,17 +22,35 @@ namespace hqm_ranked_models.ViewModels
         public int WeekNumber { get; set; }
         public int Rounds { get; set; }
         public List<WeeklyTourneyGameViewModel> Games { get; set; }
+        public List<WeeklyTourneyTeamViewModel> Teams {get; set; }
+    }
+
+    public class WeeklyTourneyTeamViewModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public List<WeeklyTourneyTeamPlayerViewModel> Players { get; set; }
+    }
+
+    public class WeeklyTourneyTeamPlayerViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
 
     }
 
     public class WeeklyTourneyGameViewModel
     {
         public Guid Id { get; set; }
-        public Guid RedTeamId { get; set; }
-        public Guid BlueTeamId { get; set; }
+        public Guid? NextGameId { get; set; }
+        public Guid? RedTeamId { get; set; }
+        public Guid? BlueTeamId { get; set; }
         public string RedTeamName { get; set; }
         public string BlueTeamName { get; set; }
+        public int RedScore { get; set; }
+        public int BlueScore { get; set; }
         public int PlayoffType { get; set; }
+        public int Index { get; set; }
     }
 
     public class WeeklyTourneyRegistrationViewModel

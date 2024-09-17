@@ -13,6 +13,7 @@ namespace hqm_ranked_database.DbModels
         public string Name { get; set; }
         public int WeekNumber { get; set; }
         public int Year { get; set; }
+        public int Round { get; set; } = 1;
         public WeeklyTourneyState State { get; set; }
         public ICollection<WeeklyTourneyRequest> WeeklyTourneyRequests { get; set; }
         public ICollection<WeeklyTourneyGame> WeeklyTourneyGames { get; set; }
@@ -23,6 +24,7 @@ namespace hqm_ranked_database.DbModels
     {
         Registration,
         Running,
-        Canceled
+        Canceled,
+        Finished
     }
 }
