@@ -180,11 +180,6 @@ namespace hqm_ranked_backend
             RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily);
             var weeklyTourneyService = scope.ServiceProvider.GetRequiredService<IWeeklyTourneyService>() as WeeklyTourneyService;
             RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "30 17 * * 6");
-            RecurringJob.AddOrUpdate("RandomizeTourney", () => weeklyTourneyService.RandomizeTourney(), "0 18 * * 6");
-            RecurringJob.AddOrUpdate("RandomizeTourneyNextStage", () => weeklyTourneyService.RandomizeTourneyNextStage(2), "30 18 * * 6");
-            RecurringJob.AddOrUpdate("RandomizeTourneyNextStage", () => weeklyTourneyService.RandomizeTourneyNextStage(3), "0 19 * * 6");
-            RecurringJob.AddOrUpdate("RandomizeTourneyNextStage", () => weeklyTourneyService.RandomizeTourneyNextStage(4), "30 19 * * 6");
-            RecurringJob.AddOrUpdate("RandomizeTourneyNextStage", () => weeklyTourneyService.RandomizeTourneyNextStage(5), "0 20 * * 6");
         }
     }
 }

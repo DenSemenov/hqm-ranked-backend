@@ -1,4 +1,5 @@
-﻿using hqm_ranked_backend.Common;
+﻿using Hangfire;
+using hqm_ranked_backend.Common;
 using hqm_ranked_backend.Hubs;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services;
@@ -135,6 +136,12 @@ namespace hqm_ranked_services
                 await _dbContext.SaveChangesAsync();
 
                 await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", tourney.Id);
+
+                var lastRound = tourney.WeeklyTourneyGames.Max(x => x.PlayoffType);
+                if (lastRound != tourney.Round)
+                {
+                    BackgroundJob.Schedule(() => this.RandomizeTourneyNextStage(tourney.Round + 1), TimeSpan.FromMinutes(30));
+                }
             }
         }
 
@@ -263,6 +270,8 @@ namespace hqm_ranked_services
 
                         index += 1;                        
                     }
+
+                    BackgroundJob.Schedule(() => this.RandomizeTourneyNextStage(tourney.Round + 1), TimeSpan.FromMinutes(30));
                 }
                 else
                 {
@@ -295,6 +304,8 @@ namespace hqm_ranked_services
                 await _dbContext.SaveChangesAsync();
 
                 await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", entity.Entity.Id);
+
+                BackgroundJob.Schedule(() => this.RandomizeTourney(), TimeSpan.FromMinutes(30));
             }
         }
 
