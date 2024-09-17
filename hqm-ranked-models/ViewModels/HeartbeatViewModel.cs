@@ -9,5 +9,6 @@ namespace hqm_ranked_models.ViewModels
     public class HeartbeatViewModel
     {
         public string Name { get; set; }
+        public bool IsPublic { get; set; } = true;
     }
 }

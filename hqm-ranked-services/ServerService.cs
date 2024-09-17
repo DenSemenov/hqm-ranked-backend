@@ -791,7 +791,31 @@ namespace hqm_ranked_backend.Services
                     await _notificationService.SendPush(server.Name, String.Format("Logged in {0}/{1}", server.LoggedIn, server.TeamMax * 2), tokens);
                 }
 
-                result.Name = request.Name +" Test";
+                result.Name = request.Name;
+
+                if (server.InstanceType == InstanceType.WeeklyTourney)
+                {
+                    var currentTourney = await _weeklyTourneyService.GetCurrentRunningTourneyId();
+                    if (currentTourney != null)
+                    {
+                        var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyGames).ThenInclude(x=>x.RedTeam).Include(x => x.WeeklyTourneyGames).ThenInclude(x => x.BlueTeam).FirstOrDefaultAsync(x => x.Id == currentTourney);
+                        var gameInThisServer = tourney.WeeklyTourneyGames.FirstOrDefault(x => x.PlayoffType == tourney.Round && x.ServerId == server.Id);
+                        if (gameInThisServer != null)
+                        {
+                            result.Name = String.Format("WT: {0} vs {1}", gameInThisServer.RedTeam.Name, gameInThisServer.BlueTeam.Name);
+                        }
+                        else
+                        {
+                            result.Name = "WT: No games here yet";
+                            result.IsPublic = false;
+                        }
+
+                    }else
+                    {
+                        result.Name = "WT: No weekly tourneys yet";
+                        result.IsPublic = false;
+                    }
+                }
             }
 
             return result;
