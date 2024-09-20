@@ -402,24 +402,29 @@ namespace hqm_ranked_services
             var weeklyTourney = await _dbContext.WeeklyTourneys.FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
             if (weeklyTourney != null)
             {
-                var weeklyTourneyRequest = await _dbContext.WeeklyTourneyRequests.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == userId);
-                if (weeklyTourneyRequest != null )
+                var user = await _dbContext.Players.Include(x => x.Bans).SingleOrDefaultAsync(x => x.Id == userId);
+                var isBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
+                if (!isBanned)
                 {
-                    _dbContext.WeeklyTourneyRequests.Remove(weeklyTourneyRequest);
-                }
-                else
-                {
-                    _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
+                    var weeklyTourneyRequest = await _dbContext.WeeklyTourneyRequests.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == userId);
+                    if (weeklyTourneyRequest != null)
                     {
-                        PlayerId = userId,
-                        WeeklyTourneyId = weeklyTourney.Id,
-                        Positions = new List<Position>()
-                    });
+                        _dbContext.WeeklyTourneyRequests.Remove(weeklyTourneyRequest);
+                    }
+                    else
+                    {
+                        _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
+                        {
+                            PlayerId = userId,
+                            WeeklyTourneyId = weeklyTourney.Id,
+                            Positions = new List<Position>()
+                        });
+                    }
+
+                    await _dbContext.SaveChangesAsync();
+
+                    await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", weeklyTourney.Id);
                 }
-
-                await _dbContext.SaveChangesAsync();
-
-                await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", weeklyTourney.Id);
             }
         }
     }
