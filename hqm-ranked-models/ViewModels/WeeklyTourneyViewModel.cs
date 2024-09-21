@@ -1,4 +1,5 @@
-﻿using hqm_ranked_database.DbModels;
+﻿using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_database.DbModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,10 @@ namespace hqm_ranked_models.ViewModels
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public int Gp {  get; set; }
+        public int Goals { get; set; }
+        public int Assists { get; set; }
+        public int Points { get; set; }
 
     }
 
@@ -51,7 +56,17 @@ namespace hqm_ranked_models.ViewModels
         public int BlueScore { get; set; }
         public int PlayoffType { get; set; }
         public int Index { get; set; }
+        public string State { get; set; }
+        public List<WeeklyTourneyGamePlayerViewModel> GamePlayers { get; set; }
     }
+
+    public class WeeklyTourneyGamePlayerViewModel
+    {
+        public int PlayerId {  get; set; }
+        public int Goals { get; set; }
+        public int Assists { get; set; }
+    }
+
 
     public class WeeklyTourneyRegistrationViewModel
     {

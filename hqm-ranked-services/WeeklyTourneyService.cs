@@ -354,6 +354,12 @@ namespace hqm_ranked_services
                         .ThenInclude(x => x.RedTeam)
                         .Include(x => x.WeeklyTourneyGames)
                         .ThenInclude(x => x.BlueTeam)
+                        .Include(x => x.WeeklyTourneyGames)
+                        .ThenInclude(x => x.Game)
+                        .ThenInclude(x => x.GamePlayers)
+                         .Include(x => x.WeeklyTourneyGames)
+                        .ThenInclude(x => x.Game)
+                        .ThenInclude(x => x.State)
                         .Include(x => x.WeeklyTourneyRequests)
                         .ThenInclude(x => x.Player)
                         .Select(tourney => new WeeklyTourneyTourneyViewModel
@@ -369,7 +375,10 @@ namespace hqm_ranked_services
                                 Players = x.WeeklyTourneyPlayers.Select(y => new WeeklyTourneyTeamPlayerViewModel
                                 {
                                     Id = y.PlayerId,
-                                    Name = y.Player.Name
+                                    Name = y.Player.Name,
+                                    Goals = 0,
+                                    Assists = 0,
+                                    Points = 0
                                 }).ToList()
                             }).ToList(),
                             Games = tourney.WeeklyTourneyGames.Select(x => new WeeklyTourneyGameViewModel
@@ -377,15 +386,36 @@ namespace hqm_ranked_services
                                 Id = x.Id,
                                 RedTeamId = x.RedTeamId,
                                 BlueTeamId = x.BlueTeamId,
-                                RedTeamName = x.RedTeam!=null ? x.RedTeam.Name: String.Empty,
+                                RedTeamName = x.RedTeam != null ? x.RedTeam.Name : String.Empty,
                                 BlueTeamName = x.BlueTeam != null ? x.BlueTeam.Name : String.Empty,
-                                RedScore = x.Game !=null? x.Game.RedScore: 0,
+                                RedScore = x.Game != null ? x.Game.RedScore : 0,
                                 BlueScore = x.Game != null ? x.Game.BlueScore : 0,
                                 PlayoffType = x.PlayoffType,
                                 Index = x.Index,
-                                NextGameId = x.NextGameId
+                                NextGameId = x.NextGameId,
+                                State = x.Game != null ? x.Game.State.Name : "Scheduled",
+                                GamePlayers = x.Game != null ? x.Game.GamePlayers.Select(y => new WeeklyTourneyGamePlayerViewModel
+                                {
+                                    PlayerId = y.PlayerId,
+                                    Assists = y.Assists,
+                                    Goals = y.Goals
+                                }).ToList() : new List<WeeklyTourneyGamePlayerViewModel>(),
                             }).OrderBy(x => x.PlayoffType).ThenBy(x => x.Index).ToList()
                         }).FirstOrDefault(x => x.TourneyId == request.Id);
+
+                    var allGamePlayers = result.Tourney.Games.SelectMany(x => x.GamePlayers).ToList();
+
+                    foreach (var team in result.Tourney.Teams)
+                    {
+                        foreach (var player in team.Players)
+                        {
+
+                            player.Gp = allGamePlayers.Count(x => x.PlayerId == player.Id);
+                            player.Goals = allGamePlayers.Where(x => x.PlayerId == player.Id).Sum(x => x.Goals);
+                            player.Assists = allGamePlayers.Where(x => x.PlayerId == player.Id).Sum(x => x.Assists);
+                            player.Points = player.Goals + player.Assists;
+                        }
+                    }
                 }
             }
             else
