@@ -26,14 +26,16 @@ namespace hqm_ranked_services
         private ISeasonService _seasonService;
         private IImageGeneratorService _imageGeneratorService;
         private IStorageService _storageService;
+        private INotificationService _notificationService;
         private readonly IHubContext<ActionHub> _hubContext;
-        public WeeklyTourneyService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService, IHubContext<ActionHub> hubContext)
+        public WeeklyTourneyService(RankedDb dbContext, ISeasonService seasonService, IImageGeneratorService imageGeneratorService, IStorageService storageService, IHubContext<ActionHub> hubContext, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _seasonService = seasonService;
             _imageGeneratorService = imageGeneratorService;
             _storageService = storageService;
             _hubContext = hubContext;
+            _notificationService = notificationService;
         }
 
         public int GetCurrentWeek()
@@ -286,6 +288,8 @@ namespace hqm_ranked_services
                 await _dbContext.SaveChangesAsync();
 
                 await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", tourney.Id);
+
+                await _notificationService.SendDiscordRegistrationStarted(tourney.Name, "https://hqmfun.space/weekly-tourney?id=" + tourney.Id);
             }
         }
 
@@ -311,6 +315,8 @@ namespace hqm_ranked_services
                 await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", entity.Entity.Id);
 
                 BackgroundJob.Schedule(() => this.RandomizeTourney(), TimeSpan.FromMinutes(30));
+
+                await _notificationService.SendDiscordRegistrationStarted(name, "https://hqmfun.space/weekly-tourney?id=" + entity.Entity.Id);
             }
         }
 

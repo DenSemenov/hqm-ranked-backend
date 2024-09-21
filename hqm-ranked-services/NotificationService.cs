@@ -308,6 +308,54 @@ namespace hqm_ranked_backend.Services
                 }
             }
         }
+        public async Task SendDiscordRegistrationStarted(string name, string url)
+        {
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            if (settings != null)
+            {
+                if (!String.IsNullOrEmpty(settings.DiscordNewsWebhook))
+                {
+                    var hook = new DiscordWebhook();
+                    hook.Uri = new Uri(settings.DiscordNewsWebhook);
+
+                    var message = new DiscordMessage();
+                    message.Username = name ;
+                    message.Content = String.Format("Registration started: {0}", url);
+
+
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        public async Task SendDiscordTourneyStarted(string name, string url)
+        {
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            if (settings != null)
+            {
+                if (!String.IsNullOrEmpty(settings.DiscordNewsWebhook))
+                {
+                    var hook = new DiscordWebhook();
+                    hook.Uri = new Uri(settings.DiscordNewsWebhook);
+
+                    var message = new DiscordMessage();
+                    message.Username = name;
+                    message.Content = String.Format("Tourney started: {0}", url);
+
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+            }
+        }
 
         public async Task SendDiscordCanceledNotification(string serverName)
         {
