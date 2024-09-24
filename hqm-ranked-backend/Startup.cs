@@ -163,23 +163,28 @@ namespace hqm_ranked_backend
 
             var scope = app.ApplicationServices.CreateScope();
 
+            var timezone = new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Local
+            };
+
             var eventService = scope.ServiceProvider.GetRequiredService<IEventService>() as EventService;
-            RecurringJob.AddOrUpdate("CreateNewDailyEvent", () => eventService.CreateNewEvent(), Cron.Daily);
+            RecurringJob.AddOrUpdate("CreateNewDailyEvent", () => eventService.CreateNewEvent(), Cron.Daily, timezone);
             var replayService = scope.ServiceProvider.GetRequiredService<IReplayService>() as ReplayService;
-            RecurringJob.AddOrUpdate("RemoveOldReplays", () => replayService.RemoveOldReplays(), Cron.Daily);
-            RecurringJob.AddOrUpdate("ParseReplays", () => replayService.ParseAllReplays(), Cron.Daily);
+            RecurringJob.AddOrUpdate("RemoveOldReplays", () => replayService.RemoveOldReplays(), Cron.Daily, timezone);
+            RecurringJob.AddOrUpdate("ParseReplays", () => replayService.ParseAllReplays(), Cron.Daily, timezone);
             var spotifyService = scope.ServiceProvider.GetRequiredService<ISpotifyService>() as SpotifyService;
-            RecurringJob.AddOrUpdate("GetPlaylist", () => spotifyService.GetPlaylist(), Cron.Daily);
+            RecurringJob.AddOrUpdate("GetPlaylist", () => spotifyService.GetPlaylist(), Cron.Daily, timezone);
             var costService = scope.ServiceProvider.GetRequiredService<ICostService>() as CostService;
-            RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily);
+            RecurringJob.AddOrUpdate("CalcCosts", () => costService.CalcCosts(), Cron.Daily, timezone);
             var teamsService = scope.ServiceProvider.GetRequiredService<ITeamsService>() as TeamsService;
-            RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly);
+            RecurringJob.AddOrUpdate("CancelExpiredInvites", () => teamsService.CancelExpiredInvites(), Cron.Hourly, timezone);
             var awardsService = scope.ServiceProvider.GetRequiredService<IAwardsService>() as AwardsService;
-            RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Daily);
+            RecurringJob.AddOrUpdate("CalcAwards", () => awardsService.CalcAwards(), Cron.Daily, timezone);
             var playerService = scope.ServiceProvider.GetRequiredService<IPlayerService>() as PlayerService;
-            RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily);
+            RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily, timezone);
             var weeklyTourneyService = scope.ServiceProvider.GetRequiredService<IWeeklyTourneyService>() as WeeklyTourneyService;
-            RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "30 17 * * 5");
+            RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "30 17 * * 5", timezone);
         }
     }
 }
