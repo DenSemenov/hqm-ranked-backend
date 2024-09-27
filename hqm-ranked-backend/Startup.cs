@@ -184,7 +184,7 @@ namespace hqm_ranked_backend
             var playerService = scope.ServiceProvider.GetRequiredService<IPlayerService>() as PlayerService;
             RecurringJob.AddOrUpdate("CalcPlayersStats", () => playerService.CalcPlayersStats(), Cron.Daily, timezone);
             var weeklyTourneyService = scope.ServiceProvider.GetRequiredService<IWeeklyTourneyService>() as WeeklyTourneyService;
-            RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "30 17 * * 5", timezone);
+            RecurringJob.AddOrUpdate("CreateWeeklyTourney", () => weeklyTourneyService.CreateTourney(), "30 20 * * 5", timezone);
         }
     }
 }
