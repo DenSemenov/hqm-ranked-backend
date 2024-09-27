@@ -1,11 +1,15 @@
 ﻿using hqm_ranked_backend.Services.Interfaces;
+using hqm_ranked_models.DTO;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System.Net;
 
 namespace hqm_ranked_backend.Services
 {
-    public class ImageGeneratorService:IImageGeneratorService
+    public class ImageGeneratorService: IImageGeneratorService
     {
 
         public Image<Rgba32> GenerateImage()
@@ -91,6 +95,133 @@ namespace hqm_ranked_backend.Services
             PokeOut();
 
             return image;
+        }
+
+        public Image GenerateMatches(List<TourneyMatchesDTO> matches, string tourneyName, string roundName)
+        {
+            var rowSize = 64;
+            var rowWidth = 650;
+            var fontSize = 16;
+            var imageSize = 48;
+            var padding = 16;
+            var gap = 8;
+            var textTopOffset = imageSize / 2;
+            var titleOffset = 48;
+
+            var height = matches.Count * rowSize + padding + titleOffset;
+
+            var image = new Image<Rgba32>(rowWidth, height);
+            image.Mutate(g => g.BackgroundColor(Color.Black));
+
+            FontCollection collection = new();
+            collection.Add("Azonix.ttf");
+
+            collection.TryGet("Azonix", out FontFamily family);
+            var font = family.CreateFont(fontSize, FontStyle.Regular);
+
+            var rowIndex = 0;
+
+            image.Mutate(x => x.DrawText(
+                new RichTextOptions(font)
+                {
+                    Origin = new PointF(padding, padding + titleOffset / 2 - 8),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
+                tourneyName,
+                new Color(Rgba32.ParseHex("#FFFFFFEE"))
+            ));
+
+            image.Mutate(x => x.DrawText(
+               new RichTextOptions(font)
+               {
+                   Origin = new PointF(rowWidth - padding, padding + titleOffset / 2 - 8),
+                   HorizontalAlignment = HorizontalAlignment.Right,
+                   VerticalAlignment = VerticalAlignment.Center,
+               },
+               roundName,
+               new Color(Rgba32.ParseHex("#FFFFFFEE"))
+           ));
+
+            var pen = Pens.Solid(new Color(Rgba32.ParseHex("#fdfdfd1f")), 1);
+            image.Mutate(x => x.DrawLine(
+                pen,
+            [new Point(padding, padding + titleOffset - 8), new Point(rowWidth - padding, padding + titleOffset - 8)]
+                ));
+
+            foreach (var match in matches)
+            {
+                var topOffset = rowIndex * rowSize;
+                var leftAlign = new RichTextOptions(font)
+                {
+                    Origin = new PointF(padding + imageSize + gap, topOffset + padding + textTopOffset + titleOffset),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                image.Mutate(x => x.DrawText(
+                    leftAlign,
+                    match.RedName,
+                    new Color(Rgba32.ParseHex("#FFFFFFEE"))
+                ));
+
+                var rightAlign = new RichTextOptions(font)
+                {
+                    Origin = new PointF(rowWidth - padding - imageSize - gap, topOffset + padding + textTopOffset + titleOffset),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                image.Mutate(x => x.DrawText(
+                  rightAlign,
+                  match.BlueName,
+                  new Color(Rgba32.ParseHex("#FFFFFFEE"))
+               ));
+
+                var centerAlign = new RichTextOptions(font)
+                {
+                    Origin = new PointF(rowWidth / 2, topOffset + padding + textTopOffset + titleOffset),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                image.Mutate(x => x.DrawText(
+                  centerAlign,
+                  "vs",
+                  new Color(Rgba32.ParseHex("#FFFFFFEE"))
+               ));
+
+                var redImage = Image.Load(ImageUrlToStream(match.RedUrl));
+                var blueImage = Image.Load(ImageUrlToStream(match.BlueUrl));
+
+                redImage.Mutate(x => x.Resize(imageSize, imageSize));
+                blueImage.Mutate(x => x.Resize(imageSize, imageSize));
+
+                image.Mutate(x => x.DrawImage(
+                        redImage,
+                        new Point(padding, topOffset + padding + titleOffset),
+                        1
+                    ));
+
+                image.Mutate(x => x.DrawImage(
+                     blueImage,
+                    new Point(rowWidth - padding - imageSize, topOffset + padding + titleOffset),
+                      1
+                    ));
+
+                rowIndex += 1;
+            }
+
+            return image;
+        }
+
+        public Stream ImageUrlToStream(string imageUrl)
+        {
+            using (WebClient webClient = new WebClient())
+            {
+                byte[] imageBytes = webClient.DownloadData(imageUrl);
+
+                MemoryStream ms = new MemoryStream(imageBytes);
+
+                return ms;
+            }
         }
     }
 }

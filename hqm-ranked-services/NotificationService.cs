@@ -5,8 +5,10 @@ using Google.Apis.Auth.OAuth2;
 using hqm_ranked_backend.Models.DbModels;
 using hqm_ranked_backend.Services.Interfaces;
 using hqm_ranked_database.DbModels;
+using hqm_ranked_models.DTO;
 using hqm_ranked_services.Helpers;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
 using System.ComponentModel;
 using TimeAgo;
 
@@ -308,7 +310,7 @@ namespace hqm_ranked_backend.Services
                 }
             }
         }
-        public async Task SendDiscordRegistrationStarted(string name, string url)
+        public async Task SendDiscordRegistrationStarted(string name, Guid id)
         {
             var settings = await _dbContext.Settings.FirstOrDefaultAsync();
 
@@ -321,7 +323,8 @@ namespace hqm_ranked_backend.Services
 
                     var message = new DiscordMessage();
                     message.Username = name ;
-                    message.Content = String.Format("Registration started: {0}", url);
+                    var url = settings.WebUrl + "/weekly-tourney?id=" + id;
+                    message.Content = "Registration started" + Environment.NewLine + url;
 
 
                     try
@@ -333,7 +336,7 @@ namespace hqm_ranked_backend.Services
             }
         }
 
-        public async Task SendDiscordTourneyStarted(string name, string url)
+        public async Task SendDiscordTourneyStarted(string name, Guid id, List<TourneyStartedDTO> teams)
         {
             var settings = await _dbContext.Settings.FirstOrDefaultAsync();
 
@@ -346,8 +349,53 @@ namespace hqm_ranked_backend.Services
 
                     var message = new DiscordMessage();
                     message.Username = name;
-                    message.Content = String.Format("Tourney started: {0}", url);
+                    var url = settings.WebUrl + "/weekly-tourney?id=" + id;
+                    message.Content = "Tourney started" + Environment.NewLine + url;
 
+                    foreach (var team in teams)
+                    {
+                        message.Embeds.Add(new DiscordEmbed
+                        {
+                            Author = new EmbedAuthor
+                            {
+                                Name = team.Name,
+                                IconUrl = new Uri(team.AvatarUrl)
+                            },
+                            Description = String.Join(Environment.NewLine, team.Players.Select(x => String.IsNullOrEmpty(x.DiscordId) ? x.Name : String.Format("{0} <@!{1}>", x.Name, x.DiscordId)))
+                        });
+                    }
+
+                    try
+                    {
+                        await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        public async Task SendDiscordTourneyGames(string name, Guid id, string imageUrl)
+        {
+            var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+            if (settings != null)
+            {
+                if (!String.IsNullOrEmpty(settings.DiscordNewsWebhook))
+                {
+                    var hook = new DiscordWebhook();
+                    hook.Uri = new Uri(settings.DiscordNewsWebhook);
+
+                    var message = new DiscordMessage();
+                    message.Username = name;
+                    var url = settings.WebUrl + "/weekly-tourney?id=" + id;
+                    message.Content = "Next games" + Environment.NewLine + url;
+                    message.Embeds.Add(new DiscordEmbed
+                    {
+                         Image = new EmbedMedia
+                         {
+                              Url = new Uri(imageUrl)
+                         }
+                    });
                     try
                     {
                         await hook.SendAsync(message);

@@ -145,6 +145,7 @@ namespace hqm_ranked_backend.Services
                 settings.SpotifyClientId = request.SpotifyClientId;
                 settings.SpotifySecret= request.SpotifySecret;
                 settings.DiscordApprove = request.DiscordApprove;
+                settings.WebUrl = request.WebUrl;
 
                 await _dbContext.SaveChangesAsync();
             }

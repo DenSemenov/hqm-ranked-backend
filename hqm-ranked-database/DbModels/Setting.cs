@@ -28,5 +28,6 @@ namespace hqm_ranked_backend.Models.DbModels
         public bool DiscordApprove { get; set; } = false;
         public string TelegramBotToken { get; set; } = String.Empty;
         public int RequiredGamesCount { get; set; } = 0;
+        public string WebUrl { get; set; } = String.Empty;
     }
 }

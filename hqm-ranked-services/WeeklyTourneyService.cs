@@ -17,7 +17,6 @@ using SixLabors.ImageSharp;
 using System.Globalization;
 using System.Net;
 
-
 namespace hqm_ranked_services
 {
     public class WeeklyTourneyService: IWeeklyTourneyService
@@ -89,10 +88,13 @@ namespace hqm_ranked_services
         public async Task RandomizeTourneyNextStage(int stage)
         {
             var currentTourneyId = await GetCurrentTourneyId();
-            var tourney = await _dbContext.WeeklyTourneys.Include(x=>x.WeeklyTourneyGames).ThenInclude(x=>x.Game).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
+            var tourney = await _dbContext.WeeklyTourneys.Include(x=>x.WeeklyTourneyGames).ThenInclude(x=>x.Game).Include(x => x.WeeklyTourneyGames).ThenInclude(x=>x.RedTeam).Include(x => x.WeeklyTourneyGames).ThenInclude(x => x.BlueTeam).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
 
             if (tourney != null)
             {
+
+                var storage = await _seasonService.GetStorage();
+                var matchesDto = new List<TourneyMatchesDTO>();
                 var games = tourney.WeeklyTourneyGames.Where(x => x.PlayoffType == stage);
                 foreach(var game in games)
                 {
@@ -131,6 +133,17 @@ namespace hqm_ranked_services
                             }
                         }
                     }
+
+                    var redTeam = _dbContext.WeeklyTourneyTeams.FirstOrDefault(x => x.Id == game.RedTeamId);
+                    var blueTeam = _dbContext.WeeklyTourneyTeams.FirstOrDefault(x => x.Id == game.BlueTeamId);
+
+                    matchesDto.Add(new TourneyMatchesDTO
+                    {
+                        RedName = redTeam.Name,
+                        BlueName = blueTeam.Name,
+                        RedUrl = String.Format(storage + "images/{0}.png", redTeam.Id),
+                        BlueUrl = String.Format(storage + "images/{0}.png", blueTeam.Id),
+                    });
                 }
 
                 tourney.Round = stage;
@@ -149,6 +162,18 @@ namespace hqm_ranked_services
                 {
                     BackgroundJob.Schedule(() => this.RandomizeTourneyNextStage(tourney.Round + 1), TimeSpan.FromMinutes(30));
                 }
+
+                if (tourney.State != WeeklyTourneyState.Finished)
+                {
+                    var roundName = GetRoundName(tourney.WeeklyTourneyGames.Max(x => x.PlayoffType), stage);
+
+                    var image = _imageGeneratorService.GenerateMatches(matchesDto, tourney.Name, roundName);
+                    var str = new MemoryStream();
+                    image.SaveAsPng(str);
+                    var newPath = String.Format("images/{0}.png", Guid.NewGuid());
+                    await _storageService.UploadFileStream(newPath, str);
+                    await _notificationService.SendDiscordTourneyGames(tourney.Name, tourney.Id, storage + newPath);
+                }
             }
         }
 
@@ -164,6 +189,15 @@ namespace hqm_ranked_services
             }
         }
 
+        public string GetRoundName(int maxRound, int current)
+        {
+            var items = new string[] { "1/32", "1/16", "1/8", "1/4", "Semifinal", "Final" };
+
+            var lastItems = items.TakeLast(maxRound).ToArray();
+
+            return lastItems.ToList()[current - 1];
+        }
+
         public async Task RandomizeTourney()
         {
             var currentTourneyId = await GetCurrentTourneyId();
@@ -171,6 +205,8 @@ namespace hqm_ranked_services
 
             if (tourney != null)
             {
+
+                var notify = new List<TourneyStartedDTO>();
 
                 var numTeams = tourney.WeeklyTourneyRequests.Count / 4;
 
@@ -209,6 +245,8 @@ namespace hqm_ranked_services
                     var nhlTeams = NhlTeamsHelper.GetTeams().OrderBy(x=>Guid.NewGuid()).ToList();
 
                     var l = 0;
+                    var storage = await _seasonService.GetStorage();
+
                     foreach (var team in teams)
                     {
                         var nhlTeam = nhlTeams[l];
@@ -229,6 +267,19 @@ namespace hqm_ranked_services
 
                         await _storageService.UploadFileStream(path, strm);
 
+                        var discordPlayers = await _dbContext.Players.Where(x => team.Players.Contains(x.Id)).Select(x=>new TourneyStartedPlayerDTO
+                        {
+                             Name = x.Name,
+                              DiscordId = x.DiscordId
+                        }).ToListAsync();
+
+                        notify.Add(new TourneyStartedDTO
+                        {
+                            Name = nhlTeam.Name,
+                            AvatarUrl = storage + path,
+                            Players = discordPlayers
+                        });
+
                         l += 1;
                     }
 
@@ -240,6 +291,8 @@ namespace hqm_ranked_services
                     var index = 0;
 
                     var servers = _dbContext.Servers.Where(x => x.InstanceType == InstanceType.WeeklyTourney).ToList();
+
+                    var matchesDto = new List<TourneyMatchesDTO>();
 
                     foreach(var match in matches.OrderByDescending(x=>x.Round))
                     {
@@ -275,21 +328,46 @@ namespace hqm_ranked_services
                             Server = servers[index]
                         }) ;
 
-                        index += 1;                        
+                        if (round == 1)
+                        {
+                            var redTeam = newTeams.FirstOrDefault(x => x.Id == teamRed);
+                            var blueTeam = newTeams.FirstOrDefault(x => x.Id == teamBlue);
+
+                            matchesDto.Add(new TourneyMatchesDTO
+                            {
+                                RedName = redTeam.Name,
+                                BlueName = blueTeam.Name,
+                                RedUrl = String.Format(storage + "images/{0}.png", redTeam.Id),
+                                BlueUrl = String.Format(storage + "images/{0}.png", blueTeam.Id),
+                            });
+                        }
+
+                        index += 1;
                     }
 
+                    await _dbContext.SaveChangesAsync();
+
                     BackgroundJob.Schedule(() => this.RandomizeTourneyNextStage(tourney.Round + 1), TimeSpan.FromMinutes(30));
+
+                    await _notificationService.SendDiscordTourneyStarted(tourney.Name, tourney.Id, notify);
+
+                    var roundName = GetRoundName(matches.Max(x=>x.Round), 1);
+
+                    var image = _imageGeneratorService.GenerateMatches(matchesDto, tourney.Name, roundName);
+                    var str = new MemoryStream();
+                    image.SaveAsPng(str);
+                    var newPath = String.Format("images/{0}.png", Guid.NewGuid());
+                    await _storageService.UploadFileStream(newPath, str);
+                    await _notificationService.SendDiscordTourneyGames(tourney.Name, tourney.Id, storage + newPath);
                 }
                 else
                 {
                     tourney.State = WeeklyTourneyState.Canceled;
+
+                    await _dbContext.SaveChangesAsync();
                 }
 
-                await _dbContext.SaveChangesAsync();
-
                 await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", tourney.Id);
-
-                await _notificationService.SendDiscordRegistrationStarted(tourney.Name, "https://hqmfun.space/weekly-tourney?id=" + tourney.Id);
             }
         }
 
@@ -316,7 +394,7 @@ namespace hqm_ranked_services
 
                 BackgroundJob.Schedule(() => this.RandomizeTourney(), TimeSpan.FromMinutes(30));
 
-                await _notificationService.SendDiscordRegistrationStarted(name, "https://hqmfun.space/weekly-tourney?id=" + entity.Entity.Id);
+                await _notificationService.SendDiscordRegistrationStarted(name, entity.Entity.Id);
             }
         }
 
@@ -442,6 +520,17 @@ namespace hqm_ranked_services
                 var isBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
                 if (!isBanned)
                 {
+                    //var p = await _dbContext.Players.OrderBy(x => Guid.NewGuid()).Take(19).ToListAsync();
+                    //foreach (var pl in p)
+                    //{
+                    //    _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
+                    //    {
+                    //        PlayerId = pl.Id,
+                    //        WeeklyTourneyId = weeklyTourney.Id,
+                    //        Positions = new List<Position>()
+                    //    });
+                    //}
+
                     var weeklyTourneyRequest = await _dbContext.WeeklyTourneyRequests.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == userId);
                     if (weeklyTourneyRequest != null)
                     {
