@@ -17,6 +17,7 @@ namespace hqm_ranked_helpers
             var minTeamsForFirstRound = teamsCount.Where(x => x <= teams.Length).Max();
 
             var round = 1;
+            var preFirstRound = false;
             for (int i = 0; i < teams.Length - minTeamsForFirstRound; i++)
             {
                 var currentRoundTeams = games.Where(x => x.Round == round).Select(x => x.TeamRed).ToList();
@@ -34,6 +35,13 @@ namespace hqm_ranked_helpers
                     TeamBlue = teamBlue,
                     Winner = teamRed,
                 });
+
+                preFirstRound = true;
+            }
+
+            if (!preFirstRound)
+            {
+                round = 0;
             }
 
             var winnerFound = false;
