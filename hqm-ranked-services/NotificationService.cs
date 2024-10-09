@@ -4,14 +4,20 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using hqm_ranked_backend.Models.DbModels;
+using hqm_ranked_backend.Models.InputModels;
 using hqm_ranked_backend.Services.Interfaces;
 using hqm_ranked_database.DbModels;
 using hqm_ranked_models.DTO;
 using hqm_ranked_services.Helpers;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
+using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using static SpotifyAPI.Web.PlaylistRemoveItemsRequest;
 
 namespace hqm_ranked_backend.Services
 {
@@ -42,6 +48,189 @@ namespace hqm_ranked_backend.Services
                 _telegramBot = new TelegramBotClient(settings.TelegramBotToken);
             }
         }
+
+        //public async Task GetNews()
+        //{
+
+        //    var msgs = new List<MessageItem>();
+        //    try
+        //    {
+        //        var token = "Bot ";
+        //        var client = new HttpClient();
+        //        var request = new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/channels/1257624019067207780/messages?limit=100");
+        //        request.Headers.Add("Accept", "application/json");
+        //        request.Headers.Add("Authorization", token);
+        //        var response = await client.SendAsync(request);
+        //        response.EnsureSuccessStatusCode(); 
+        //        var res = await response.Content.ReadAsStringAsync();
+
+        //        var myDeserializedClass = JsonConvert.DeserializeObject<List<Root>>(res);
+
+        //        foreach(var item in myDeserializedClass)
+        //        {
+        //            var type = MsgType.Achive;
+        //            var title = String.Empty;
+        //            var desc = String.Empty;
+        //            var images = new List<string>();
+
+        //            var firstEmbedTitle = item.embeds.Any() ? item.embeds.FirstOrDefault().title?? String.Empty: String.Empty;
+
+        //            if (firstEmbedTitle.StartsWith("New nickname"))
+        //            {
+        //                type = MsgType.NewNickname;
+        //                title = item.author.username;
+        //                desc = firstEmbedTitle;
+        //            }
+        //            else if (firstEmbedTitle.EndsWith(" games played") || firstEmbedTitle.EndsWith(" goals") || firstEmbedTitle.EndsWith(" assists") || firstEmbedTitle.StartsWith("Best assistant ") || firstEmbedTitle.StartsWith("Best goaleador ") || firstEmbedTitle.StartsWith("Third place ") || firstEmbedTitle.StartsWith("Second place ") || firstEmbedTitle.StartsWith("First place "))
+        //            {
+        //                type = MsgType.Achive;
+        //                title = item.author.username;
+        //                desc = firstEmbedTitle;
+        //            }
+        //            else if (item.content.StartsWith("Registration started"))
+        //            {
+        //                title = item.content;
+        //                type = MsgType.WtRegistrationStarted;
+        //            }
+        //            else if (item.content.StartsWith("Tourney started"))
+        //            {
+        //                title = item.content;
+        //                type = MsgType.WtStarted;
+
+        //                foreach(var em in item.embeds)
+        //                {
+        //                    desc += "*" + em.author.name+ "*" + Environment.NewLine + Regex.Replace(em.description, @"<@![^>]+>", "") + Environment.NewLine+ Environment.NewLine;
+        //                }
+        //            }
+        //            else if (item.content.StartsWith("Next games"))
+        //            {
+        //                title = item.content;
+        //                type = MsgType.WtGames;
+        //                images.Add(item.embeds.FirstOrDefault().image.url);
+
+        //            }
+        //            else if (firstEmbedTitle.StartsWith("Congratulations to the winner!"))
+        //            {
+        //                type = MsgType.WtWinner;
+        //                title = firstEmbedTitle;
+        //                desc = Regex.Replace(item.embeds.FirstOrDefault().description, @"<@![^>]+>", ""); 
+        //            }
+
+        //            if (!String.IsNullOrEmpty(title))
+        //            {
+        //                msgs.Add(new MessageItem
+        //                {
+        //                    Type = type,
+        //                    Date = item.timestamp,
+        //                    Title = title,
+        //                    Description = desc,
+        //                    Images = images
+        //                });
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //    }
+        //    var settings = await _dbContext.Settings.FirstOrDefaultAsync();
+
+        //    foreach (var item in msgs.OrderBy(x=>x.Date).TakeLast(1))
+        //    {
+        //        if (_telegramBot != null)
+        //        {
+        //            try
+        //            {
+        //                var text = EscapeMarkdownV2("*" + item.Title + "*" + Environment.NewLine + item.Description);
+
+        //                await _telegramBot.SendTextMessageAsync(
+        //                    chatId: settings.TelegramGroupId,
+        //                    text: text,
+        //                    replyToMessageId: settings.NewsThreadId,
+        //                    parseMode: ParseMode.MarkdownV2
+        //                );
+
+        //                foreach (var image in item.Images)
+        //                {
+        //                    var file = InputFile.FromUri(image);
+        //                    await _telegramBot.SendPhotoAsync(
+        //                        chatId: settings.TelegramGroupId,
+        //                        replyToMessageId: settings.NewsThreadId,
+        //                         photo: file
+        //                         );
+        //                }
+        //            }
+        //            catch (Exception ex )
+        //            {
+
+        //            }
+        //        }
+
+        //        Thread.Sleep(3000);
+        //    }
+        //}
+
+        public string EscapeMarkdownV2(string text)
+        {
+            string[] reservedCharacters = { "_",  "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!" };
+            foreach (var ch in reservedCharacters)
+            {
+                text = text.Replace(ch, "\\" + ch);
+            }
+            return text;
+        }
+
+        //public class MessageItem
+        //{
+        //    public MsgType Type { get; set; }
+        //    public string Title { get; set; }
+        //    public string Description { get; set; }
+        //    public DateTime Date { get; set; }
+        //    public List<string> Images { get; set; }
+        //}
+
+        //public enum MsgType
+        //{
+        //    Achive,
+        //    WtWinner,
+        //    WtGames,
+        //    WtStarted,
+        //    WtRegistrationStarted,
+        //    NewNickname,
+
+        //}
+
+        //// Root myDeserializedClass = JsonConvert.DeserializeObject<List<Root>>(myJsonResponse);
+        //public class Author
+        //{
+        //    public string username { get; set; }
+        //    public string name { get; set; }
+        //}
+
+        //public class Img
+        //{
+        //    public string url { get; set; }
+        //}
+        //public class Embed
+        //{
+        //    public string type { get; set; }
+        //    public string title { get; set; }
+        //    public int content_scan_version { get; set; }
+        //    public string description { get; set; }
+        //    public Img image { get; set; }
+        //    public Author author { get; set; }
+        //    public string url { get; set; }
+        //}
+
+        //public class Root
+        //{
+        //    public string content { get; set; }
+        //    public List<object> attachments { get; set; }
+        //    public List<Embed> embeds { get; set; }
+        //    public DateTime timestamp { get; set; }
+           
+        //    public Author author { get; set; }
+        //}
 
         public async Task SendDiscordNotification(string serverName, int count, int teamMax)
         {
@@ -224,10 +413,12 @@ namespace hqm_ranked_backend.Services
                 {
                     try
                     {
+                        var desc = String.Format("New nickname: {0}", newNickname);
                         await _telegramBot.SendTextMessageAsync(
                             chatId: settings.TelegramGroupId,
-                            text: String.Format("{0} > {1}", player.Name, newNickname),
-                            replyToMessageId: settings.NewsThreadId
+                            text: EscapeMarkdownV2("*" + player.Name + "*" + Environment.NewLine + desc),
+                            replyToMessageId: settings.NewsThreadId,
+                            parseMode: ParseMode.MarkdownV2
                         );
                     }
                     catch { }
@@ -341,8 +532,9 @@ namespace hqm_ranked_backend.Services
                     {
                         await _telegramBot.SendTextMessageAsync(
                             chatId: settings.TelegramGroupId,
-                            text: title + Environment.NewLine + desc,
-                            replyToMessageId: settings.NewsThreadId
+                            text: EscapeMarkdownV2("*" + title + "*" + Environment.NewLine + desc),
+                            replyToMessageId: settings.NewsThreadId,
+                            parseMode: ParseMode.MarkdownV2
                         );
                     }
                     catch { }
@@ -476,8 +668,9 @@ namespace hqm_ranked_backend.Services
                         var url = settings.WebUrl + "/weekly-tourney?id=" + id;
                         await _telegramBot.SendTextMessageAsync(
                             chatId: settings.TelegramGroupId,
-                            text: "Registration started" + Environment.NewLine + url,
-                            replyToMessageId: settings.NewsThreadId
+                            text: EscapeMarkdownV2("*Registration started*" + Environment.NewLine + url),
+                            replyToMessageId: settings.NewsThreadId,
+                            parseMode: ParseMode.MarkdownV2
                         );
                     }
                     catch { }
@@ -528,7 +721,7 @@ namespace hqm_ranked_backend.Services
                         var url = settings.WebUrl + "/weekly-tourney?id=" + id;
                         await _telegramBot.SendTextMessageAsync(
                             chatId: settings.TelegramGroupId,
-                            text: "Tourney started" + Environment.NewLine + url,
+                            text: EscapeMarkdownV2("*Tourney started*" + Environment.NewLine + url),
                             replyToMessageId: settings.NewsThreadId
                         );
                     }
@@ -573,7 +766,7 @@ namespace hqm_ranked_backend.Services
                         var url = settings.WebUrl + "/weekly-tourney?id=" + id;
                         await _telegramBot.SendTextMessageAsync(
                             chatId: settings.TelegramGroupId,
-                            text: "Next games" + Environment.NewLine + url,
+                            text: EscapeMarkdownV2("*Next games*" + Environment.NewLine + url),
                             replyToMessageId: settings.NewsThreadId
                         );
 
