@@ -10,5 +10,6 @@ namespace hqm_ranked_models.ViewModels
     {
         public string DiscordAppClientId { get; set; }
         public string DiscordJoinLink { get; set; }
+        public string TelegramJoinLink { get; set; }
     }
 }

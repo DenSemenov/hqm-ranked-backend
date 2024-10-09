@@ -26,8 +26,13 @@ namespace hqm_ranked_backend.Models.DbModels
         public string DiscordNewsWebhook { get; set; }
         public string DiscordJoinLink { get; set; }
         public bool DiscordApprove { get; set; } = false;
-        public string TelegramBotToken { get; set; } = String.Empty;
         public int RequiredGamesCount { get; set; } = 0;
         public string WebUrl { get; set; } = String.Empty;
+        public string TelegramBotToken { get; set; } = String.Empty;
+        public int TelegramGroupId { get; set; } = 0;
+        public int NotificationThreadId { get; set; } = 0;
+        public int NewsThreadId { get; set; } = 0;
+        public string TelegramJoinLink { get; set; }
+
     }
 }

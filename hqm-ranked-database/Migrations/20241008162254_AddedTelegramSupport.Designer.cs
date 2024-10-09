@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using hqm_ranked_backend.Models.DbModels;
 
 #nullable disable
 
-namespace hqm_ranked_backend.Migrations
+namespace hqm_ranked_database.Migrations
 {
     [DbContext(typeof(RankedDb))]
-    partial class RankedDbModelSnapshot : ModelSnapshot
+    [Migration("20241008162254_AddedTelegramSupport")]
+    partial class AddedTelegramSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1164,8 +1167,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<bool>("NewPlayerApproveRequired")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("NewsThreadId")
-                        .HasColumnType("integer");
+                    b.Property<long>("NewsThreadId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("NextGameCheckGames")
                         .HasColumnType("integer");
@@ -1173,8 +1176,8 @@ namespace hqm_ranked_backend.Migrations
                     b.Property<int>("NicknameChangeDaysLimit")
                         .HasColumnType("integer");
 
-                    b.Property<int>("NotificationThreadId")
-                        .HasColumnType("integer");
+                    b.Property<long>("NotificationThreadId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("PushJson")
                         .IsRequired()
@@ -1231,12 +1234,8 @@ namespace hqm_ranked_backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("TelegramGroupId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TelegramJoinLink")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<long>("TelegramGroupId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("WebUrl")
                         .IsRequired()

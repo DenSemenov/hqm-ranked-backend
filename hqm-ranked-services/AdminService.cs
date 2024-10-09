@@ -146,6 +146,11 @@ namespace hqm_ranked_backend.Services
                 settings.SpotifySecret= request.SpotifySecret;
                 settings.DiscordApprove = request.DiscordApprove;
                 settings.WebUrl = request.WebUrl;
+                settings.TelegramBotToken = request.TelegramBotToken;
+                settings.TelegramGroupId = request.TelegramGroupId;
+                settings.NotificationThreadId = request.NotificationThreadId;
+                settings.NewsThreadId = request.NewsThreadId;
+                settings.TelegramJoinLink = request.TelegramJoinLink;
 
                 await _dbContext.SaveChangesAsync();
             }

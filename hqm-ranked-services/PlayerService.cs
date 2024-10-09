@@ -335,6 +335,7 @@ namespace hqm_ranked_backend.Services
             {
                 result.DiscordAppClientId = settings.DiscordAppClientId;
                 result.DiscordJoinLink = settings.DiscordJoinLink;
+                result.TelegramJoinLink = settings.TelegramJoinLink;
             }
 
             return result;

@@ -1,4 +1,5 @@
-﻿using CSharpDiscordWebhook.NET.Discord;
+﻿using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using CSharpDiscordWebhook.NET.Discord;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
@@ -9,14 +10,16 @@ using hqm_ranked_models.DTO;
 using hqm_ranked_services.Helpers;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
-using System.ComponentModel;
-using TimeAgo;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.InputFiles;
 
 namespace hqm_ranked_backend.Services
 {
     public class NotificationService : INotificationService
     {
         private RankedDb _dbContext;
+        private static TelegramBotClient? _telegramBot;
         public NotificationService(RankedDb dbContext)
         {
             _dbContext = dbContext;
@@ -33,6 +36,11 @@ namespace hqm_ranked_backend.Services
                     });
                 }
                 catch { }
+            }
+
+            if (!String.IsNullOrEmpty(settings.TelegramBotToken))
+            {
+                _telegramBot = new TelegramBotClient(settings.TelegramBotToken);
             }
         }
 
@@ -56,6 +64,22 @@ namespace hqm_ranked_backend.Services
                         try
                         {
                             await hook.SendAsync(message);
+                        }
+                        catch { }
+                    }
+                }
+
+                if (_telegramBot != null)
+                {
+                    if (count >= settings.WebhookCount)
+                    {
+                        try
+                        {
+                            await _telegramBot.SendTextMessageAsync(
+                                chatId: settings.TelegramGroupId,
+                                text: String.Format("{0}: Logged in {1}/{2}", serverName, count, teamMax * 2),
+                                replyToMessageId: settings.NotificationThreadId
+                            );
                         }
                         catch { }
                     }
@@ -95,6 +119,20 @@ namespace hqm_ranked_backend.Services
 
                     }
                 }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        var timeAgo = TimeHelper.GetRemainingTime(gameInvite.Date);
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: String.Format("{0} vs {1} {2} ({3})", team1, team2, timeAgo, gameInvite.GamesCount),
+                            replyToMessageId: settings.NewsThreadId
+                        );
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -129,6 +167,20 @@ namespace hqm_ranked_backend.Services
                     {
 
                     }
+                }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        var timeAgo = TimeHelper.GetRemainingTime(gameInvite.Date);
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: String.Format("New game invite available {0} ({1} games)", timeAgo, gameInvite.GamesCount),
+                            replyToMessageId: settings.NewsThreadId
+                        );
+                    }
+                    catch { }
                 }
             }
         }
@@ -167,6 +219,19 @@ namespace hqm_ranked_backend.Services
                     {
 
                     }
+                }
+
+                if (_telegramBot !=null)
+                {
+                    try
+                    {
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: String.Format("{0} > {1}", player.Name, newNickname),
+                            replyToMessageId: settings.NewsThreadId
+                        );
+                    }
+                    catch { }
                 }
             }
         }
@@ -238,6 +303,51 @@ namespace hqm_ranked_backend.Services
 
                     }
                 }
+
+                if (_telegramBot != null)
+                {
+                    var desc = String.Empty;
+
+                    switch (award.AwardType)
+                    {
+                        case AwardType.FirstPlace:
+                            desc = String.Format("First place ({0})", award.Season.Name);
+                            break;
+                        case AwardType.SecondPlace:
+                            desc = String.Format("Second place ({0})", award.Season.Name);
+                            break;
+                        case AwardType.ThirdPlace:
+                            desc = String.Format("Third place ({0})", award.Season.Name);
+                            break;
+                        case AwardType.BestGoaleador:
+                            desc = String.Format("Best goaleador ({0})", award.Season.Name);
+                            break;
+                        case AwardType.BestAssistant:
+                            desc = String.Format("Best assistant ({0})", award.Season.Name);
+                            break;
+                        case AwardType.GamesPlayed:
+                            desc = String.Format("{0} games played", award.Count);
+                            break;
+                        case AwardType.Goals:
+                            desc = String.Format("{0} goals", award.Count);
+                            break;
+                        case AwardType.Assists:
+                            desc = String.Format("{0} assists", award.Count);
+                            break;
+                    }
+
+                    var title = String.Format("{0} {1}", award.Season != null ? "🏆" : "🏅", playerName);
+
+                    try
+                    {
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: title + Environment.NewLine + desc,
+                            replyToMessageId: settings.NewsThreadId
+                        );
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -258,6 +368,19 @@ namespace hqm_ranked_backend.Services
                     try
                     {
                         await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: String.Format("{0}: Game ended", serverName),
+                            replyToMessageId: settings.NotificationThreadId
+                        );
                     }
                     catch { }
                 }
@@ -282,6 +405,19 @@ namespace hqm_ranked_backend.Services
                     try
                     {
                         await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: String.Format("{0}: Game started", serverName),
+                            replyToMessageId: settings.NotificationThreadId
+                        );
                     }
                     catch { }
                 }
@@ -333,6 +469,20 @@ namespace hqm_ranked_backend.Services
                     }
                     catch { }
                 }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        var url = settings.WebUrl + "/weekly-tourney?id=" + id;
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: "Registration started" + Environment.NewLine + url,
+                            replyToMessageId: settings.NewsThreadId
+                        );
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -371,6 +521,20 @@ namespace hqm_ranked_backend.Services
                     }
                     catch { }
                 }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        var url = settings.WebUrl + "/weekly-tourney?id=" + id;
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: "Tourney started" + Environment.NewLine + url,
+                            replyToMessageId: settings.NewsThreadId
+                        );
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -402,6 +566,27 @@ namespace hqm_ranked_backend.Services
                     }
                     catch { }
                 }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        var url = settings.WebUrl + "/weekly-tourney?id=" + id;
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: "Next games" + Environment.NewLine + url,
+                            replyToMessageId: settings.NewsThreadId
+                        );
+
+                        var file = InputFile.FromUri(url);
+                        await _telegramBot.SendPhotoAsync(
+                            chatId: settings.TelegramGroupId,
+                            replyToMessageId: settings.NewsThreadId,
+                             photo: file
+                       );
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -423,6 +608,19 @@ namespace hqm_ranked_backend.Services
                     try
                     {
                         await hook.SendAsync(message);
+                    }
+                    catch { }
+                }
+
+                if (_telegramBot != null)
+                {
+                    try
+                    {
+                        await _telegramBot.SendTextMessageAsync(
+                            chatId: settings.TelegramGroupId,
+                            text: String.Format("{0}: Game canceled", serverName),
+                            replyToMessageId: settings.NewsThreadId
+                        );
                     }
                     catch { }
                 }
