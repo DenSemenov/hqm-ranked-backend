@@ -18,7 +18,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace hqm_ranked_backend
 {

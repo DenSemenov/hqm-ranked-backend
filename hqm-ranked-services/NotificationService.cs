@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.InputFiles;
 
 namespace hqm_ranked_backend.Services
 {
@@ -578,14 +577,17 @@ namespace hqm_ranked_backend.Services
                             replyToMessageId: settings.NewsThreadId
                         );
 
-                        var file = InputFile.FromUri(url);
+                        var file = InputFile.FromUri(imageUrl);
                         await _telegramBot.SendPhotoAsync(
                             chatId: settings.TelegramGroupId,
                             replyToMessageId: settings.NewsThreadId,
                              photo: file
                        );
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+
+                    }
                 }
             }
         }
