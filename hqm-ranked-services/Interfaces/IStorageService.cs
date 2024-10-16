@@ -12,5 +12,6 @@ namespace hqm_ranked_backend.Services.Interfaces
         Task<StorageType> UploadFileStream(string name, Stream file);
         Task<string> LoadTextFile(string name);
         Task<string> RemoveFile(string name);
+        Task RemoveFiles(DateTime before);
     }
 }

@@ -175,6 +175,63 @@ namespace hqm_ranked_backend.Services
             return result;
         }
 
+        public async Task RemoveFiles(DateTime before)
+        {
+            if (_client != null)
+            {
+                var result = new List<string>();
+                var nextMarkerId = String.Empty;
+
+                while (true)
+                {
+                    var request = new ListObjectsRequest
+                    {
+                        BucketName = _S3Bucket,
+                        Prefix = _S3Id.ToString(),
+                        MaxKeys = 99999,
+                        Marker = nextMarkerId
+                    };
+                    var files = await _client.ListObjectsAsync(request);
+
+                    var filesToRemove = files.S3Objects.Where(x => x.LastModified < before && (x.Key.EndsWith(".hrp") || x.Key.EndsWith(".json"))).ToList();
+                    result.AddRange(filesToRemove.Select(x=>x.Key));
+
+                    nextMarkerId = files.NextMarker;
+
+                    if (String.IsNullOrEmpty(nextMarkerId))
+                    {
+                        break;
+                    }
+                }
+                var chunks = SplitArray(result, 1000);
+                foreach(var chunk in chunks)
+                {
+                    await _client.DeleteObjectsAsync(new DeleteObjectsRequest
+                    {
+                        BucketName = _S3Bucket,
+                        Objects = chunk.Select(x => new KeyVersion { Key = x }).ToList()
+                    });
+                }
+              
+            }
+        }
+
+        public static List<string[]> SplitArray(List<string> array, int maxChunkSize)
+        {
+            var chunks = new List<string[]>();
+
+            for (int i = 0; i < array.Count; i += maxChunkSize)
+            {
+                int remainingItems = array.Count - i;
+                int currentChunkSize = Math.Min(maxChunkSize, remainingItems);
+                var chunk = new string[currentChunkSize];
+                Array.Copy(array.ToArray(), i, chunk, 0, currentChunkSize);
+                chunks.Add(chunk);
+            }
+
+            return chunks;
+        }
+
         private Stream GenerateStreamFromString(string p)
         {
             var bytes = Encoding.UTF8.GetBytes(p);

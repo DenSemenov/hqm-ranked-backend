@@ -65,6 +65,7 @@ namespace hqm_ranked_backend.Services
             if (settings != null)
             {
                 var dateToCheck = DateTime.UtcNow.AddDays(-settings.ReplayStoreDays);
+
                 try
                 {
                     var replaysToRemove = _dbContext.ReplayData.Include(x => x.ReplayFragments).Include(x => x.ReplayGoals).Where(x => x.CreatedOn < dateToCheck).ToList();
@@ -86,6 +87,9 @@ namespace hqm_ranked_backend.Services
                         _dbContext.ReplayData.Remove(replay);
                     }
                     _dbContext.SaveChanges();
+
+                    _storageService.RemoveFiles(dateToCheck).Wait();
+
                 }
                 catch (Exception ex)
                 {
