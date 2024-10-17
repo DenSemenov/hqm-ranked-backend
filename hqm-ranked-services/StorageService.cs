@@ -33,7 +33,8 @@ namespace hqm_ranked_backend.Services
                 AmazonS3Config config = new AmazonS3Config()
                 {
                     ServiceURL = string.Format("https://{0}", settings.S3Domain),
-                    UseHttp = false
+                    UseHttp = false,
+                    ForcePathStyle = true
                 };
                 AWSCredentials creds = new BasicAWSCredentials(settings.S3User, settings.S3Key);
                 _client = new AmazonS3Client(creds, config);
@@ -177,42 +178,49 @@ namespace hqm_ranked_backend.Services
 
         public async Task RemoveFiles(DateTime before)
         {
-            if (_client != null)
+            try
             {
-                var result = new List<string>();
-                var nextMarkerId = String.Empty;
-
-                while (true)
+                if (_client != null)
                 {
-                    var request = new ListObjectsRequest
+                    var result = new List<string>();
+                    var nextMarkerId = String.Empty;
+
+                    while (true)
                     {
-                        BucketName = _S3Bucket,
-                        Prefix = _S3Id.ToString(),
-                        MaxKeys = 99999,
-                        Marker = nextMarkerId
-                    };
-                    var files = await _client.ListObjectsAsync(request);
+                        var request = new ListObjectsRequest
+                        {
+                            BucketName = _S3Bucket,
+                            Prefix = _S3Id.ToString(),
+                            MaxKeys = 1,
+                            Marker = nextMarkerId
+                        };
+                        var files = await _client.ListObjectsAsync(request);
 
-                    var filesToRemove = files.S3Objects.Where(x => x.LastModified < before && (x.Key.EndsWith(".hrp") || x.Key.EndsWith(".json"))).ToList();
-                    result.AddRange(filesToRemove.Select(x=>x.Key));
+                        var filesToRemove = files.S3Objects.Where(x => x.LastModified < before && (x.Key.EndsWith(".hrp") || x.Key.EndsWith(".json"))).ToList();
+                        result.AddRange(filesToRemove.Select(x => x.Key));
 
-                    nextMarkerId = files.NextMarker;
+                        nextMarkerId = files.NextMarker;
 
-                    if (String.IsNullOrEmpty(nextMarkerId))
-                    {
-                        break;
+                        if (String.IsNullOrEmpty(nextMarkerId))
+                        {
+                            break;
+                        }
                     }
-                }
-                var chunks = SplitArray(result, 1000);
-                foreach(var chunk in chunks)
-                {
-                    await _client.DeleteObjectsAsync(new DeleteObjectsRequest
+                    var chunks = SplitArray(result, 1000);
+                    foreach (var chunk in chunks)
                     {
-                        BucketName = _S3Bucket,
-                        Objects = chunk.Select(x => new KeyVersion { Key = x }).ToList()
-                    });
+                        await _client.DeleteObjectsAsync(new DeleteObjectsRequest
+                        {
+                            BucketName = _S3Bucket,
+                            Objects = chunk.Select(x => new KeyVersion { Key = x }).ToList()
+                        });
+                    }
+
                 }
-              
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
