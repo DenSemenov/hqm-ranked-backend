@@ -74,12 +74,21 @@ namespace hqm_ranked_models.ViewModels
         public string TourneyName { get; set; }
         public int WeekNumber { get; set; }
         public List<WeeklyTourneyRegistrationPlayerViewModel> Players { get; set; }
+        public List<WeeklyTourneyRegistrationPartyViewModel> Parties { get; set; }
+        public List<WeeklyTourneyRegistrationPlayerViewModel> AllPlayers { get; set; }
+    }
+
+    public class WeeklyTourneyRegistrationPartyViewModel
+    {
+        public Guid PartyId { get; set; }
+        public List<WeeklyTourneyRegistrationPlayerViewModel> Players { get; set; }
     }
 
     public class WeeklyTourneyRegistrationPlayerViewModel
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public WeeklyTourneyPartyPlayerState State { get; set; }
     }
 
 }

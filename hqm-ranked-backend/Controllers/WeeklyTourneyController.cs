@@ -52,6 +52,28 @@ namespace hqm_ranked_backend.Controllers
             return Ok();
         }
 
+        [Authorize]
+        [HttpPost("WeeklyTourneyInvite")]
+        public async Task<IActionResult> WeeklyTourneyInvite(WeeklyTourneyInviteRequest request)
+        {
+            var userId = UserHelper.GetUserId(User);
+
+            await _weeklyTourneyService.WeeklyTourneyInvite(userId, request.InvitedId);
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("WeeklyTourneyAcceptDeclineInvite")]
+        public async Task<IActionResult> WeeklyTourneyAcceptDeclineInvite(WeeklyTourneyAcceptDeclineInvite request)
+        {
+            var userId = UserHelper.GetUserId(User);
+
+            await _weeklyTourneyService.WeeklyTourneyAcceptDeclineInvite(userId, request);
+
+            return Ok();
+        }
+
         [HttpPost("RandomizeNextStage")]
         public async Task<IActionResult> RandomizeNextStage(int request)
         {

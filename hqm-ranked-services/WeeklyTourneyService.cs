@@ -201,25 +201,18 @@ namespace hqm_ranked_services
         public async Task RandomizeTourney()
         {
             var currentTourneyId = await GetCurrentTourneyId();
-            var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyRequests).ThenInclude(x => x.Player).ThenInclude(x => x.Cost).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
+            var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyParties).ThenInclude(x => x.WeeklyTourneyPartyPlayers).ThenInclude(x => x.Player).ThenInclude(x => x.Cost).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
 
             if (tourney != null)
             {
 
                 var notify = new List<TourneyStartedDTO>();
 
-                var numTeams = tourney.WeeklyTourneyRequests.Count / 4;
+                var numTeams = tourney.WeeklyTourneyParties.SelectMany(x=>x.WeeklyTourneyPartyPlayers.Where(y=>y.State != WeeklyTourneyPartyPlayerState.Waiting)).Count() / 4;
 
                 if (numTeams >= 4)
                 {
                     tourney.State = WeeklyTourneyState.Running;
-
-                    var players = tourney.WeeklyTourneyRequests.OrderBy(x => x.CreatedOn).Take(numTeams * 4).Select(x => new
-                    {
-                        Id = x.Player.Id,
-                        Cost = x.Player.Cost != null ? x.Player.Cost.Cost : 100000,
-
-                    }).OrderByDescending(x => x.Cost).ToList();
 
                     var teams = new List<WeeklyTourneyTeamDTO>();
                     for (int i = 0; i < numTeams; i++)
@@ -227,15 +220,36 @@ namespace hqm_ranked_services
                         teams.Add(new WeeklyTourneyTeamDTO());
                     }
 
-                    foreach (var player in players)
+                    foreach (var party in tourney.WeeklyTourneyParties.OrderByDescending(x => x.WeeklyTourneyPartyPlayers.Count).ThenByDescending(x => x.WeeklyTourneyPartyPlayers.Sum(y => y.Player.Cost != null ? y.Player.Cost.CostPlayer : 100000)))
                     {
-                        foreach (var teamWithMinRating in teams.OrderBy(t => t.TotalRating))
+                        var teamWithLowerRating = teams.Where(x => 4 - x.Players.Count >= party.WeeklyTourneyPartyPlayers.Count).OrderBy(t => t.TotalRating).FirstOrDefault();
+
+                        if (teamWithLowerRating != null)
                         {
-                            if (teamWithMinRating.Players.Count != 4)
+                            foreach (var player in party.WeeklyTourneyPartyPlayers)
                             {
-                                teamWithMinRating.Players.Add(player.Id);
-                                teamWithMinRating.TotalRating += player.Cost;
-                                break;
+                                teamWithLowerRating.Players.Add(player.Player.Id);
+                                teamWithLowerRating.TotalRating += player.Player.Cost.CostPlayer;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var player in party.WeeklyTourneyPartyPlayers)
+                            {
+                                var teamWithLowerRatingTemp = teams.OrderBy(t => t.TotalRating).FirstOrDefault();
+
+                                if (teamWithLowerRatingTemp != null)
+                                {
+                                    if (teamWithLowerRatingTemp.Players.Count < 4)
+                                    {
+                                        teamWithLowerRatingTemp.Players.Add(player.Player.Id);
+                                        teamWithLowerRatingTemp.TotalRating += player.Player.Cost.CostPlayer;
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Player removed {0} {1}", player.Player.Id, party.Id);
+                                    }
+                                }
                             }
                         }
                     }
@@ -410,17 +424,33 @@ namespace hqm_ranked_services
                 if (tr.State == WeeklyTourneyState.Registration)
                 {
 
-                    result.Registration = _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyRequests).ThenInclude(x => x.Player).Select(x => new WeeklyTourneyRegistrationViewModel
+                    result.Registration = _dbContext.WeeklyTourneys.Include(x=>x.WeeklyTourneyParties).ThenInclude(x=>x.WeeklyTourneyPartyPlayers).ThenInclude(x => x.Player).Include(x => x.WeeklyTourneyRequests).ThenInclude(x => x.Player).Select(x => new WeeklyTourneyRegistrationViewModel
                     {
                         TourneyId = x.Id,
                         TourneyName = x.Name,
                         WeekNumber = x.WeekNumber,
+                        Parties = x.WeeklyTourneyParties.Select(y => new WeeklyTourneyRegistrationPartyViewModel
+                        {
+                            PartyId = y.Id,
+                            Players = y.WeeklyTourneyPartyPlayers.OrderBy(x=>x.CreatedOn).Select(y => new WeeklyTourneyRegistrationPlayerViewModel
+                            {
+                                Id = y.Player.Id,
+                                Name = y.Player.Name,
+                                State = y.State
+                            }).ToList()
+                        }).ToList(),
                         Players = x.WeeklyTourneyRequests.OrderByDescending(x => x.CreatedOn).Select(y => new WeeklyTourneyRegistrationPlayerViewModel
                         {
                             Id = y.Player.Id,
                             Name = y.Player.Name
                         }).ToList()
                     }).FirstOrDefault(x => x.TourneyId == request.Id);
+
+                    result.Registration.AllPlayers = _dbContext.Players.Include(x=>x.Bans).Where(x=>!x.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow)).OrderBy(x => x.Name).Select(x => new WeeklyTourneyRegistrationPlayerViewModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name
+                    }).ToList();
                 }
                 else if (tr.State == WeeklyTourneyState.Running || tr.State == WeeklyTourneyState.Finished)
                 {
@@ -513,36 +543,52 @@ namespace hqm_ranked_services
         public async Task WeeklyTourneyRegister(int userId)
         {
             var weekNumber = GetCurrentWeek();
-            var weeklyTourney = await _dbContext.WeeklyTourneys.FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
+            var weeklyTourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyParties).ThenInclude(x => x.WeeklyTourneyPartyPlayers).ThenInclude(x => x.Player).FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
             if (weeklyTourney != null)
             {
                 var user = await _dbContext.Players.Include(x => x.Bans).SingleOrDefaultAsync(x => x.Id == userId);
                 var isBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
                 if (!isBanned)
                 {
-                    //var p = await _dbContext.Players.OrderBy(x => Guid.NewGuid()).Take(19).ToListAsync();
-                    //foreach (var pl in p)
-                    //{
-                    //    _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
-                    //    {
-                    //        PlayerId = pl.Id,
-                    //        WeeklyTourneyId = weeklyTourney.Id,
-                    //        Positions = new List<Position>()
-                    //    });
-                    //}
-
-                    var weeklyTourneyRequest = await _dbContext.WeeklyTourneyRequests.Include(x => x.Player).FirstOrDefaultAsync(x => x.Player.Id == userId);
-                    if (weeklyTourneyRequest != null)
+                    var partiesWaitings = weeklyTourney.WeeklyTourneyParties.Where(x => x.WeeklyTourneyPartyPlayers.Any(x => x.Player.Id == userId && x.State == WeeklyTourneyPartyPlayerState.Waiting)).ToList();
+                    foreach(var partiesWaiting in partiesWaitings)
                     {
-                        _dbContext.WeeklyTourneyRequests.Remove(weeklyTourneyRequest);
+                        var playerInWaitingParty = partiesWaiting.WeeklyTourneyPartyPlayers.FirstOrDefault(x => x.Player.Id == userId);
+                        if (playerInWaitingParty != null)
+                        {
+                            partiesWaiting.WeeklyTourneyPartyPlayers.Remove(playerInWaitingParty);
+                        }
+                    }
+
+                    var party = weeklyTourney.WeeklyTourneyParties.FirstOrDefault(x => x.WeeklyTourneyPartyPlayers.Any(x => x.Player.Id == userId));
+                    if (party != null)
+                    {
+                        var playerInParty = party.WeeklyTourneyPartyPlayers.FirstOrDefault(x => x.Player.Id == userId);
+                        if (playerInParty != null)
+                        {
+                            if (playerInParty.State == WeeklyTourneyPartyPlayerState.Host)
+                            {
+                                weeklyTourney.WeeklyTourneyParties.Remove(party);
+                            }
+                            else
+                            {
+                                party.WeeklyTourneyPartyPlayers.Remove(playerInParty);
+                            }
+                        }
+                        
                     }
                     else
                     {
-                        _dbContext.WeeklyTourneyRequests.Add(new WeeklyTourneyRequest
+                        weeklyTourney.WeeklyTourneyParties.Add(new WeeklyTourneyParty
                         {
-                            PlayerId = userId,
-                            WeeklyTourneyId = weeklyTourney.Id,
-                            Positions = new List<Position>()
+                            WeeklyTourneyPartyPlayers = new List<WeeklyTourneyPartyPlayer>
+                             {
+                                 new WeeklyTourneyPartyPlayer
+                                 {
+                                      Player = user,
+                                      State = WeeklyTourneyPartyPlayerState.Host
+                                 }
+                             }
                         });
                     }
 
@@ -550,6 +596,73 @@ namespace hqm_ranked_services
 
                     await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", weeklyTourney.Id);
                 }
+            }
+        }
+
+        public async Task WeeklyTourneyInvite(int userId, int invitedId)
+        {
+            var weekNumber = GetCurrentWeek();
+            var weeklyTourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyParties).ThenInclude(x => x.WeeklyTourneyPartyPlayers).ThenInclude(x => x.Player).FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
+            if (weeklyTourney != null)
+            {
+                var user = await _dbContext.Players.Include(x => x.Bans).SingleOrDefaultAsync(x => x.Id == userId);
+                var invited = await _dbContext.Players.SingleOrDefaultAsync(x => x.Id == invitedId);
+                var isBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
+                if (!isBanned)
+                {
+                    var party = weeklyTourney.WeeklyTourneyParties.FirstOrDefault(x => x.WeeklyTourneyPartyPlayers.Any(x => x.Player.Id == userId && x.State == WeeklyTourneyPartyPlayerState.Host));
+                    if (party != null)
+                    {
+                        var playerInParty = party.WeeklyTourneyPartyPlayers.FirstOrDefault(x => x.Player == invited);
+                        if (playerInParty == null)
+                        {
+                            party.WeeklyTourneyPartyPlayers.Add(new WeeklyTourneyPartyPlayer
+                            {
+                                Player = invited,
+                                State = WeeklyTourneyPartyPlayerState.Waiting
+                            });
+                        }
+                        else
+                        {
+                            party.WeeklyTourneyPartyPlayers.Remove(playerInParty);
+                        }
+
+                        await _dbContext.SaveChangesAsync();
+                    }
+
+                    await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", weeklyTourney.Id);
+                }
+            }
+        }
+
+        public async Task WeeklyTourneyAcceptDeclineInvite(int userId, WeeklyTourneyAcceptDeclineInvite request)
+        {
+            var weekNumber = GetCurrentWeek();
+            var weeklyTourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyParties).ThenInclude(x => x.WeeklyTourneyPartyPlayers).ThenInclude(x => x.Player).FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
+            if (weeklyTourney != null)
+            {
+                var user = await _dbContext.Players.Include(x => x.Bans).SingleOrDefaultAsync(x => x.Id == userId);
+
+                var party = weeklyTourney.WeeklyTourneyParties.FirstOrDefault(x => x.Id == request.Id);
+                if (party != null)
+                {
+                    var invited = party.WeeklyTourneyPartyPlayers.FirstOrDefault(x => x.Player == user);
+                    if (invited != null)
+                    {
+                        if (request.IsAccepted)
+                        {
+                            invited.State = WeeklyTourneyPartyPlayerState.Accepted;
+                        }else
+                        {
+                            party.WeeklyTourneyPartyPlayers.Remove(invited);
+                        }
+
+                        await _dbContext.SaveChangesAsync();
+
+                        await _hubContext.Clients.All.SendAsync("onWeeklyTourneyChange", weeklyTourney.Id);
+                    }
+                }
+
             }
         }
     }

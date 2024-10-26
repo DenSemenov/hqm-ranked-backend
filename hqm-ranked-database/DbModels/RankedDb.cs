@@ -51,6 +51,8 @@ namespace hqm_ranked_backend.Models.DbModels
         public DbSet<WeeklyTourneyPlayer> WeeklyTourneyPlayers { get; set; }
         public DbSet<WeeklyTourneyRequest> WeeklyTourneyRequests { get; set; }
         public DbSet<WeeklyTourneyGame> WeeklyTourneyGame { get; set; }
+        public DbSet<WeeklyTourneyParty> WeeklyTourneyParties { get; set; }
+        public DbSet<WeeklyTourneyPartyPlayer> WeeklyTourneyPartyPlayers { get; set; }
 
 
         public RankedDb(DbContextOptions<RankedDb> options)

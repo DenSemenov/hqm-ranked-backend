@@ -199,10 +199,13 @@ namespace hqm_ranked_backend.Services
 
                     _dbContext.SaveChanges();
                 }
-                catch(DbUpdateException ex)
+                catch(Exception ex)
                 {
                     Console.WriteLine(ex.Message + ex.StackTrace);
                     Log.Error(ex.Message + ex.StackTrace);
+
+                    _dbContext.ReplayData.Remove(replayData);
+                    _dbContext.SaveChanges();
                 }
             }
         }

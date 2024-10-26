@@ -16,6 +16,7 @@ namespace hqm_ranked_database.DbModels
         public int Round { get; set; } = 1;
         public WeeklyTourneyState State { get; set; }
         public ICollection<WeeklyTourneyRequest> WeeklyTourneyRequests { get; set; }
+        public ICollection<WeeklyTourneyParty> WeeklyTourneyParties { get; set; }
         public ICollection<WeeklyTourneyGame> WeeklyTourneyGames { get; set; }
         public ICollection<WeeklyTourneyTeam> WeeklyTourneyTeams { get; set; }
     }

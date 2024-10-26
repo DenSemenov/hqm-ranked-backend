@@ -18,5 +18,7 @@ namespace hqm_ranked_services.Interfaces
         Task<List<WeeklyTourneyItemViewModel>> GetWeeklyTourneys();
         Task<WeeklyTourneyViewModel> GetWeeklyTournament(WeeklyTourneyIdRequest request);
         Task WeeklyTourneyRegister(int userId);
+        Task WeeklyTourneyInvite(int userId, int invitedId);
+        Task WeeklyTourneyAcceptDeclineInvite(int userId, WeeklyTourneyAcceptDeclineInvite request);
     }
 }
