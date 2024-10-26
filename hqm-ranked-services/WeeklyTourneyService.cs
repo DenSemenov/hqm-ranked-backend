@@ -220,7 +220,7 @@ namespace hqm_ranked_services
                         teams.Add(new WeeklyTourneyTeamDTO());
                     }
 
-                    foreach (var party in tourney.WeeklyTourneyParties.OrderByDescending(x => x.WeeklyTourneyPartyPlayers.Count).ThenByDescending(x => x.WeeklyTourneyPartyPlayers.Sum(y => y.Player.Cost != null ? y.Player.Cost.CostPlayer : 100000)))
+                    foreach (var party in tourney.WeeklyTourneyParties.OrderByDescending(x => x.WeeklyTourneyPartyPlayers.Count).ThenByDescending(x => x.WeeklyTourneyPartyPlayers.Sum(y => y.Player.Cost != null ? y.Player.Cost.Cost : 100000)))
                     {
                         var teamWithLowerRating = teams.Where(x => 4 - x.Players.Count >= party.WeeklyTourneyPartyPlayers.Count).OrderBy(t => t.TotalRating).FirstOrDefault();
 
@@ -229,7 +229,7 @@ namespace hqm_ranked_services
                             foreach (var player in party.WeeklyTourneyPartyPlayers)
                             {
                                 teamWithLowerRating.Players.Add(player.Player.Id);
-                                teamWithLowerRating.TotalRating += player.Player.Cost.CostPlayer;
+                                teamWithLowerRating.TotalRating += (player.Player.Cost !=null? player.Player.Cost.Cost: 100000);
                             }
                         }
                         else
@@ -243,7 +243,7 @@ namespace hqm_ranked_services
                                     if (teamWithLowerRatingTemp.Players.Count < 4)
                                     {
                                         teamWithLowerRatingTemp.Players.Add(player.Player.Id);
-                                        teamWithLowerRatingTemp.TotalRating += player.Player.Cost.CostPlayer;
+                                        teamWithLowerRatingTemp.TotalRating += (player.Player.Cost != null ? player.Player.Cost.Cost : 100000);
                                     }
                                     else
                                     {
