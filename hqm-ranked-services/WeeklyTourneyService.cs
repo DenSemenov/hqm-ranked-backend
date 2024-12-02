@@ -201,10 +201,20 @@ namespace hqm_ranked_services
         public async Task RandomizeTourney()
         {
             var currentTourneyId = await GetCurrentTourneyId();
+
+            var waitingUsers = _dbContext.WeeklyTourneyPartyPlayers.Where(x => x.State == WeeklyTourneyPartyPlayerState.Waiting).ToList();
+            for (var i = 0; i < waitingUsers.Count; i++)
+            {
+                _dbContext.WeeklyTourneyPartyPlayers.Remove(waitingUsers[i]);
+            }
+
+            await _dbContext.SaveChangesAsync();    
+
             var tourney = await _dbContext.WeeklyTourneys.Include(x => x.WeeklyTourneyParties).ThenInclude(x => x.WeeklyTourneyPartyPlayers).ThenInclude(x => x.Player).ThenInclude(x => x.Cost).FirstOrDefaultAsync(x => x.Id == currentTourneyId);
 
             if (tourney != null)
             {
+
 
                 var notify = new List<TourneyStartedDTO>();
 
