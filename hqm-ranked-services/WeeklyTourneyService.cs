@@ -456,7 +456,7 @@ namespace hqm_ranked_services
                         }).ToList()
                     }).FirstOrDefault(x => x.TourneyId == request.Id);
 
-                    result.Registration.AllPlayers = _dbContext.Players.Include(x=>x.Bans).Where(x=>!x.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow)).OrderBy(x => x.Name).Select(x => new WeeklyTourneyRegistrationPlayerViewModel
+                    result.Registration.AllPlayers = _dbContext.Players.Include(x=>x.Bans).Where(x=>!x.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow) && x.IsApproved).OrderBy(x => x.Name).Select(x => new WeeklyTourneyRegistrationPlayerViewModel
                     {
                         Id = x.Id,
                         Name = x.Name
@@ -558,7 +558,7 @@ namespace hqm_ranked_services
             {
                 var user = await _dbContext.Players.Include(x => x.Bans).SingleOrDefaultAsync(x => x.Id == userId);
                 var isBanned = user.Bans.Any(x => x.CreatedOn.AddDays(x.Days) >= DateTime.UtcNow);
-                if (!isBanned)
+                if (!isBanned && user.IsApproved)
                 {
                     var partiesWaitings = weeklyTourney.WeeklyTourneyParties.Where(x => x.WeeklyTourneyPartyPlayers.Any(x => x.Player.Id == userId && x.State == WeeklyTourneyPartyPlayerState.Waiting)).ToList();
                     foreach(var partiesWaiting in partiesWaitings)
